@@ -7,3 +7,4 @@
 .ao-cal-day{aspect-ratio:1;border:0;border-radius:.5rem;background:var(--accent);cursor:pointer;font:inherit}
 .ao-cal-day:disabled{background:transparent;color:#b5c0c6;cursor:default}
 .ao-cal-day[data-selected]{background:var(--primary);color:#fff}
+.ao-cal-head button:disabled{opacity:.35;cursor:default}

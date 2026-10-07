@@ -26,12 +26,8 @@ test("enquiry forms collect split names, optional uploads and a signed security 
   assert.match(smtp, /attachments: EmailAttachment\[\]/);
 });
 
-test("payment callbacks use the public Auto Opulence URL", async () => {
-  const [paymentReturn, server] = await Promise.all([
-    source("lib/simplybook-payment-return.ts"),
-    source("lib/simplybook-server.ts"),
-  ]);
-
-  assert.match(paymentReturn, /new URL\("\/booking\/payment-complete", siteUrl\)/);
-  assert.match(server, /new URL\("\/booking\/payment-complete\/", siteUrl\)/);
+test("bookings return from Stripe to this website's payment page", async () => {
+  const [vehicleCare, form] = await Promise.all([source("lib/vehicle-care.ts"), source("components/ServiceBookingForm.tsx")]);
+  assert.match(vehicleCare, /bookingPaymentCompletePath = "\/booking\/payment-complete"/);
+  assert.match(form, /success_url: `\$\{origin\}\$\{bookingPaymentCompletePath\}\?session_id=\{CHECKOUT_SESSION_ID\}`/);
 });

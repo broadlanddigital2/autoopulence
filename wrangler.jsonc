@@ -15,7 +15,6 @@
     "html_handling": "auto-trailing-slash"
   },
   "vars": {
-    "SIMPLYBOOK_COMPANY_LOGIN": "racecargraphics",
     "SMTP_FROM_EMAIL": "valeting@autoopulence.co.uk",
     "SMTP_FROM_NAME": "Auto Opulence Website"
   },

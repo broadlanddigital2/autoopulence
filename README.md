@@ -7,7 +7,7 @@ The Auto Opulence site (autoopulence.co.uk), hosted on Cloudflare. Same setup as
 | `dist/` | **The live website.** 82 static pages + images, sitemap.xml, robots.txt, 404 page. This is what Cloudflare serves. |
 | `source/` | The original Next.js project. Edit content and pages here. |
 | `tools/static-export/` | Converts `source/` into `dist/`, and bundles the Worker. |
-| `worker/` | Small server that runs in front of `dist/`: redirects `www.` and `http://` to `https://autoopulence.co.uk`, and runs the site's own API routes from `source/app/api` (enquiry form + emails, security question, postcode lookup, SimplyBook bookings, payment return). `worker/dist/index.js` is generated. |
+| `worker/` | Small server that runs in front of `dist/`: redirects `www.` and `http://` to `https://autoopulence.co.uk`, forwards booking calls to the Race Car Graphics CRM (`/api/crm/booking`), and runs the site's own API routes from `source/app/api` (enquiry form + emails, security question, postcode lookup). `worker/dist/index.js` is generated. |
 | `wrangler.jsonc` | Cloudflare config (Worker name `autoopulence`, serves `dist/`, runs the Worker first on every request). |
 
 ## Deploying
@@ -34,6 +34,22 @@ in `tools/static-export/shims/` (links, scripts, icons, the service dropdown and
 Emails: Cloudflare Workers can't use SMTP, so the Worker sends the same emails through SendGrid's HTTPS API
 using the existing SendGrid key (`SMTP_PASSWORD`). See `worker/src/shims/nodemailer.ts`.
 
+## Bookings
+
+Bookings, customer accounts and payments use the **Race Car Graphics CRM** — the same system as racecargraphics.uk
+(Supabase project `dipjypzrfigkzuarlsov`, business unit *Auto Opulence* `8a8a2f45-…`). Services, prices, vehicle
+sizes, extras, packages and availability are managed in the CRM; the booking form loads them live. Payment is
+Stripe checkout run by the CRM, which returns customers to `/booking/payment-complete`.
+
+- Booking form: `source/components/ServiceBookingForm.tsx` (shared with RCG's site)
+- Customer login (emailed 6-digit code, no password) and account: `source/components/CustomerAccount.tsx`
+  (`/login`, `/signup`, `/account`). Customers have one account across Auto Opulence and Race Car Graphics.
+- CRM client: `source/lib/crm-booking.ts`; catalogue helpers: `source/lib/vehicle-care.ts`
+- The browser calls `/api/crm/booking` on this site and the Worker forwards it to the CRM, so the CRM doesn't need
+  autoopulence.co.uk on its list of allowed browser origins.
+- `source/lib/crm/vehicle-care.json` is a copy of the catalogue, refreshed by `npm run rebuild`
+  (`tools/static-export/fetch-crm.mjs`); the form uses it until the live catalogue loads.
+
 ## Settings (Cloudflare → Workers & Pages → autoopulence → Settings → Variables and Secrets)
 
 Add these as **Secrets**:
@@ -43,11 +59,9 @@ Add these as **Secrets**:
 | `SMTP_PASSWORD` | SendGrid API key (needs *Mail Send* permission) |
 | `ENQUIRY_CAPTCHA_SECRET` | Any long random string |
 | `IDEAL_POSTCODES_API_KEY` | Postcode lookup key |
-| `SIMPLYBOOK_REST_API_KEY`, `SIMPLYBOOK_RPC_API_KEY`, `SIMPLYBOOK_SECRET_API_KEY` | SimplyBook API keys |
-| `SIMPLYBOOK_SESSION_SECRET` | Any long random string (signs customer login cookies) |
 
 Optional: `SMTP_TO_EMAIL`, `SMTP_CC_EMAIL` (who receives enquiries; the code has defaults).
-`SIMPLYBOOK_COMPANY_LOGIN`, `SMTP_FROM_EMAIL` and `SMTP_FROM_NAME` are set in `wrangler.jsonc`.
+`SMTP_FROM_EMAIL` and `SMTP_FROM_NAME` are set in `wrangler.jsonc`. Bookings need no settings.
 
 ## Going live checklist
 
@@ -57,5 +71,6 @@ Optional: `SMTP_TO_EMAIL`, `SMTP_CC_EMAIL` (who receives enquiries; the code has
 - [ ] Test on the `*.workers.dev` address (it is kept out of Google automatically).
 - [ ] `autoopulence.co.uk` must be a zone in this Cloudflare account. Then Settings → Domains & Routes → add
       **both** `autoopulence.co.uk` and `www.autoopulence.co.uk` as Custom Domains (the Worker redirects www).
-- [ ] SimplyBook: payment return URLs keep working (`/booking/payment-complete/ext/invoice-payment/...`).
+- [ ] Make a test booking on the live domain and check it appears in the CRM, the Stripe payment returns to
+      `/booking/payment-complete`, and the confirmation email arrives.
 - [ ] Search Console: resubmit `https://autoopulence.co.uk/sitemap.xml`.

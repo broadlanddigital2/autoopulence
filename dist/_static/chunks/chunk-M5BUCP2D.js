@@ -1,0 +1,1 @@
+import{c as o}from"./chunk-WBHRCEHP.js";o();function n(){throw new Error("NOT_FOUND")}function r(){return globalThis.__AO_ROUTE||(typeof window<"u"?window.location.pathname:"/")}function t(){return new URLSearchParams(typeof window<"u"?window.location.search:"")}export{n as a,r as b,t as c};

@@ -1,5 +1,5 @@
 import { ServiceBookingForm } from "@/components/ServiceBookingForm";
-import { bookingServiceIdForSiteSlug, bookingTypeForCategorySlug } from "@/lib/booking-services";
+import { bookingTypeForCategorySlug } from "@/lib/booking-services";
 
 export function BookingWidget({
   initialCategory = "vehicle-valeting",
@@ -18,7 +18,7 @@ export function BookingWidget({
     </header>
     <ServiceBookingForm
       initialType={bookingTypeForCategorySlug(initialCategory)}
-      initialServiceId={bookingServiceIdForSiteSlug[initialService] || ""}
+      initialService={initialService}
     />
   </div>;
 }

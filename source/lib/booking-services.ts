@@ -13,6 +13,8 @@ export type BookingService = {
 
 export type BookingPackage = {
   id: string;
+  /** Slug of the matching package in the CRM (used in "book this package" links). */
+  crmSlug: string;
   totals?: Partial<Record<VehicleSize, number>>;
   serviceId: string;
   baseServiceId: string;
@@ -32,6 +34,7 @@ export type BookingType = { id: BookingTypeId; label: string; services: BookingS
 export const bookingPackages: BookingPackage[] = [
   {
     id: "exterior-valet-three-month",
+    crmSlug: "exterior-valet-3-month-package",
     totals: { small: 114, medium: 129, large: 144, extraLarge: 174 },
     serviceId: "exterior-valet-package-three-month",
     baseServiceId: "exterior-valet",
@@ -46,6 +49,7 @@ export const bookingPackages: BookingPackage[] = [
   },
   {
     id: "exterior-valet-six-month",
+    crmSlug: "exterior-valet-6-month-package",
     totals: { small: 216, medium: 246, large: 276, extraLarge: 336 },
     serviceId: "exterior-valet-package-six-month",
     baseServiceId: "exterior-valet",

@@ -1,11 +1,13 @@
-/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, CarFront, CheckCircle2, ChevronDown, Eye, EyeOff, MapPin, UserRound } from "lucide-react";
-import { bookingPackages, bookingTypes, sizeLabels, type BookingTypeId, type CustomerKind, type VehicleSize } from "@/lib/booking-services";
-import { isWeekdayDateKey } from "@/lib/booking-dates";
-import { bookingDate, bookingMoney, bookingPaymentCompletePath, pendingBookingKey, productVehicleSize, simplyBookCategoryIds, simplyBookRequest, simplyBookServiceIds, SimplyBookError, type SimplyBookBooking, type SimplyBookCategory, type SimplyBookClient, type SimplyBookInvoice, type SimplyBookPackage, type SimplyBookPaymentSummary, type SimplyBookProduct, type SimplyBookProvider, type SimplyBookService } from "@/lib/simplybook";
+// Auto Opulence booking form, backed by the Race Car Graphics CRM: live services, prices, availability and
+// prepaid packages; guest or email-code sign-in; payment through Stripe checkout. Same form as racecargraphics.uk.
+
+import { FormEvent, forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { CalendarDays, CarFront, CheckCircle2, ChevronDown, Lock, Mail, MapPin, Phone, UserRound } from "lucide-react";
+import { bookingTypes, sizeLabels, type BookingTypeId, type CustomerKind, type VehicleSize } from "@/lib/booking-services";
+import { bookingDate, bookingMoney, bookingPaymentCompletePath, careAudience, careBusinessUnitId, careCatalogue, carePackagePrice, carePrice, careServiceFor, careServicesFor, careSizeOption, careTypeFor, PACKAGE_DISCLAIMER, packageMonthRanges, ukDate, ukTime, type CareCatalogue, type CareExtra, type CarePackage, type CarePackagePrice, type CareSlot } from "@/lib/vehicle-care";
+import { BookingError, bookingRequest, currentSession, loadAvailableDates, loadAvailableSlots, loadCatalogue, loadCustomerProfile, requestEmailCode, signInWithEmailCode, signOut as crmSignOut, type CrmCustomer, type CrmServiceOrder } from "@/lib/crm-booking";
 import { Calendar } from "@/components/ui/calendar";
 import { BookingAddressFields } from "./BookingAddressFields";
 
@@ -16,445 +18,417 @@ const vehicleSizeExamples: Record<VehicleSize, { title: string; description: str
   extraLarge: { title: "Extra-large car", description: "Large SUVs and seven-seat passenger vehicles.", examples: ["Range Rover", "BMW X5", "Volvo XC90", "Mercedes GLE", "Toyota Land Cruiser"] },
 };
 
+// A booking awaiting payment, kept for this browser tab so the customer can return to checkout.
+type PendingBooking = { orderNumber?: string; serviceName: string; packageName?: string; startAt: string; total: number; checkoutUrl: string; createdAt: number };
+export const pendingBookingKey = "ao-care-pending";
+const checkoutLifetimeMs = 29 * 60 * 1000; // Stripe checkout sessions expire after 30 minutes.
+
 const message = (error: unknown) => error instanceof Error ? error.message : "Please try again shortly.";
-function isLivePackageForOption(livePackage: SimplyBookPackage, option: (typeof bookingPackages)[number], baseServiceId: string) {
-  const serviceId = simplyBookServiceIds[baseServiceId];
-  return new RegExp(`\\b${option.appointmentCount}\\s*month\\b`, "i").test(livePackage.name)
-    && livePackage.services.some(item => Number(item.service_id) === serviceId && Number(item.qty) >= option.appointmentCount);
-}
 function focusBookingSection(element: HTMLElement | null) {
   if (!element) return;
   element.focus({ preventScroll: true });
   element.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
 }
+function readPending(): PendingBooking | undefined {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(pendingBookingKey) || "null") as PendingBooking | null;
+    if (value && Date.now() - value.createdAt < checkoutLifetimeMs) return value;
+    sessionStorage.removeItem(pendingBookingKey);
+  } catch { /* Storage is optional. */ }
+  return undefined;
+}
+function checkoutUrl(value?: string) {
+  if (!value) return "";
+  const url = new URL(value);
+  if (url.protocol !== "https:" || !/(^|\.)stripe\.com$/.test(url.hostname)) throw new Error("The payment link could not be verified. Please call us before trying again.");
+  return url.href;
+}
 
-export function ServiceBookingForm({ initialType, initialServiceId = "" }: { initialType: BookingTypeId; initialServiceId?: string }) {
+export function ServiceBookingForm({ initialType, initialService = "" }: { initialType: BookingTypeId; initialService?: string }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const accountRef = useRef<HTMLDivElement>(null);
-  const signInPasswordRef = useRef<HTMLInputElement>(null);
   const choicesRef = useRef<HTMLFieldSetElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const submissionLock = useRef(false);
   const [typeId, setTypeId] = useState<BookingTypeId>(initialType);
-  const initialService = bookingTypes.find(type => type.id === initialType)?.services.find(service => service.id === initialServiceId);
-  const [customerKind, setCustomerKind] = useState<CustomerKind>(initialService?.audience || "public");
-  const [serviceId, setServiceId] = useState(initialService?.id || "");
-  const [packageId, setPackageId] = useState("");
+  const [customerKind, setCustomerKind] = useState<CustomerKind>("public");
+  const [serviceId, setServiceId] = useState("");
   const [vehicleSize, setVehicleSize] = useState<VehicleSize>("small");
+  const [extraIds, setExtraIds] = useState<string[]>([]);
+  const [plan, setPlan] = useState("single"); // "single" or the id of a prepaid package
+  const [wantedPackage, setWantedPackage] = useState(""); // package slug from a renewal link
+  const [renewId, setRenewId] = useState(""); // the package being renewed (from a renewal link)
+  const [renewals, setRenewals] = useState<{ id: string; name: string; url: string; nextMonth?: string; perVisit?: string }[]>([]);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [postcode, setPostcode] = useState("");
   const [city, setCity] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
-  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
-  const [selectedTime, setSelectedTime] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState<CareSlot>();
+  // Packages: book every visit now (one per consecutive month), or just the first and the rest in the customer account.
+  const [bookAllVisits, setBookAllVisits] = useState(false);
+  const [laterVisits, setLaterVisits] = useState<(CareSlot | undefined)[]>([]);
+  const [activeVisit, setActiveVisit] = useState(1);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  // Review step: everything checked, shown as a full summary before "Pay now" sends the customer to Stripe.
+  type ReviewSnapshot = { values: Record<string, string>; marketing: boolean; extraVisits: CareSlot[]; signedIn: boolean };
+  const [review, setReview] = useState<ReviewSnapshot>();
+  const reviewRef = useRef<HTMLElement>(null);
   const [error, setError] = useState("");
+  const [catalogue, setCatalogue] = useState<CareCatalogue>(careCatalogue);
   const [catalogueError, setCatalogueError] = useState("");
-  const [catalogueBusy, setCatalogueBusy] = useState(true);
+  const [catalogueBusy, setCatalogueBusy] = useState(!careCatalogue.services.length);
   const [catalogueRevision, setCatalogueRevision] = useState(0);
-  const [liveServices, setLiveServices] = useState<SimplyBookService[]>([]);
-  const [liveCategories, setLiveCategories] = useState<SimplyBookCategory[]>([]);
-  const [livePackages, setLivePackages] = useState<SimplyBookPackage[]>([]);
-  const [bookingTerms, setBookingTerms] = useState<{ policies: { title: string; content: string }[]; simplybook: boolean; accountRequired: boolean }>({ policies: [], simplybook: false, accountRequired: false });
-  const [products, setProducts] = useState<SimplyBookProduct[]>([]);
-  const [productId, setProductId] = useState("");
-  const [providerId, setProviderId] = useState<number>();
-  const [loadedServiceId, setLoadedServiceId] = useState<number>();
   const [dates, setDates] = useState<string[]>([]);
-  const [slots, setSlots] = useState<string[]>([]);
+  const [loadedServiceId, setLoadedServiceId] = useState("");
+  const [slots, setSlots] = useState<CareSlot[]>([]);
   const [availabilityBusy, setAvailabilityBusy] = useState(false);
   const [slotsBusy, setSlotsBusy] = useState(false);
   const [availabilityError, setAvailabilityError] = useState("");
   const [availabilityRevision, setAvailabilityRevision] = useState(0);
   const [bookingBusy, setBookingBusy] = useState(false);
   const [bookingUncertain, setBookingUncertain] = useState(false);
-  const [booking, setBooking] = useState<SimplyBookBooking>();
-  const [sessionBusy, setSessionBusy] = useState(true);
-  const [previousPaidBooking, setPreviousPaidBooking] = useState(false);
-  const [resumedDetails, setResumedDetails] = useState<SimplyBookPaymentSummary["details"]>();
-  const [confirmed, setConfirmed] = useState(false);
-  const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
-  const [paymentBusy, setPaymentBusy] = useState(false);
-  const [paymentUrl, setPaymentUrl] = useState("");
+  const [booking, setBooking] = useState<PendingBooking & { resumed?: boolean }>();
   const [paymentError, setPaymentError] = useState("");
-  const [client, setClient] = useState<SimplyBookClient | null>(null);
+  const [cancelledPayment, setCancelledPayment] = useState(false);
+  const [client, setClient] = useState<CrmCustomer | null>(null);
+  const [sessionBusy, setSessionBusy] = useState(true);
   const [signInOpen, setSignInOpen] = useState(false);
-  const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [signInEmail, setSignInEmail] = useState("");
-  const [signInPassword, setSignInPassword] = useState("");
+  const [codeSentTo, setCodeSentTo] = useState(""); // email the current code was sent to
+  const [signInCode, setSignInCode] = useState("");
   const [signInStatus, setSignInStatus] = useState("");
-  const [signInError, setSignInError] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
-  const [createAccount, setCreateAccount] = useState(false);
-  const [accountName, setAccountName] = useState("");
-  const [accountPhone, setAccountPhone] = useState("");
-  const [accountTermsAccepted, setAccountTermsAccepted] = useState(false);
 
   const activeType = bookingTypes.find(type => type.id === typeId)!;
-  const services = useMemo(() => activeType.services.filter(service => {
-    if (typeId === "bay" && service.audience !== customerKind) return false;
-    return true;
-  }), [activeType, customerKind, typeId]);
+  const services = useMemo(() => careServicesFor(typeId, customerKind, catalogue), [catalogue, customerKind, typeId]);
   const selectedService = services.find(service => service.id === serviceId);
-  const packageOptions = bookingPackages.filter(item => item.baseServiceId === serviceId && livePackages.some(livePackage => isLivePackageForOption(livePackage, item, serviceId)));
-  const selectedPackage = packageOptions.find(item => item.id === packageId);
-  const selectedPackageName = selectedPackage?.name.split(" — ");
-  const appointmentTarget = selectedPackage?.appointmentCount || 1;
-  const availabilityMonths = selectedPackage ? 12 : 3;
-  const hasSelectedLivePackage = !!selectedPackage && livePackages.some(item => isLivePackageForOption(item, selectedPackage, serviceId));
-  const effectiveServiceId = hasSelectedLivePackage ? serviceId : selectedPackage ? selectedPackage.serviceId : serviceId;
-  const liveCategory = liveCategories.find(category => simplyBookCategoryIds[typeId].includes(category.id) && category.is_visible && category.services.includes(simplyBookServiceIds[effectiveServiceId]));
-  const liveService = liveServices.find(service => service.id === simplyBookServiceIds[effectiveServiceId] && service.is_active && service.is_visible && liveCategory?.services.includes(service.id));
-  const deposits = products.filter(item => /deposit/i.test(item.product.name));
-  const choices = products.filter(item => !/deposit/i.test(item.product.name));
-  const hasSizeChoices = choices.some(item => productVehicleSize(item.product.name));
-  const selectedProduct = hasSizeChoices ? choices.find(item => productVehicleSize(item.product.name) === vehicleSize) : choices.find(item => String(item.product.id) === productId);
-  const selectedNativePackage = selectedPackage ? livePackages.find(item => isLivePackageForOption(item, selectedPackage, serviceId) && (!selectedProduct || item.paid_attributes.some(attribute => Number(attribute.product_id) === selectedProduct.product.id && Number(attribute.qty) >= selectedPackage.appointmentCount))) : undefined;
-  const depositPrice = deposits.reduce((sum, item) => sum + item.product.price * (item.qty || 1), 0);
-  const pricePerAppointment = liveService && !availabilityBusy && !availabilityError ? liveService.price + (selectedProduct?.product.price || 0) + depositPrice : undefined;
-  const price = selectedNativePackage ? Number(selectedNativePackage.price) : pricePerAppointment === undefined ? undefined : pricePerAppointment * appointmentTarget;
-  const displayedPricePerAppointment = selectedNativePackage && Number.isFinite(price) ? (price as number) / appointmentTarget : pricePerAppointment;
-  const requiresPriceConfirmation = price !== undefined && price <= 0;
-  const needsProduct = choices.length > 0 && !selectedProduct;
-  const optionStepNumber = 3 + (packageOptions.length > 0 ? 1 : 0);
-  const dateStepNumber = optionStepNumber + (choices.length > 0 ? 1 : 0);
-  const detailsStepNumber = dateStepNumber + 1;
+  const liveService = selectedService?.bookable ? selectedService : undefined;
+  const hasSizeChoices = !!liveService?.sizes.length;
+  const sizeOption = careSizeOption(liveService, vehicleSize);
+  const extras = liveService?.extras || [];
+  const selectedExtras = extras.filter(extra => extraIds.includes(extra.addon_id));
+  const needsSize = hasSizeChoices && !sizeOption;
+  // Prepaid packages (3 / 6 monthly visits): no extras, paid in full, visits in consecutive months.
+  const packages = liveService?.packages || [];
+  const chosenPackage = packages.find(pkg => pkg.id === plan);
+  const packagePrice = carePackagePrice(chosenPackage, vehicleSize, hasSizeChoices);
+  const singlePrice = carePrice(liveService, vehicleSize, chosenPackage ? [] : extraIds);
+  const visitPrice = carePrice(liveService, vehicleSize);
+  const price = chosenPackage ? packagePrice?.amount : singlePrice;
+  const requiresPriceConfirmation = !!liveService && !needsSize && (price === undefined || price <= 0);
+  const depositPrice = liveService?.deposit_required && price ? Math.min(liveService.deposit_amount, price) : 0;
   const dateKey = selectedDate ? bookingDate(selectedDate) : "";
-  const displayedSlots = slots;
   const formattedDate = selectedDate ? new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" }).format(selectedDate) : "";
-  const currency = liveService?.currency || "GBP";
+  const currency = "GBP";
 
-  function isBookingDateDisabled(date: Date) {
-    const candidate = bookingDate(date);
-    if (!isWeekdayDateKey(candidate)) return true;
-    return !dates.includes(candidate);
-  }
-
-  function fillClient(value: SimplyBookClient) {
+  function fillClient(value: CrmCustomer) {
     setClient(value);
-    const names = value.name.trim().split(/\s+/);
-    const values = { firstName: names.shift() || "", lastName: names.join(" "), email: value.email, mobile: value.phone || "", address1: value.address1 || "", address2: value.address2 || "" };
+    const values = { firstName: value.first_name, lastName: value.last_name, email: value.email, mobile: value.mobile, address1: value.address_line_1, address2: value.address_line_2 };
     for (const [name, text] of Object.entries(values)) {
       const field = formRef.current?.elements.namedItem(name);
-      if (field instanceof HTMLInputElement) field.value = text;
+      if (field instanceof HTMLInputElement && text) field.value = text;
     }
-    setPostcode(value.zip || ""); setCity(value.city || "");
+    if (value.postcode) setPostcode(value.postcode);
+    if (value.city) setCity(value.city);
   }
 
+  // Pre-select from the page link (?type=…&service=…&size=…) and restore any booking awaiting payment.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const matchedType = bookingTypes.find(type => type.id === params.get("type"));
-    if (matchedType) {
-      setTypeId(matchedType.id);
-      const service = matchedType.services.find(item => item.id === params.get("service"));
-      if (service) {
-        setServiceId(service.id); if (service.audience) setCustomerKind(service.audience);
-        const requestedPackage = bookingPackages.find(item => item.id === params.get("package") && item.baseServiceId === service.id);
-        if (requestedPackage) setPackageId(requestedPackage.id);
-      }
-      const size = params.get("size");
-      if (size && Object.hasOwn(sizeLabels, size)) setVehicleSize(size as VehicleSize);
-    }
-    const returningFromPayment = params.get("step") === "payment";
+    const service = careServiceFor(params.get("service")) || careServiceFor(initialService);
+    const serviceType = service && careTypeFor(service);
+    if (service && serviceType) {
+      setTypeId(serviceType); setServiceId(service.id);
+      if (serviceType === "bay") setCustomerKind(careAudience(service));
+    } else if (matchedType) setTypeId(matchedType.id);
+    const audience = params.get("audience");
+    if (!service && (audience === "trade" || audience === "public")) setCustomerKind(audience);
+    const size = params.get("size");
+    if (size && Object.hasOwn(sizeLabels, size)) setVehicleSize(size as VehicleSize);
+    if (params.get("package")) setWantedPackage(params.get("package")!);
+    if (params.get("renew") && /^[0-9a-f-]{36}$/i.test(params.get("renew")!)) setRenewId(params.get("renew")!);
+    const pending = readPending();
+    if (pending) setBooking({ ...pending, resumed: true });
+    if (params.get("step") === "payment-cancelled") setCancelledPayment(true);
+
     const controller = new AbortController();
-    // The encrypted cookie is the source of truth, including in another tab or
-    // after browser storage has been cleared. Never restore an old local invoice.
-    simplyBookRequest<SimplyBookPaymentSummary>("payment/summary", { signal: controller.signal }).then(summary => {
-      if (controller.signal.aborted) return;
-      if (summary.paid) {
-        try { sessionStorage.removeItem(pendingBookingKey); } catch {}
-        if (returningFromPayment) window.location.replace(bookingPaymentCompletePath);
-        else setPreviousPaidBooking(true);
-        return;
-      }
-      setBooking({ ...summary.booking, resumed: true }); setResumedDetails(summary.details);
-      try { sessionStorage.setItem(pendingBookingKey, JSON.stringify(summary.booking)); } catch {}
-    }).catch(error => {
-      if (controller.signal.aborted) return;
-      if (error instanceof SimplyBookError && [401, 404].includes(error.status)) {
-        try { sessionStorage.removeItem(pendingBookingKey); } catch {}
-        if (returningFromPayment) setError(message(error));
-      } else {
-        setPaymentError(message(error)); setError(message(error));
-        if (error instanceof SimplyBookError && error.status === 409) setBookingUncertain(true);
-      }
-    }).finally(() => { if (!controller.signal.aborted) setSessionBusy(false); });
-    simplyBookRequest<SimplyBookClient | null>("client/session", { signal: controller.signal }).then(value => { if (value && !controller.signal.aborted) fillClient(value); }).catch(() => {});
+    currentSession().then(session => session ? loadCustomerProfile(controller.signal).then(fillClient).then(() => loadRenewals(controller.signal)) : undefined)
+      .catch(() => { /* Signed out or profile unavailable: the customer can sign in again. */ })
+      .finally(() => { if (!controller.signal.aborted) setSessionBusy(false); });
     return () => controller.abort();
   }, []);
 
   useEffect(() => {
-    if (serviceId && !services.some(service => service.id === serviceId)) setServiceId("");
-  }, [services, serviceId]);
+    if (booking) focusBookingSection(resultRef.current);
+  }, [booking?.checkoutUrl]);
 
-  useEffect(() => {
-    if (packageId && !bookingPackages.some(item => item.id === packageId && item.baseServiceId === serviceId)) setPackageId("");
-  }, [packageId, serviceId]);
-
-  useEffect(() => {
-    setSelectedDate(undefined); setSelectedTime(""); setCalendarMonth(new Date()); setError("");
-  }, [packageId, serviceId]);
-
-  useEffect(() => {
-    if (booking?.invoiceId || booking?.bookingCode) focusBookingSection(resultRef.current);
-  }, [booking?.invoiceId, booking?.bookingCode]);
-
+  // Refresh prices and services from the CRM; the published catalogue is used until (or if) this fails.
   useEffect(() => {
     const controller = new AbortController();
-    setCatalogueBusy(true); setCatalogueError("");
-    Promise.all([
-      simplyBookRequest<SimplyBookService[]>("services", { signal: controller.signal }),
-      simplyBookRequest<SimplyBookCategory[]>("categories", { signal: controller.signal }),
-      simplyBookRequest<typeof bookingTerms>("terms", { signal: controller.signal }),
-      simplyBookRequest<SimplyBookPackage[]>("packages", { signal: controller.signal }),
-    ]).then(([services, categories, terms, packages]) => { if (!controller.signal.aborted) {
-      setLiveServices(services); setLiveCategories(categories); setLivePackages(packages);
-      setBookingTerms({ ...terms, policies: terms.policies.map(policy => ({ ...policy, content: new DOMParser().parseFromString(policy.content, "text/html").body.textContent || "" })) });
-    } })
-      .catch(error => { if (!controller.signal.aborted) setCatalogueError(message(error)); })
+    setCatalogueError("");
+    loadCatalogue(controller.signal)
+      .then(({ ok: _ok, ...live }) => { if (!controller.signal.aborted && live.services?.length) setCatalogue(live); })
+      .catch(error => { if (!controller.signal.aborted && !careCatalogue.services.length) setCatalogueError(message(error)); })
       .finally(() => { if (!controller.signal.aborted) setCatalogueBusy(false); });
     return () => controller.abort();
   }, [catalogueRevision]);
 
+  // A renewal link names the package by slug: select it once the service's packages are loaded.
   useEffect(() => {
-    const controller = new AbortController();
-    setProducts([]); setProductId(""); setProviderId(undefined); setLoadedServiceId(undefined); setDates([]); setSlots([]); setSelectedDate(undefined); setSelectedTime(""); setAvailabilityError("");
-    if (!liveService) { setAvailabilityBusy(false); return () => controller.abort(); }
-    const id = liveService.id;
-    setAvailabilityBusy(true);
-    Promise.all([
-      simplyBookRequest<SimplyBookProduct[]>(`products?serviceId=${id}`, { signal: controller.signal }),
-      simplyBookRequest<SimplyBookProvider[]>(`providers?serviceId=${id}`, { signal: controller.signal }),
-    ]).then(async ([products, providers]) => {
-      if (controller.signal.aborted) return;
-      if (!providers.length) throw new Error("No team member is available for this service. Please call us to book.");
-      const provider = providers[0].id; // Match the current live form's provider selection.
-      setProducts(products); setProviderId(provider);
-      const dates = await simplyBookRequest<string[]>(`availability?serviceId=${id}&providerId=${provider}&type=dates&months=${availabilityMonths}`, { signal: controller.signal });
-      if (!controller.signal.aborted) { setDates(dates); setLoadedServiceId(id); }
-    }).catch(error => { if (!controller.signal.aborted) setAvailabilityError(message(error)); })
-      .finally(() => { if (!controller.signal.aborted) setAvailabilityBusy(false); });
-    return () => controller.abort();
-  }, [liveService?.id, availabilityMonths, availabilityRevision]);
+    if (!wantedPackage) return;
+    const match = packages.find(pkg => pkg.slug === wantedPackage);
+    if (match) { setPlan(match.id); setWantedPackage(""); }
+  }, [wantedPackage, liveService?.id, catalogue]);
+
+  // Packages need a signed-in customer: open the email-code sign-in when one is chosen.
+  useEffect(() => { if (chosenPackage && !client && !sessionBusy) setSignInOpen(true); }, [chosenPackage?.id, client, sessionBusy]);
+
+  // Keep the chosen plan valid for the selected service.
+  useEffect(() => { if (plan !== "single" && !packages.some(pkg => pkg.id === plan)) setPlan("single"); }, [liveService?.id, catalogue]);
+
+  // Keep the chosen size and extras valid for the selected service.
+  useEffect(() => {
+    setExtraIds(ids => ids.filter(id => liveService?.extras.some(extra => extra.addon_id === id)));
+    if (liveService?.sizes.length && !careSizeOption(liveService, vehicleSize)) {
+      const fallback = liveService.sizes.find(option => option.is_default && option.size) || liveService.sizes.find(option => option.size);
+      if (fallback?.size) setVehicleSize(fallback.size);
+    }
+  }, [liveService?.id, catalogue]);
 
   useEffect(() => {
     const controller = new AbortController();
-    setSlots([]); setSelectedTime("");
-    if (!liveService || !providerId || !dateKey) { setSlotsBusy(false); return () => controller.abort(); }
+    setLoadedServiceId(""); setDates([]); setSlots([]); setSelectedDate(undefined); setSelectedSlot(undefined); setAvailabilityError("");
+    if (!liveService) { setAvailabilityBusy(false); return () => controller.abort(); }
+    const id = liveService.id;
+    setAvailabilityBusy(true);
+    loadAvailableDates(id, controller.signal)
+      .then(dates => { if (!controller.signal.aborted) { setDates(dates); setLoadedServiceId(id); } })
+      .catch(error => { if (!controller.signal.aborted) setAvailabilityError(message(error)); })
+      .finally(() => { if (!controller.signal.aborted) setAvailabilityBusy(false); });
+    return () => controller.abort();
+  }, [liveService?.id, availabilityRevision]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setSlots([]); setSelectedSlot(undefined);
+    if (!liveService || !dateKey) { setSlotsBusy(false); return () => controller.abort(); }
     setSlotsBusy(true); setAvailabilityError("");
-    simplyBookRequest<string[]>(`availability?serviceId=${liveService.id}&providerId=${providerId}&type=slots&date=${dateKey}`, { signal: controller.signal })
+    loadAvailableSlots(liveService.id, dateKey, controller.signal)
       .then(slots => { if (!controller.signal.aborted) setSlots(slots); })
       .catch(error => { if (!controller.signal.aborted) setAvailabilityError(message(error)); })
       .finally(() => { if (!controller.signal.aborted) setSlotsBusy(false); });
     return () => controller.abort();
-  }, [liveService?.id, providerId, dateKey]);
+  }, [liveService?.id, dateKey]);
 
-  async function loadPaymentMethods() {
-    setPaymentBusy(true); setPaymentError("");
+  // The pay button sits in the summary column: show problems next to it and bring the form's message into view.
+  useEffect(() => { if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, [error]);
+  useEffect(() => { setLaterVisits([]); setActiveVisit(1); }, [selectedSlot?.start_at, chosenPackage?.id, liveService?.id]);
+
+  /** Signed-in customers whose package is fully booked are offered a renewal. */
+  async function loadRenewals(signal?: AbortSignal) {
     try {
-      const result = await simplyBookRequest<{ availableMethods: string[] }>("payment/methods");
-      setPaymentMethods(result.availableMethods);
-      if (!result.availableMethods.length) setPaymentError("Secure Stripe payment is not currently available. Please call us with your booking reference.");
-    } catch (error) { setPaymentError(message(error)); } finally { setPaymentBusy(false); }
+      const data = await bookingRequest<{ packages: { id: string; status: string; renewal_url?: string; renewal_next_month?: string; renewal_per_visit?: string; ecommerce_packages?: { name?: string } }[] }>("portal_data", {}, { signal });
+      setRenewals((data.packages || []).filter(p => p.renewal_url).map(p => ({ id: p.id, name: p.ecommerce_packages?.name || "Your package", url: p.renewal_url!, nextMonth: p.renewal_next_month, perVisit: p.renewal_per_visit })));
+    } catch { /* Renewal prompts are optional. */ }
   }
-  useEffect(() => { if (booking?.paymentRequired && !confirmed) void loadPaymentMethods(); }, [booking?.invoiceId, confirmed]);
 
-  function changeType(nextType: BookingTypeId) { setTypeId(nextType); setServiceId(""); setPackageId(""); setSelectedTime(""); setError(""); }
+  function changeType(nextType: BookingTypeId) { setTypeId(nextType); setServiceId(""); setSelectedSlot(undefined); setError(""); }
+  function toggleExtra(id: string) { setExtraIds(ids => ids.includes(id) ? ids.filter(item => item !== id) : [...ids, id]); }
 
-  async function signIn() {
-    if (!signInEmail.trim() || !signInPassword) { setSignInError(true); return setSignInStatus("Enter your email address and password."); }
-    if (createAccount && (!accountName.trim() || !accountTermsAccepted)) { setSignInError(true); return setSignInStatus("Enter your full name and accept the account terms."); }
-    setAuthBusy(true); setSignInStatus(""); setSignInError(false);
+  /** Step 1: email a 6-digit code (new and existing customers alike). */
+  async function sendCode() {
+    const email = signInEmail.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(email)) return setSignInStatus("Enter your email address.");
+    setAuthBusy(true); setSignInStatus("");
     try {
-      const value = await simplyBookRequest<SimplyBookClient>(createAccount ? "client/register" : "client/login", { method: "POST", body: JSON.stringify({ email: signInEmail.trim(), password: signInPassword, ...(createAccount ? { name: accountName, phone: accountPhone, acceptedTerms: accountTermsAccepted } : {}) }) });
-      fillClient(value); setSignInPassword(""); setSignInOpen(false); setSignInStatus("Signed in. Your booking details have been restored."); setSignInError(false);
-    } catch (error) {
-      const errorMessage = message(error);
-      if (createAccount && /already|exist|registered/i.test(errorMessage)) {
-        setCreateAccount(false);
-        setSignInStatus("An account already exists for this email. Sign in below or use ‘Forgot password?’.");
-      } else setSignInStatus(errorMessage);
-      setSignInError(true);
-    } finally { setAuthBusy(false); }
+      await requestEmailCode(email);
+      setCodeSentTo(email); setSignInCode("");
+      setSignInStatus(`We've emailed a 6-digit code to ${email}. It expires in 10 minutes.`);
+    } catch (error) { setSignInStatus(message(error)); } finally { setAuthBusy(false); }
   }
-  async function remindPassword() {
-    if (!signInEmail.trim()) { setSignInError(true); return setSignInStatus("Enter your account email address first."); }
-    setAuthBusy(true); setSignInStatus(""); setSignInError(false);
+  /** Step 2: check the code — signs the customer in, creating their account if it's new. */
+  async function verifyCode() {
+    const code = signInCode.replace(/\D/g, "");
+    if (code.length !== 6) return setSignInStatus("Enter the 6-digit code from your email.");
+    setAuthBusy(true); setSignInStatus("");
     try {
-      await simplyBookRequest("client/remind-password", { method: "POST", body: JSON.stringify({ email: signInEmail.trim() }) });
-      setSignInStatus("Password-reset request sent. Please check your email."); setSignInError(false);
-    } catch (error) { setSignInStatus(message(error)); setSignInError(true); } finally { setAuthBusy(false); }
+      const form = formRef.current ? new FormData(formRef.current) : null;
+      const value = (name: string) => String(form?.get(name) || "").trim();
+      await signInWithEmailCode(codeSentTo, code, { firstName: value("firstName"), lastName: value("lastName"), mobile: value("mobile") });
+      const profile = await loadCustomerProfile().catch(() => null);
+      if (profile) fillClient({ ...profile, email: profile.email || codeSentTo });
+      else setClient({ first_name: "", last_name: "", email: codeSentTo, mobile: "", address_line_1: "", address_line_2: "", city: "", county: "", postcode: "" });
+      const emailField = formRef.current?.elements.namedItem("email");
+      if (emailField instanceof HTMLInputElement && !emailField.value) emailField.value = codeSentTo;
+      void loadRenewals();
+      setSignInOpen(false); setCodeSentTo(""); setSignInCode("");
+      setSignInStatus("You're signed in. Check your details, then continue to payment.");
+      if (error) setError("");
+    } catch (error) { setSignInStatus(message(error)); } finally { setAuthBusy(false); }
   }
   async function signOut() {
     setAuthBusy(true);
-    try { await simplyBookRequest("client/logout", { method: "POST", body: "{}" }); setClient(null); setSignInStatus("Signed out."); }
+    try { await crmSignOut(); setClient(null); setSignInStatus("Signed out."); }
     catch (error) { setSignInStatus(message(error)); } finally { setAuthBusy(false); }
   }
 
   async function prepareBooking(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // Keep the form now: React clears event.currentTarget once this handler awaits (e.g. the session check below).
+    const formElement = event.currentTarget;
     if (submissionLock.current || booking || bookingUncertain || sessionBusy) return;
-    if ((bookingTerms.accountRequired || selectedNativePackage) && !client) {
-      setSignInOpen(true); setSignInStatus("Please sign in or create a booking account before continuing."); setSignInError(true); setError("");
-      requestAnimationFrame(() => focusBookingSection(accountRef.current));
-      return;
-    }
-    if (!liveService || loadedServiceId !== liveService.id || !providerId || availabilityBusy || availabilityError || catalogueBusy) return setError("Wait for the live booking options to load.");
-    if (needsProduct) return setError("Please select an available vehicle size or service option.");
-    if (requiresPriceConfirmation) return setError("Please call us to confirm the price and book this service.");
-    if (!dateKey || !dates.includes(dateKey) || !selectedTime || !slots.includes(selectedTime)) return setError("Please choose an available date and time.");
-    const data = new FormData(event.currentTarget);
+    // Single visits can be booked as a guest; prepaid packages are linked to a customer account.
+    const signedIn = !!client && !!(await currentSession());
+    if (client && !signedIn) setClient(null);
+    if (chosenPackage && !signedIn) { setSignInOpen(true); setError("Packages are linked to your customer account. Please sign in or create an account to continue."); formRef.current?.querySelector(".booking-account")?.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+    if (chosenPackage && !packagePrice) return setError("This package isn't available for the selected vehicle size.");
+    if (!liveService || loadedServiceId !== liveService.id || availabilityBusy || availabilityError || catalogueBusy) return setError("Wait for the live booking options to load.");
+    if (needsSize) return setError("Please select an available vehicle size.");
+    if (requiresPriceConfirmation || price === undefined) return setError("Please call us to confirm the price and book this service.");
+    if (!dateKey || !dates.includes(dateKey) || !selectedSlot || !slots.some(slot => slot.start_at === selectedSlot.start_at)) return setError("Please choose an available date and time.");
+    const data = new FormData(formElement);
     const field = (name: string) => String(data.get(name) || "").trim();
-    if (!field("firstName") || !field("lastName") || !field("email") || !field("mobile") || !field("vehicleRegistration") || !postcode || !field("address1") || !city) return setError("Please complete your vehicle, contact and address details.");
+    if (!field("firstName") || !field("lastName") || !field("email") || !field("mobile") || !postcode || !field("address1") || !city) return setError("Please complete your contact and address details.");
     if (data.get("acceptedTerms") !== "on") return setError("Please accept the booking terms before continuing.");
+    const extraVisits = chosenPackage && bookAllVisits ? laterVisits.slice(0, chosenPackage.total_visits - 1) : [];
+    if (chosenPackage && bookAllVisits && (extraVisits.length < chosenPackage.total_visits - 1 || extraVisits.some(visit => !visit))) return setError("Choose a date and time for each visit, or choose to book the rest later in your account.");
+    if (chosenPackage && data.get("packageTerms") !== "on") return setError(`Please confirm you understand the package terms: ${PACKAGE_DISCLAIMER.toLowerCase()}`);
+    // All checks passed: show the summary. Payment starts from "Pay now".
+    const values: Record<string, string> = {};
+    for (const name of ["firstName", "lastName", "email", "mobile", "address1", "address2", "registration", "website"]) values[name] = field(name);
+    setError("");
+    setReview({ values, marketing: data.get("marketing") === "on", extraVisits: extraVisits.filter(Boolean) as CareSlot[], signedIn });
+  }
+
+  useEffect(() => { if (review) requestAnimationFrame(() => { reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); reviewRef.current?.focus({ preventScroll: true }); }); }, [review]);
+
+  function editBooking() {
+    setReview(undefined);
+    requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+
+  /** "Pay now" on the summary: recheck the slot, create the order in the CRM and go to Stripe. */
+  async function payNow() {
+    if (!review || submissionLock.current || !liveService || !selectedSlot) return;
+    const { values, marketing, extraVisits, signedIn } = review;
+    const field = (name: string) => values[name] || "";
     submissionLock.current = true; setBookingBusy(true); setError("");
     try {
-      const requestedAppointments = [{ date: dateKey, time: selectedTime }];
-      for (const appointment of requestedAppointments) {
-        const latest = await simplyBookRequest<string[]>(`availability?serviceId=${liveService.id}&providerId=${providerId}&type=slots&date=${appointment.date}`);
-        if (!latest.includes(appointment.time)) throw new Error(`${new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/London" }).format(new Date(`${appointment.date}T12:00:00Z`))} at ${appointment.time.slice(0, 5)} is no longer available. Choose another first appointment.`);
-      }
-      let result: SimplyBookBooking;
+      // Recheck availability immediately before creating the booking.
+      const latest = await loadAvailableSlots(liveService.id, dateKey);
+      const slot = latest.find(item => item.start_at === selectedSlot.start_at);
+      if (!slot) { setSlots(latest); setSelectedSlot(undefined); setReview(undefined); throw new Error("That time has just been taken. Please choose another available time."); }
+      const registration = field("registration").toUpperCase();
+      const sizeLabel = hasSizeChoices ? sizeLabels[vehicleSize] : "";
+      const origin = window.location.origin;
+      let result: CrmServiceOrder;
       try {
-        result = selectedNativePackage
-          ? await simplyBookRequest<SimplyBookBooking>("package/purchase", { method: "POST", body: JSON.stringify({
-              packageId: selectedNativePackage.id,
-              startDate: dateKey,
-              appointment: { serviceId: liveService.id, providerId, date: dateKey, time: selectedTime, productId: selectedProduct?.product.id, vehicleRegistration: field("vehicleRegistration") },
-            }) })
-          : await simplyBookRequest<SimplyBookBooking>("book", { method: "POST", body: JSON.stringify({
-              serviceId: liveService.id, providerId, appointments: requestedAppointments, durationMinutes: liveService.duration,
-              acceptedTerms: data.get("acceptedTerms") === "on", vehicleRegistration: field("vehicleRegistration"),
-              clientData: { name: `${field("firstName")} ${field("lastName")}`, email: field("email"), phone: field("mobile"), address1: field("address1"), address2: field("address2"), city, zip: postcode.trim().toUpperCase() },
-              products: [...deposits.map(item => ({ productId: item.product.id, qty: item.qty || 1 })), ...(selectedProduct ? [{ productId: selectedProduct.product.id, qty: 1 }] : [])],
-            }) });
+        const action = chosenPackage ? "create_package_order" : signedIn ? "create_service_order" : "public_guest_service_order";
+        const extrasChosen = chosenPackage ? [] : selectedExtras;
+        result = await bookingRequest<CrmServiceOrder>(action, {
+          business_unit_id: careBusinessUnitId, service_id: liveService.id, provider_id: slot.provider_id, start_at: slot.start_at,
+          addon_ids: [...(sizeOption ? [sizeOption.addon_id] : []), ...extrasChosen.map(extra => extra.addon_id)],
+          ...(chosenPackage ? { package_id: chosenPackage.id, package_price_id: packagePrice!.id, ...(renewId ? { renew_entitlement_id: renewId } : {}), ...(extraVisits.length ? { extra_visits: extraVisits.map(visit => ({ provider_id: visit.provider_id, start_at: visit.start_at })) } : {}) } : {}),
+          source: "website", website: field("website"), marketing_email_consent: marketing,
+          notes: [`Booked online at ${window.location.host}`, chosenPackage && `Package: ${chosenPackage.name} (${chosenPackage.total_visits} visits, consecutive months)`, sizeLabel && `Vehicle size: ${sizeLabel}`, registration && `Vehicle registration: ${registration}`, extrasChosen.length ? `Extras: ${extrasChosen.map(extra => extra.name).join(", ")}` : ""].filter(Boolean).join("\n"),
+          service_type: activeType.label, vehicle_registration: registration, vehicle_size: sizeLabel,
+          first_name: field("firstName"), last_name: field("lastName"), email: field("email"), mobile: field("mobile"),
+          address_line_1: field("address1"), address_line_2: field("address2"), city, postcode: postcode.trim().toUpperCase(),
+          source_url: window.location.href.split("#")[0],
+          success_url: `${origin}${bookingPaymentCompletePath}?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}${window.location.pathname}?step=payment-cancelled#book`,
+        }, { signedIn });
       } catch (error) {
-        if (error instanceof SimplyBookError && error.status === 401) {
-          setClient(null); setSignInOpen(true); setSignInPassword(""); setSignInError(true);
-          setSignInStatus(selectedNativePackage ? "Your account session ended. Sign in again to purchase this package." : "Your account session ended. Sign in again or continue as a guest.");
-        }
-        if (error instanceof SimplyBookError && (error.status === 0 || error.status >= 500)) setBookingUncertain(true);
+        if (error instanceof BookingError && (error.status === 0 || error.status >= 500)) setBookingUncertain(true);
         throw error;
       }
-      if ((selectedNativePackage ? !result.invoiceId : !result.bookingCode) || (result.paymentRequired && !result.invoiceId)) { setBookingUncertain(true); throw new Error("Please call us to check your booking before submitting again. The confirmation was incomplete."); }
-      setBooking(result); setConfirmed(!result.paymentRequired);
-      if (result.resumed || (selectedNativePackage && !result.paymentRequired)) simplyBookRequest<SimplyBookPaymentSummary>("payment/summary").then(summary => { setResumedDetails(summary.details); setBooking({ ...summary.booking, resumed: result.resumed }); }).catch(() => {});
-      if (result.paymentRequired) { try { sessionStorage.setItem(pendingBookingKey, JSON.stringify(result)); } catch {} }
+      if (!result.booking_id && !result.checkout?.url) { setBookingUncertain(true); throw new Error("Please call us to check your booking before submitting again. The confirmation was incomplete."); }
+      const pending: PendingBooking = { orderNumber: result.order_number, serviceName: liveService.name, packageName: chosenPackage?.name, startAt: slot.start_at, total: Number(result.total ?? price), checkoutUrl: checkoutUrl(result.checkout?.url), createdAt: Date.now() };
+      setBooking(pending);
+      if (pending.checkoutUrl) {
+        try { sessionStorage.setItem(pendingBookingKey, JSON.stringify(pending)); } catch { /* Storage is optional. */ }
+        window.location.assign(pending.checkoutUrl);
+      }
     } catch (error) { setError(message(error)); }
     finally { submissionLock.current = false; setBookingBusy(false); }
   }
 
-  async function checkPayment() {
-    if (!booking?.invoiceId) return;
-    setPaymentBusy(true); setPaymentError("");
-    try {
-      const invoice = await simplyBookRequest<SimplyBookInvoice>(`payment/invoice-status?invoiceId=${booking.invoiceId}`);
-      if (invoice.paid) window.location.assign(bookingPaymentCompletePath);
-      else setPaymentError("Payment has not been confirmed yet. Complete checkout, then check again. If you have paid, please contact us with your booking reference.");
-    } catch (error) { setPaymentError(message(error)); } finally { setPaymentBusy(false); }
-  }
-  async function startPayment(system: string) {
-    if (!booking?.invoiceId || paymentBusy) return;
-    setPaymentBusy(true); setPaymentError(""); setPaymentUrl("");
-    try {
-      const result = await simplyBookRequest<{ redirect_url?: string }>("payment/pay", { method: "POST", body: JSON.stringify({ invoiceId: booking.invoiceId, system }) });
-      if (result.redirect_url) {
-        const url = new URL(result.redirect_url);
-        if (url.protocol !== "https:") throw new Error("The payment link could not be verified. Please call us with your booking reference.");
-        setPaymentUrl(url.href);
-        window.location.assign(url.href);
-      } else {
-        const invoice = await simplyBookRequest<SimplyBookInvoice>(`payment/invoice-status?invoiceId=${booking.invoiceId}`);
-        if (invoice.paid) window.location.assign(bookingPaymentCompletePath);
-        else throw new Error("Stripe has not confirmed payment. Your booking remains incomplete and must not be treated as confirmed.");
-      }
-    } catch (error) { setPaymentError(message(error)); } finally { setPaymentBusy(false); }
-  }
-  async function cancelPendingPackage() {
-    if (!booking?.invoiceId || booking.orderType !== "package" || paymentBusy) return;
-    if (!window.confirm("Cancel this unpaid package order and return to package selection?")) return;
-    setPaymentBusy(true); setPaymentError("");
-    try {
-      await simplyBookRequest<{ cancelled: boolean }>("payment/cancel", { method: "POST", body: JSON.stringify({ invoiceId: booking.invoiceId }) });
-      try { sessionStorage.removeItem(pendingBookingKey); } catch {}
-      setBooking(undefined); setConfirmed(false); setResumedDetails(undefined); setPaymentMethods([]); setPaymentUrl(""); setPackageId(""); setSelectedDate(undefined); setSelectedTime(""); setError("");
-      requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-    } catch (error) { setPaymentError(message(error)); } finally { setPaymentBusy(false); }
+  function startNewBooking() {
+    try { sessionStorage.removeItem(pendingBookingKey); } catch { /* Storage is optional. */ }
+    setBooking(undefined); setCancelledPayment(false); setPaymentError("");
   }
 
-  if (booking) return <div className="simplybook-result" id="complete-payment" ref={resultRef} tabIndex={-1} role="region" aria-labelledby="booking-payment-heading">
-    <span className="section-kicker">{confirmed ? booking.orderType === "package" ? "Package purchased" : "Booking received" : "Finish your booking"}</span>
-    <h3 id="booking-payment-heading">{confirmed ? booking.orderType === "package" ? "Thank you. Your package is active." : "Thank you. Your booking has been received." : "Complete your payment."}</h3>
-    {booking.resumed && <p>We’ve reopened your existing booking so you can finish payment below.</p>}
-    {booking.vehicleRegistration && <p>Vehicle registration: <strong className="vehicle-registration-plate">{booking.vehicleRegistration}</strong></p>}
-    <p>{booking.orderType === "package" ? "Package order" : booking.appointmentCount && booking.appointmentCount > 1 ? `${booking.appointmentCount} appointments reserved` : "Booking reference"}: <strong>{booking.orderType === "package" ? booking.invoiceNumber || booking.invoiceId : booking.bookingCodes?.join(", ") || booking.bookingCode}</strong>{booking.orderType !== "package" && booking.invoiceNumber ? ` · Invoice ${booking.invoiceNumber}` : ""}</p>
-    {booking.orderType === "package" && booking.packageName && <p><strong>{booking.packageName}</strong><br />Your selected first visit will be reserved as soon as payment is confirmed.</p>}
-    {booking.bookingDates && booking.bookingDates.length > 1 && <ol className="simplybook-recurring-dates" aria-label="Reserved recurring appointments">{booking.bookingDates.map((dateTime, index) => { const [date, time = ""] = dateTime.split(" "); return <li key={`${dateTime}-${index}`}><span>{index + 1}</span><strong>{new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" }).format(new Date(`${date}T12:00:00Z`))}</strong><small>{time.slice(0, 5)} · UK time</small></li>; })}</ol>}
-    {resumedDetails && <p><strong>{resumedDetails.serviceName}</strong><br />{resumedDetails.appointmentCount && resumedDetails.appointmentCount > 1 ? `First of ${resumedDetails.appointmentCount} appointments: ` : ""}{new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" }).format(new Date(`${resumedDetails.date}T12:00:00Z`))} at {resumedDetails.time.slice(0, 5)} · UK time</p>}
-    {confirmed ? <p>{booking.orderType === "package" ? booking.firstAppointmentMessage || "Your package credits are available in your customer account." : "We’ll email your appointment status. Keep your booking reference for any questions or changes."}</p> : <>
-      {booking.invoiceAmount !== undefined && <p>Amount due: <strong>{bookingMoney(booking.invoiceAmount, booking.currency)}</strong></p>}
-      {paymentBusy && <p role="status">Checking your payment options…</p>}
-      <div className="simplybook-actions">{paymentMethods.map(system => <button type="button" className="button button--lime" disabled={paymentBusy} onClick={() => startPayment(system)} key={system}>{system.toLowerCase().includes("stripe") ? "Pay securely with Stripe" : `Pay with ${system}`}</button>)}</div>
-      {paymentUrl && <div className="simplybook-checkout"><a className="button button--lime" href={paymentUrl}>Continue to secure checkout ↗</a><p>You’ll return to this website after checkout to see your payment status and booking details.</p></div>}
-      <div className="simplybook-actions"><button type="button" className="button button--ghost" disabled={paymentBusy} onClick={checkPayment}>Check payment status</button>{!paymentMethods.length && <button type="button" className="button button--ghost" disabled={paymentBusy} onClick={loadPaymentMethods}>Reload payment options</button>}{booking.orderType === "package" && <button type="button" className="button button--cancel" disabled={paymentBusy} onClick={cancelPendingPackage}>Cancel package order</button>}</div>
+  if (booking) return <div className="booking-result" id="complete-payment" ref={resultRef} tabIndex={-1} role="region" aria-labelledby="booking-payment-heading">
+    <span className="section-kicker">{booking.checkoutUrl ? "Finish your booking" : "Booking received"}</span>
+    <h3 id="booking-payment-heading">{booking.checkoutUrl ? booking.resumed ? "Complete your payment." : "Taking you to secure checkout…" : "Thank you. Your booking has been received."}</h3>
+    {booking.resumed && <p>{cancelledPayment ? "Your payment wasn’t completed. Your appointment is held for a short time — continue to checkout to confirm it, or start again." : "We’ve kept your booking so you can finish payment below."}</p>}
+    {booking.orderNumber && <p>Order number: <strong>{booking.orderNumber}</strong></p>}
+    <p><strong>{booking.packageName || booking.serviceName}</strong><br />{booking.packageName ? "First visit: " : ""}{ukDate(booking.startAt, { day: "numeric", month: "long", year: "numeric" })} at {ukTime(booking.startAt)} · UK time</p>
+    {booking.checkoutUrl ? <>
+      <p>Amount due: <strong>{bookingMoney(booking.total, currency)}</strong></p>
+      <div className="booking-checkout"><a className="button" href={booking.checkoutUrl}>Continue to secure checkout ↗</a><p>You’ll return to this website after checkout to see your payment status and booking details.</p></div>
+      <div className="booking-actions"><button type="button" className="button button--ghost" onClick={startNewBooking}>Start a new booking</button></div>
       {paymentError && <p className="booking-form-error" role="alert">{paymentError}</p>}
-      <p>{booking.orderType === "package" ? "Your package order has been created. Complete Stripe payment now to activate the package and reserve the first visit. Unpaid reservations are cancelled automatically." : "Your booking has been created. Complete Stripe payment now to confirm it. Unpaid reservations are cancelled automatically."}</p>
-    </>}
+      <p>Your appointment is confirmed once payment is complete. Unpaid bookings are released automatically after 30 minutes.</p>
+    </> : <p>Auto Opulence will email your appointment confirmation. Keep your order number for any questions or changes.</p>}
     <a href="tel:03300536925">Booking help: 0330 053 6925</a>
   </div>;
 
-  return <form className="service-booking-form" onSubmit={prepareBooking} ref={formRef}>
+  return <>
+  {review && liveService && selectedSlot && <BookingReview ref={reviewRef}
+    serviceName={liveService.name} typeLabel={activeType.label} sizeLabel={hasSizeChoices ? sizeLabels[vehicleSize] : ""}
+    registration={review.values.registration.toUpperCase()} pkg={chosenPackage} packagePrice={packagePrice} visitPrice={visitPrice}
+    firstSlot={selectedSlot} extraVisits={review.extraVisits} extras={chosenPackage ? [] : selectedExtras} sizePrice={chosenPackage ? undefined : carePrice(liveService, vehicleSize)}
+    total={price ?? 0} deposit={depositPrice} currency={currency} values={review.values}
+    city={city} postcode={postcode.trim().toUpperCase()} busy={bookingBusy} error={error} uncertain={bookingUncertain}
+    onPay={payNow} onEdit={editBooking} />}
+  <form className="service-booking-form" onSubmit={prepareBooking} ref={formRef} hidden={!!review}>
     <div className="booking-form-main">
-      <div className="booking-account" ref={accountRef} tabIndex={-1}>
-        <div className="booking-account-prompt"><UserRound aria-hidden="true" /><span>{client ? `Signed in as ${client.name}` : selectedNativePackage || bookingTerms.accountRequired ? "Sign in or create an account to book" : "Already have a booking account?"}</span>{client ? <button type="button" disabled={authBusy} onClick={signOut}>Sign out</button> : <button type="button" aria-expanded={signInOpen} aria-controls="booking-sign-in" onClick={() => { setSignInOpen(open => !open); setSignInStatus(""); setSignInError(false); }}>{signInOpen ? "Close" : "Sign in / register"}</button>}</div>
-        {signInOpen && !client && <section className="booking-sign-in" id="booking-sign-in" aria-label="Customer account sign in" onKeyDown={event => {
-          if (event.key !== "Enter" || !(event.target instanceof HTMLInputElement)) return;
-          event.preventDefault(); event.stopPropagation();
-          if (event.target.type === "email") signInPasswordRef.current?.focus({ preventScroll: true });
-          else if (!authBusy) void signIn();
-        }}>
-          <div className="booking-sign-in__heading"><strong>{createAccount ? "Create your booking account" : "Sign in to your booking account"}</strong><span>{selectedNativePackage ? "A customer account is needed so your prepaid package visits can be stored and managed." : bookingTerms.accountRequired ? "Use your Auto Opulence booking account to manage your appointment." : "Sign in, create an account or continue as a guest below."}</span></div>
-          <div className="booking-sign-in__fields">
-            {createAccount && <><label className="booking-field"><span>Full name</span><input value={accountName} onChange={event => setAccountName(event.target.value)} autoComplete="name" maxLength={200} /></label><label className="booking-field"><span>Phone number</span><input type="tel" value={accountPhone} onChange={event => setAccountPhone(event.target.value)} autoComplete="tel" maxLength={30} /></label></>}
-            <label className="booking-field"><span>Email address</span><input type="email" value={signInEmail} onChange={event => setSignInEmail(event.target.value)} autoComplete="username" /></label>
-            <label className="booking-field"><span>Password</span><span className="booking-password-input"><input ref={signInPasswordRef} type={showSignInPassword ? "text" : "password"} value={signInPassword} onChange={event => setSignInPassword(event.target.value)} autoComplete={createAccount ? "new-password" : "current-password"} maxLength={1024} /><button type="button" aria-label={showSignInPassword ? "Hide password" : "Show password"} aria-pressed={showSignInPassword} onClick={() => setShowSignInPassword(value => !value)}>{showSignInPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}</button></span></label>
+      <div className="booking-account">
+        <div className="booking-account-prompt"><UserRound aria-hidden="true" /><span>{client ? `Signed in as ${[client.first_name, client.last_name].filter(Boolean).join(" ") || client.email}` : chosenPackage ? "Packages are linked to your email — sign in with a code" : "Book a single visit as a guest, or sign in with a code"}</span>{client ? <button type="button" disabled={authBusy} onClick={signOut}>Sign out</button> : <button type="button" aria-expanded={signInOpen} aria-controls="booking-sign-in" onClick={() => { setSignInOpen(open => !open); setSignInStatus(""); }}>{signInOpen ? "Close" : "Sign in"}</button>}</div>
+        {signInOpen && !client && <section className="booking-sign-in" id="booking-sign-in" aria-label="Customer sign in">
+          <div className="booking-sign-in__heading"><strong>{codeSentTo ? "Enter your code" : chosenPackage ? "Packages are linked to your account" : "Sign in"}</strong><span>{codeSentTo ? `We sent a 6-digit code to ${codeSentTo}.` : "Enter your email and we'll send you a 6-digit code — no password needed. New customers get an account automatically."}</span></div>
+          {!codeSentTo ? <div className="booking-sign-in__fields">
+            <label className="booking-field"><span>Email address</span><input type="email" value={signInEmail} onChange={event => setSignInEmail(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); void sendCode(); } }} autoComplete="email" maxLength={254} /></label>
+          </div> : <div className="booking-sign-in__fields">
+            <label className="booking-field"><span>6-digit code</span><input value={signInCode} onChange={event => setSignInCode(event.target.value.replace(/\D/g, "").slice(0, 6))} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); void verifyCode(); } }} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6} className="booking-code-input" autoFocus /></label>
+          </div>}
+          <div className="booking-sign-in__actions">
+            {!codeSentTo ? <button type="button" className="button" disabled={authBusy} onClick={sendCode}>{authBusy ? "Sending…" : "Email me a code"}</button>
+              : <><button type="button" className="button" disabled={authBusy || signInCode.length !== 6} onClick={verifyCode}>{authBusy ? "Checking…" : "Continue"}</button>
+                <button type="button" disabled={authBusy} onClick={sendCode}>Send a new code</button>
+                <button type="button" disabled={authBusy} onClick={() => { setCodeSentTo(""); setSignInCode(""); setSignInStatus(""); }}>Use a different email</button></>}
           </div>
-          {createAccount && <>{bookingTerms.policies.map(policy => <details className="booking-service-note" key={policy.title}><summary>{policy.title}</summary><p style={{ whiteSpace: "pre-wrap" }}>{policy.content}</p></details>)}<label className="booking-consent"><input type="checkbox" checked={accountTermsAccepted} onChange={event => setAccountTermsAccepted(event.target.checked)} /><span>I agree to any terms shown above and to my details being used to create and manage my booking account.{bookingTerms.simplybook && <> I accept the <a href="https://simplybook.me/en/terms-and-conditions" target="_blank" rel="noopener noreferrer">booking-platform terms</a>.</>}</span></label></>}
-          <div className="booking-sign-in__actions"><button type="button" className="button button--lime" disabled={authBusy || catalogueBusy || !!catalogueError} onClick={signIn}>{authBusy ? "Please wait…" : createAccount ? "Create account" : "Sign in"}</button><button type="button" disabled={authBusy} onClick={() => { setCreateAccount(value => !value); setSignInStatus(""); setSignInError(false); setSignInPassword(""); }}>{createAccount ? "I already have an account" : "Create an account"}</button>{!createAccount && <button type="button" className="booking-forgot-password" disabled={authBusy} onClick={remindPassword}>Forgot password?</button>}</div>
+          <p className="booking-sign-in__note">By continuing you agree to your details being used to manage your bookings, as described in the <a href="/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>.</p>
         </section>}
-        {signInStatus && <p className={`booking-sign-in__status${signInError ? " is-error" : ""}`} role={signInError ? "alert" : "status"}>{signInStatus}</p>}
-        {client && <button type="button" className="button button--lime booking-account-continue" onClick={() => focusBookingSection(choicesRef.current)}>Continue to Booking</button>}
+        {signInStatus && <p className="booking-sign-in__status" role="status">{signInStatus}</p>}
+        {client && <button type="button" className="button booking-account-continue" onClick={() => focusBookingSection(choicesRef.current)}>Continue to Booking</button>}
       </div>
-      {sessionBusy && <p role="status">Checking for an existing booking…</p>}
-      {previousPaidBooking && <p className="booking-service-note">Your previous booking is paid. You can book another appointment below or <a href={bookingPaymentCompletePath}>view your payment confirmation</a>.</p>}
+      {renewId && chosenPackage && <div className="booking-package-disclaimer" role="note"><strong>Renewing your {chosenPackage.name}</strong><p>Choose the first visit of your new package below — to keep your monthly schedule, book it in the month after your current package's last visit. {PACKAGE_DISCLAIMER}</p></div>}
+      {!renewId && renewals.length > 0 && renewals.map(r => <div className="booking-package-disclaimer booking-renewal-offer" role="note" key={r.id}><strong>Your {r.name} is fully booked</strong><p>Renew now{r.perVisit ? ` at ${r.perVisit} per visit` : ""}{r.nextMonth ? ` and your next visits start in ${r.nextMonth}` : ""}.</p><a className="button" href={r.url}>Renew my package</a></div>)}
+      {sessionBusy && <p role="status">Checking your account…</p>}
       {catalogueBusy && <p role="status">Loading live booking options…</p>}
       {catalogueError && <div className="booking-form-error" role="alert"><p>{catalogueError}</p><button type="button" className="button button--ghost" onClick={() => setCatalogueRevision(value => value + 1)}>Try again</button></div>}
       <fieldset id="booking-choices" ref={choicesRef} tabIndex={-1} disabled={bookingBusy || bookingUncertain}>
-        <legend><span>01</span> Select category</legend>
+        <legend><span>01</span> Select type</legend>
         <div className="booking-type-options">{bookingTypes.map(type => <label className={typeId === type.id ? "is-selected" : ""} key={type.id}><input type="radio" name="bookingType" value={type.id} checked={typeId === type.id} onChange={() => changeType(type.id)} /><strong>{type.label}</strong></label>)}</div>
       </fieldset>
-      {typeId === "bay" && <fieldset disabled={bookingBusy || bookingUncertain}><legend>Trade or general public?</legend><div className="booking-audience-options">{(["public", "trade"] as CustomerKind[]).map(kind => <label className={customerKind === kind ? "is-selected" : ""} key={kind}><input type="radio" name="customerKind" checked={customerKind === kind} onChange={() => { setCustomerKind(kind); setServiceId(""); setPackageId(""); }} /><strong>{kind === "trade" ? "Trade" : "General public"}</strong></label>)}</div></fieldset>}
+      {typeId === "bay" && <fieldset disabled={bookingBusy || bookingUncertain}><legend>Trade or general public?</legend><div className="booking-audience-options">{(["public", "trade"] as CustomerKind[]).map(kind => <label className={customerKind === kind ? "is-selected" : ""} key={kind}><input type="radio" name="customerKind" checked={customerKind === kind} onChange={() => { setCustomerKind(kind); setServiceId(""); }} /><strong>{kind === "trade" ? "Trade" : "General public"}</strong></label>)}</div></fieldset>}
       <fieldset disabled={bookingBusy || bookingUncertain}>
         <legend><span>02</span> Select service</legend>
-        <label className="booking-field"><span>Service type</span><select value={serviceId} onChange={event => { setServiceId(event.target.value); setPackageId(""); setError(""); }} required><option value="">Choose a service</option>{services.map(service => <option value={service.id} key={service.id}>{service.name}</option>)}</select></label>
-        {selectedService?.note && <p className="booking-service-note">{selectedService.note}</p>}
+        <label className="booking-field"><span>Service type</span><select value={serviceId} onChange={event => { setServiceId(event.target.value); setError(""); }} required><option value="">Choose a service</option>{services.map(service => <option value={service.id} key={service.id}>{service.name}</option>)}</select></label>
+        {selectedService?.description && <p className="booking-service-note">{selectedService.description.replace(/\s*View inclusions and size-based prices from Auto Opulence in Norwich, then book online\.?$/, "")}</p>}
         {selectedService && !catalogueBusy && !catalogueError && !liveService && <p className="booking-form-error">Online booking is not available for this service. Please <a href="tel:03300536925">call 0330 053 6925</a>.</p>}
-        {availabilityBusy && <p role="status">Loading live prices and availability…</p>}
+        {availabilityBusy && <p role="status">Loading live availability…</p>}
         {availabilityError && <div className="booking-form-error" role="alert"><p>{availabilityError}</p><button type="button" className="button button--ghost" onClick={() => setAvailabilityRevision(value => value + 1)}>Reload availability</button></div>}
+        {extras.length > 0 && !chosenPackage && <div className="booking-addons"><span>Optional extras</span><div>{extras.map(extra => <label key={extra.addon_id} title={extra.description || undefined}><input type="checkbox" checked={extraIds.includes(extra.addon_id)} onChange={() => toggleExtra(extra.addon_id)} /><i aria-hidden="true" /><strong>{extra.name}{extra.price_adjustment > 0 ? ` — +${bookingMoney(extra.price_adjustment, currency)}` : ""}</strong></label>)}</div></div>}
       </fieldset>
-      {selectedService && packageOptions.length > 0 && <fieldset disabled={bookingBusy || bookingUncertain}>
-        <legend><span>03</span> Choose single service or package</legend>
-        <div className="booking-package-options">
-          <label className={!packageId ? "is-selected" : ""}><input type="radio" name="bookingPackage" value="base" checked={!packageId} onChange={() => { setPackageId(""); setError(""); }} /><span>Single option</span><strong>Single service</strong><small>{selectedService.name} as one appointment at the standard vehicle-size price.</small></label>
-          {packageOptions.map(item => { const variants = livePackages.filter(value => isLivePackageForOption(value, item, serviceId)); const fromPrice = variants.length ? Math.min(...variants.map(value => Number(value.price))) : undefined; return <label className={packageId === item.id ? "is-selected" : ""} key={item.id}><input type="radio" name="bookingPackage" value={item.id} checked={packageId === item.id} onChange={() => { setPackageId(item.id); setError(""); }} /><span>{item.term}</span><strong>{item.name}</strong><small>{fromPrice !== undefined ? `From ${bookingMoney(fromPrice, variants[0]?.currency)} package total · ${item.appointmentCount} prepaid visits.` : ""}</small></label>; })}
-        </div>
-      </fieldset>}
-      {hasSizeChoices && <fieldset disabled={bookingBusy || bookingUncertain || availabilityBusy}>
-        <legend><span>{String(optionStepNumber).padStart(2, "0")}</span> Select vehicle size</legend>
+      {hasSizeChoices && <fieldset disabled={bookingBusy || bookingUncertain}>
+        <legend><span>03</span> Select vehicle size</legend>
         <div className="booking-size-options">{(Object.keys(sizeLabels) as VehicleSize[]).map(size => {
-          const product = choices.find(item => productVehicleSize(item.product.name) === size);
-          const matchingPackage = selectedPackage && product ? livePackages.find(item => isLivePackageForOption(item, selectedPackage, serviceId) && item.paid_attributes.some(attribute => Number(attribute.product_id) === product.product.id && Number(attribute.qty) >= selectedPackage.appointmentCount)) : undefined;
-          const includedInPackage = !!selectedPackage && !!matchingPackage;
-          return <label className={vehicleSize === size ? "is-selected" : ""} key={size}><input type="radio" name="vehicleSize" value={size} checked={vehicleSize === size} disabled={!product || (!!selectedPackage && !matchingPackage)} onChange={() => { setVehicleSize(size); setSizeGuideOpen(true); }} /><strong>{sizeLabels[size]}</strong><small>{includedInPackage ? `${bookingMoney(Number(matchingPackage.price), matchingPackage.currency)} package total` : product && liveService ? bookingMoney(liveService.price + product.product.price, currency) : "Not available online"}</small></label>;
+          const option = careSizeOption(liveService, size);
+          const sizePrice = option ? carePrice(liveService, size) : undefined;
+          return <label className={vehicleSize === size ? "is-selected" : ""} key={size}><input type="radio" name="vehicleSize" value={size} checked={vehicleSize === size} disabled={!option} onChange={() => { setVehicleSize(size); setSizeGuideOpen(true); }} /><strong>{sizeLabels[size]}</strong><small>{sizePrice !== undefined ? bookingMoney(sizePrice, currency) : "Not available online"}</small></label>;
         })}</div>
         <div className={`vehicle-size-guide ${sizeGuideOpen ? "is-open" : ""}`}>
           <button className="vehicle-size-guide__toggle" type="button" aria-expanded={sizeGuideOpen} aria-controls="vehicle-size-guide-panel" onClick={() => setSizeGuideOpen((open) => !open)}>
@@ -462,48 +436,229 @@ export function ServiceBookingForm({ initialType, initialServiceId = "" }: { ini
           </button>
           {sizeGuideOpen && <div className="vehicle-size-guide__panel" id="vehicle-size-guide-panel">
             <div className="vehicle-size-guide__grid">{(Object.keys(vehicleSizeExamples) as VehicleSize[]).map((size, index) => { const item = vehicleSizeExamples[size]; return <article className={vehicleSize === size ? `vehicle-size-guide__card vehicle-size-guide__card--${size} is-selected` : `vehicle-size-guide__card vehicle-size-guide__card--${size}`} key={size}>
-              <button type="button" aria-pressed={vehicleSize === size} onClick={() => setVehicleSize(size)}><span className="vehicle-size-guide__icon"><CarFront aria-hidden="true" /></span><span className="vehicle-size-guide__number">{String(index + 1).padStart(2, "0")}</span><strong>{item.title}</strong></button><small>{item.description}</small><ul>{item.examples.map((example) => <li key={example}>{example}</li>)}</ul>
+              <button type="button" aria-pressed={vehicleSize === size} disabled={!careSizeOption(liveService, size)} onClick={() => setVehicleSize(size)}><span className="vehicle-size-guide__icon"><CarFront aria-hidden="true" /></span><span className="vehicle-size-guide__number">{String(index + 1).padStart(2, "0")}</span><strong>{item.title}</strong></button><small>{item.description}</small><ul>{item.examples.map((example) => <li key={example}>{example}</li>)}</ul>
             </article>; })}</div>
             <p><strong>Not sure?</strong> Choose the closest example or call <a href="tel:03300536925">0330 053 6925</a>. The team will confirm the vehicle category before your booking is finalised.</p>
           </div>}
         </div>
       </fieldset>}
-      {!hasSizeChoices && choices.length > 0 && <fieldset disabled={bookingBusy || bookingUncertain}><legend><span>{String(optionStepNumber).padStart(2, "0")}</span> Select service option</legend><label className="booking-field"><span>Option</span><select value={productId} onChange={event => setProductId(event.target.value)} required><option value="">Choose an option</option>{choices.map(item => <option key={item.product.id} value={item.product.id}>{item.product.name} — {bookingMoney((liveService?.price || 0) + item.product.price, currency)}</option>)}</select></label></fieldset>}
-      {depositPrice > 0 && <p className="booking-service-note">A {bookingMoney(depositPrice, currency)} damage deposit is included. It is refundable subject to the hire conditions.</p>}
+      {liveService && packages.length > 0 && <fieldset disabled={bookingBusy || bookingUncertain}>
+        <legend><span>{hasSizeChoices ? "04" : "03"}</span> Single visit or package</legend>
+        <div className="booking-plan-options">
+          <label className={plan === "single" ? "is-selected" : ""}>
+            <input type="radio" name="plan" checked={plan === "single"} onChange={() => setPlan("single")} />
+            <span className="booking-plan__name">Single visit</span>
+            <span className="booking-plan__price">{visitPrice !== undefined ? bookingMoney(visitPrice, currency) : "—"}</span>
+            <small>Pay for one visit. Book as a guest or with your account.</small>
+          </label>
+          {packages.map(pkg => {
+            const option = carePackagePrice(pkg, vehicleSize, hasSizeChoices);
+            const perVisit = option?.per_visit ?? (option ? option.amount / pkg.total_visits : undefined);
+            const saving = option && visitPrice !== undefined ? Math.max(0, visitPrice * pkg.total_visits - option.amount) : 0;
+            return <label className={plan === pkg.id ? "is-selected" : ""} key={pkg.id}>
+              <input type="radio" name="plan" checked={plan === pkg.id} disabled={!option} onChange={() => setPlan(pkg.id)} />
+              {saving > 0 && <span className="booking-plan__badge">Save {bookingMoney(saving, currency)}</span>}
+              <span className="booking-plan__name">{pkg.months}-month package</span>
+              <span className="booking-plan__price">{perVisit !== undefined ? bookingMoney(perVisit, currency) : "—"}<em> per visit</em></span>
+              {visitPrice !== undefined && perVisit !== undefined && perVisit < visitPrice && <span className="booking-plan__was">Usually {bookingMoney(visitPrice, currency)} per visit</span>}
+              <small>{pkg.total_visits} visits, one a month · {option ? `${bookingMoney(option.amount, currency)} paid today` : "Not available for this size"}</small>
+            </label>;
+          })}
+        </div>
+        {chosenPackage && <div className="booking-package-disclaimer" role="note"><strong>{PACKAGE_DISCLAIMER}</strong><p>Pay for all {chosenPackage.total_visits} visits today, one visit each month. Book every visit now, or just the first and book the rest later in your customer account. Packages are linked to your customer account.</p></div>}
+      </fieldset>}
+      {depositPrice > 0 && <p className="booking-service-note">A {bookingMoney(depositPrice, currency)} deposit is taken when you book. The remaining balance is payable on the day.</p>}
       {requiresPriceConfirmation && <p className="booking-form-error">The price for this service needs confirming. Please <a href="tel:03300536925">call 0330 053 6925</a> to book.</p>}
       <fieldset disabled={bookingBusy || bookingUncertain || !liveService || availabilityBusy || requiresPriceConfirmation}>
-        <legend><span>{String(dateStepNumber).padStart(2, "0")}</span> {selectedNativePackage ? "First package visit" : selectedPackage ? "First recurring appointment" : "Date and time"}</legend>
-        {selectedNativePackage && <div className="booking-appointment-count" role="status"><span>{appointmentTarget}</span><div><strong>{appointmentTarget} prepaid visits included</strong><small>Choose the first visit now. It will be reserved after payment, and the remaining visits can be booked from your customer account.</small></div></div>}
-        {selectedPackage && !selectedNativePackage && <div className="booking-appointment-count" role="status"><span>{appointmentTarget}</span><div><strong>All {appointmentTarget} appointments are booked together</strong><small>Choose the first appointment. Our booking system will reserve the complete recurring series at 30-day intervals and move weekends or unavailable dates to the next available weekday.</small></div></div>}
+        <legend><span>{String(4 + (packages.length ? 1 : 0) - (hasSizeChoices ? 0 : 1)).padStart(2, "0")}</span> {chosenPackage ? "First visit — date and time" : "Date and time"}</legend>
         <div className="booking-date-time">
-          <div className="booking-calendar"><span className="booking-control-label">{selectedPackage ? "Select first appointment" : "Select date"}</span><Calendar mode="single" month={calendarMonth} onMonthChange={setCalendarMonth} selected={selectedDate} onSelect={date => { setSelectedDate(date); setSelectedTime(""); setError(""); }} disabled={isBookingDateDisabled} showOutsideDays={false} /></div>
-          <div className="booking-time-panel"><span className="booking-control-label">Available times · Monday to Friday · UK time</span>{slotsBusy ? <p role="status">Checking available times…</p> : selectedDate ? displayedSlots.length ? <div className="booking-time-options">{displayedSlots.map(time => <button type="button" className={selectedTime === time ? "is-selected" : ""} aria-pressed={selectedTime === time} onClick={() => { setSelectedTime(time); setError(""); }} key={time}>{time.slice(0, 5)}</button>)}</div> : <p>No times are available on this date. Please choose another day.</p> : <div className="booking-time-empty"><CalendarDays aria-hidden="true" /><strong>{liveService ? "Choose an available date" : "Choose a service first"}</strong><p>{!availabilityBusy && liveService && !dates.length ? "No appointments are currently available online. Please call us." : selectedNativePackage ? "Choose the first prepaid visit. The remaining visits stay in your customer account until you are ready to book them." : selectedPackage ? `Choose the first appointment. Our booking system will reserve all ${appointmentTarget} recurring appointments together.` : "Dates and times come directly from our Monday-to-Friday booking calendar."}</p></div>}</div>
+          <div className="booking-calendar"><span className="booking-control-label">Select date</span><Calendar mode="single" selected={selectedDate} onSelect={date => { setSelectedDate(date); setSelectedSlot(undefined); setError(""); }} disabled={date => !dates.includes(bookingDate(date))} showOutsideDays={false} /></div>
+          <div className="booking-time-panel"><span className="booking-control-label">Available times · UK time</span>{slotsBusy ? <p role="status">Checking available times…</p> : selectedDate ? slots.length ? <div className="booking-time-options">{slots.map(slot => <button type="button" className={selectedSlot?.start_at === slot.start_at ? "is-selected" : ""} aria-pressed={selectedSlot?.start_at === slot.start_at} onClick={() => { setSelectedSlot(slot); setError(""); }} key={slot.start_at}>{ukTime(slot.start_at)}</button>)}</div> : <p>No times are available on this date. Please choose another day.</p> : <div className="booking-time-empty"><CalendarDays aria-hidden="true" /><strong>{liveService ? "Choose an available date" : "Choose a service first"}</strong><p>{!availabilityBusy && liveService && !dates.length ? "No appointments are currently available online. Please call us." : "Dates and times come directly from our booking calendar."}</p></div>}</div>
         </div>
-        {selectedDate && <div className="booking-selected-slot"><p><strong>{formattedDate}</strong>{selectedTime ? ` at ${selectedTime.slice(0, 5)}` : " — now choose a time"}</p></div>}
+        {selectedDate && <p className="booking-selected-slot"><strong>{formattedDate}</strong>{selectedSlot ? ` at ${ukTime(selectedSlot.start_at)}` : " — now choose a time"}</p>}
+        {chosenPackage && selectedSlot && <div className="booking-package-visits">
+          <div className="booking-plan-options booking-plan-options--compact" role="radiogroup" aria-label="When to book your other visits">
+            <label className={`booking-plan-option${bookAllVisits ? " is-selected" : ""}`}><input type="radio" name="visitPlan" checked={bookAllVisits} onChange={() => setBookAllVisits(true)} /><strong>Book all {chosenPackage.total_visits} visits now</strong><small>Choose a date and time in each month</small></label>
+            <label className={`booking-plan-option${!bookAllVisits ? " is-selected" : ""}`}><input type="radio" name="visitPlan" checked={!bookAllVisits} onChange={() => setBookAllVisits(false)} /><strong>Book the first visit only</strong><small>Book the rest later in your account</small></label>
+          </div>
+          {bookAllVisits && liveService ? (() => {
+            const months = packageMonthRanges(selectedSlot.start_at, chosenPackage.total_visits);
+            const active = Math.min(Math.max(1, activeVisit), months.length - 1);
+            const choose = (slot?: CareSlot) => {
+              const next = [...laterVisits]; next[active - 1] = slot; setLaterVisits(next); setError("");
+              if (slot) { const open = months.findIndex((_, i) => i > 0 && i !== active && !next[i - 1]); if (open > 0) setActiveVisit(open); }
+            };
+            return <div className="booking-visit-planner">
+              <div className="booking-visit-tabs" role="tablist" aria-label="Package visits">
+                {months.map((month, index) => {
+                  const slot = index === 0 ? selectedSlot : laterVisits[index - 1];
+                  return <button type="button" role="tab" key={month.from} aria-selected={index === active} disabled={index === 0}
+                    className={`booking-visit-tab${index === active ? " is-active" : ""}${slot ? " is-done" : ""}`} onClick={() => setActiveVisit(index)}>
+                    <small>Visit {index + 1} · {month.label}</small>
+                    <strong>{slot ? <>{new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/London" }).format(new Date(slot.start_at))} · {ukTime(slot.start_at)}</> : "Choose a time"}</strong>
+                    {slot && <CheckCircle2 aria-hidden="true" />}
+                  </button>;
+                })}
+              </div>
+              <PackageVisitPicker key={months[active].from} serviceId={liveService.id} visitNumber={active + 1} month={months[active]} value={laterVisits[active - 1]} onChange={choose} />
+            </div>;
+          })() : <ol className="booking-package-schedule">{packageMonthRanges(selectedSlot.start_at, chosenPackage.total_visits).map((month, index) => <li key={month.from}>
+            <span>Visit {index + 1}</span>
+            {index === 0 ? <strong>{ukDate(selectedSlot.start_at)}, {ukTime(selectedSlot.start_at)}</strong> : <><strong>{month.label}</strong><small>book in your account</small></>}
+          </li>)}</ol>}
+          {!bookAllVisits && <p className="booking-service-note">After payment, book each remaining visit in its month from <a href="/account?section=packages">your account</a> — sign in with your email and we'll send you a code. We'll email a confirmation for each one.</p>}
+        </div>}
       </fieldset>
       <fieldset disabled={bookingBusy || bookingUncertain}>
-        <legend><span>{String(detailsStepNumber).padStart(2, "0")}</span> Your details</legend>
+        <legend><span>{String(5 + (packages.length ? 1 : 0) - (hasSizeChoices ? 0 : 1)).padStart(2, "0")}</span> Your details</legend>
         <div className="booking-form-grid">
-          <label className="booking-field booking-field--registration"><span>Vehicle registration</span><input name="vehicleRegistration" autoComplete="off" autoCapitalize="characters" spellCheck={false} inputMode="text" minLength={2} maxLength={12} placeholder="AB12 CDE" required /></label>
           <label className="booking-field"><span>First name</span><input name="firstName" autoComplete="given-name" maxLength={100} required /></label>
           <label className="booking-field"><span>Last name</span><input name="lastName" autoComplete="family-name" maxLength={100} required /></label>
           <label className="booking-field"><span>Email address</span><input name="email" type="email" autoComplete="email" maxLength={254} required /></label>
           <label className="booking-field"><span>Mobile number</span><input name="mobile" type="tel" autoComplete="tel" maxLength={30} required /></label>
+          {typeId !== "bay" && <label className="booking-field"><span>Vehicle registration</span><input name="registration" autoComplete="off" maxLength={12} style={{ textTransform: "uppercase" }} /></label>}
         </div>
         <BookingAddressFields postcode={postcode} city={city} onPostcodeChange={setPostcode} onCityChange={setCity} />
-        {bookingTerms.policies.map(policy => <details className="booking-service-note" key={policy.title}><summary>{policy.title}</summary><p style={{ whiteSpace: "pre-wrap" }}>{policy.content}</p></details>)}
-        <label className="booking-consent"><input type="checkbox" name="acceptedTerms" required /><span>I agree to any booking terms shown above and to my details being shared with our booking provider to process this booking.{bookingTerms.simplybook && <> I also accept the <a href="https://simplybook.me/en/terms-and-conditions" target="_blank" rel="noopener noreferrer">booking-platform terms</a>.</>}</span></label>
+        <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1 }} />
+        {chosenPackage && <label className="booking-consent"><input type="checkbox" name="packageTerms" required /><span>I understand that {PACKAGE_DISCLAIMER.charAt(0).toLowerCase() + PACKAGE_DISCLAIMER.slice(1)} All {chosenPackage.total_visits} visits are paid in advance today.</span></label>}
+        <label className="booking-consent"><input type="checkbox" name="acceptedTerms" required /><span>I agree to the booking terms and to my details being used by Auto Opulence to manage this booking, as described in the <a href="/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>.</span></label>
       </fieldset>
+      {error && <p className="booking-form-error" ref={errorRef}>{error}</p>}
+      {bookingUncertain && <p className="booking-form-error">Please call us before trying again. We need to check whether the booking was received.</p>}
     </div>
     <aside className="booking-form-summary">
-      <span className="section-kicker">Your booking</span><h3 className={selectedPackage ? "booking-summary-package-title" : undefined}><span>{selectedPackageName?.[0] || selectedService?.name || "Select a service"}</span>{selectedPackageName?.[1] && <small>— {selectedPackageName[1]}</small>}</h3>
-      <dl className="booking-price-summary"><div><dt>Category</dt><dd>{activeType.label}</dd></div>{typeId === "bay" && <div><dt>Customer</dt><dd>{customerKind === "trade" ? "Trade" : "General public"}</dd></div>}{selectedService && <div><dt>Option</dt><dd>{selectedPackage ? selectedPackage.term : "Single service"}</dd></div>}{selectedNativePackage && <div><dt>Booking now</dt><dd>First of {appointmentTarget} visits</dd></div>}{selectedPackage && !selectedNativePackage && <div><dt>Booking now</dt><dd>All {appointmentTarget} appointments</dd></div>}{hasSizeChoices && <div><dt>Vehicle size</dt><dd>{sizeLabels[vehicleSize]}</dd></div>}{selectedPackage && displayedPricePerAppointment !== undefined && <div><dt>Average per visit</dt><dd>{bookingMoney(displayedPricePerAppointment, selectedNativePackage?.currency || currency)}</dd></div>}{depositPrice > 0 && !selectedNativePackage && <div><dt>Included damage deposit</dt><dd>{bookingMoney(depositPrice, currency)}</dd></div>}<div className="booking-price-row"><dt>{selectedNativePackage ? "Package total" : "Booking total"}</dt><dd>{price === undefined || needsProduct ? "—" : requiresPriceConfirmation ? "Please call" : bookingMoney(price, selectedNativePackage?.currency || currency)}</dd></div></dl>
-      <button className="button button--lime" type="submit" disabled={bookingBusy || bookingUncertain || sessionBusy || catalogueBusy || !liveService || availabilityBusy || slotsBusy || !!availabilityError || needsProduct || requiresPriceConfirmation || !selectedTime}>{bookingBusy ? selectedNativePackage ? "Creating package order…" : selectedPackage ? `Booking all ${appointmentTarget} appointments…` : "Creating booking…" : selectedNativePackage ? "Buy package & book first visit" : selectedPackage ? `Book all ${appointmentTarget} appointments` : "Continue to booking"}</button>
-      {error && <p className="booking-form-error booking-summary-error" role="alert">{error}</p>}
-      {bookingUncertain && <p className="booking-form-error booking-summary-error" role="alert">Please call us before trying again. We need to check whether the booking was received.</p>}
-      <ul><li><CarFront aria-hidden="true" /><span><strong>Norwich facility</strong>Unit 7 Consensus House, St Faiths Road, NR6 7BW</span></li><li><CalendarDays aria-hidden="true" /><span><strong>Live availability</strong>Select an available appointment from our live booking calendar.</span></li><li><MapPin aria-hidden="true" /><span><strong>Your details</strong>Sign in to your booking account or continue as a guest.</span></li><li><CheckCircle2 aria-hidden="true" /><span><strong>Secure checkout</strong>Payment options appear after your booking has been created.</span></li></ul>
+      <span className="section-kicker">{chosenPackage ? "Your package" : "Your booking"}</span><h3>{selectedService?.name || "Select a service"}</h3>
+      <dl className="booking-price-summary"><div><dt>Type</dt><dd>{activeType.label}</dd></div>{typeId === "bay" && <div><dt>Customer</dt><dd>{customerKind === "trade" ? "Trade" : "General public"}</dd></div>}{hasSizeChoices && <div><dt>Vehicle size</dt><dd>{sizeLabels[vehicleSize]}</dd></div>}{!chosenPackage && selectedExtras.map(extra => <div key={extra.addon_id}><dt>{extra.name}</dt><dd>{bookingMoney(extra.price_adjustment, currency)}</dd></div>)}{chosenPackage && packagePrice && <><div><dt>Package</dt><dd>{chosenPackage.months} months · {chosenPackage.total_visits} visits</dd></div><div><dt>Per visit</dt><dd>{bookingMoney(packagePrice.per_visit ?? packagePrice.amount / chosenPackage.total_visits, currency)}{visitPrice !== undefined && <s style={{ marginLeft: 8, opacity: .6 }}>{bookingMoney(visitPrice, currency)}</s>}</dd></div></>}{depositPrice > 0 && <div><dt>Deposit due now</dt><dd>{bookingMoney(depositPrice, currency)}</dd></div>}<div className="booking-price-row"><dt>{chosenPackage ? "Paid today" : "Booking total"}</dt><dd>{!liveService || needsSize ? "—" : requiresPriceConfirmation || price === undefined ? "Please call" : bookingMoney(price, currency)}</dd></div></dl>
+            {chosenPackage && <p className="booking-package-disclaimer booking-package-disclaimer--summary"><strong>{PACKAGE_DISCLAIMER}</strong></p>}
+      <ul><li><CarFront aria-hidden="true" /><span><strong>Norwich facility</strong>Unit 7 Consensus House, St Faiths Road, NR6 7BW</span></li><li><CalendarDays aria-hidden="true" /><span><strong>Live availability</strong>Select an available appointment from our booking calendar.</span></li><li><MapPin aria-hidden="true" /><span><strong>{chosenPackage ? "Your account" : "Guest or account"}</strong>{chosenPackage ? "Packages are linked to your account so our team can book your remaining visits." : "Book as a guest, or sign in to keep your bookings together."}</span></li><li><CheckCircle2 aria-hidden="true" /><span><strong>Secure checkout</strong>Pay securely by card to confirm your appointment.</span></li></ul>
+      <button className="button" type="submit" disabled={bookingBusy || bookingUncertain || sessionBusy || catalogueBusy || !liveService || availabilityBusy || slotsBusy || !!availabilityError || needsSize || requiresPriceConfirmation || !selectedSlot}>{chosenPackage && !client ? "Sign in to continue" : "Review booking"}</button>
+      {error && <p className="booking-form-error booking-form-error--summary" role="alert">{error}</p>}
       <a href="tel:03300536925">Prefer to call? 0330 053 6925</a>
-      <p>Review your service, date and details before continuing. If payment is required, complete checkout to confirm your booking.</p>
+      <p>Review your service, date and details before continuing. Your appointment is confirmed once checkout is complete.</p>
     </aside>
-  </form>;
+  </form>
+  </>;
 }
+
+/** Calendar and times for one later package visit, locked to the month it must fall in. */
+export function PackageVisitPicker({ serviceId, visitNumber, month, value, onChange }: { serviceId: string; visitNumber: number; month: { from: string; to: string; days: number; label: string }; value?: CareSlot; onChange: (slot?: CareSlot) => void }) {
+  const [dates, setDates] = useState<string[]>([]);
+  const [date, setDate] = useState<Date | undefined>(value ? new Date(value.start_at) : undefined);
+  const [times, setTimes] = useState<CareSlot[]>([]);
+  const [busy, setBusy] = useState(true);
+  const [timesBusy, setTimesBusy] = useState(false);
+  const [problem, setProblem] = useState("");
+  const key = date ? bookingDate(date) : "";
+  const monthStart = new Date(`${month.from}T12:00:00`);
+  useEffect(() => {
+    const controller = new AbortController();
+    setBusy(true); setProblem("");
+    loadAvailableDates(serviceId, controller.signal, { from: month.from, days: month.days })
+      .then(list => { if (!controller.signal.aborted) setDates(list.filter(d => d >= month.from && d <= month.to)); })
+      .catch(error => { if (!controller.signal.aborted) setProblem(error instanceof Error ? error.message : "Availability could not be loaded."); })
+      .finally(() => { if (!controller.signal.aborted) setBusy(false); });
+    return () => controller.abort();
+  }, [serviceId, month.from]);
+  useEffect(() => {
+    const controller = new AbortController();
+    setTimes([]);
+    if (!key) return () => controller.abort();
+    setTimesBusy(true);
+    loadAvailableSlots(serviceId, key, controller.signal)
+      .then(list => { if (!controller.signal.aborted) setTimes(list); })
+      .catch(error => { if (!controller.signal.aborted) setProblem(error instanceof Error ? error.message : "Times could not be loaded."); })
+      .finally(() => { if (!controller.signal.aborted) setTimesBusy(false); });
+    return () => controller.abort();
+  }, [serviceId, key]);
+  return <div className="booking-visit-picker">
+    <p className="booking-visit-picker__title"><strong>Visit {visitNumber}</strong> — choose a date in {month.label}</p>
+    <div className="booking-date-time">
+      <div className="booking-calendar"><span className="booking-control-label">Select date · {month.label}</span>
+        {busy ? <p role="status">Checking availability…</p> : <Calendar mode="single" selected={date} defaultMonth={monthStart} startMonth={monthStart} endMonth={monthStart} onSelect={next => { setDate(next); onChange(undefined); }} disabled={d => !dates.includes(bookingDate(d))} showOutsideDays={false} />}
+      </div>
+      <div className="booking-time-panel"><span className="booking-control-label">Available times · UK time</span>
+        {timesBusy ? <p role="status">Checking available times…</p>
+          : date ? times.length ? <div className="booking-time-options">{times.map(slot => <button type="button" className={value?.start_at === slot.start_at ? "is-selected" : ""} aria-pressed={value?.start_at === slot.start_at} onClick={() => onChange(slot)} key={slot.start_at}>{ukTime(slot.start_at)}</button>)}</div> : <p>No times are available on this date. Please choose another day.</p>
+          : <div className="booking-time-empty"><CalendarDays aria-hidden="true" /><strong>Choose a date in {month.label}</strong><p>{!busy && !dates.length ? `No appointments are left online in ${month.label}. Please call us, or book this visit later in your account.` : "Package visits have to be booked in consecutive months."}</p></div>}
+      </div>
+    </div>
+    {problem && <p className="booking-form-error" role="alert">{problem}</p>}
+  </div>;
+}
+
+type ReviewProps = {
+  serviceName: string; typeLabel: string; sizeLabel: string; registration: string;
+  pkg?: CarePackage; packagePrice?: CarePackagePrice; visitPrice?: number; sizePrice?: number;
+  firstSlot: CareSlot; extraVisits: CareSlot[]; extras: CareExtra[];
+  total: number; deposit: number; currency: string; values: Record<string, string>; city: string; postcode: string;
+  busy: boolean; error: string; uncertain: boolean; onPay: () => void; onEdit: () => void;
+};
+/** Full order summary shown before Stripe: what's booked, when, for whom, and what's paid today. */
+const BookingReview = forwardRef<HTMLElement, ReviewProps>(function BookingReview(props, ref) {
+  const { pkg, packagePrice, firstSlot, extraVisits, currency, values } = props;
+  const when = (iso: string) => `${ukDate(iso)} · ${ukTime(iso)}`;
+  const months = pkg ? packageMonthRanges(firstSlot.start_at, pkg.total_visits) : [];
+  const perVisit = packagePrice ? (packagePrice.per_visit ?? packagePrice.amount / Math.max(1, pkg?.total_visits || 1)) : undefined;
+  const saving = pkg && props.visitPrice && perVisit ? Math.max(0, props.visitPrice * pkg.total_visits - (packagePrice?.amount || 0)) : 0;
+  const payToday = props.deposit > 0 ? props.deposit : props.total;
+  const later = pkg ? months.length - 1 - extraVisits.length : 0;
+  return <section className="booking-receipt booking-review" ref={ref} tabIndex={-1} aria-labelledby="booking-review-title">
+    <div className="booking-receipt__intro">
+      <span className="section-kicker">Step 2 of 2 · Review and pay</span>
+      <h1 id="booking-review-title">Check your booking.</h1>
+      <p>Make sure everything below is right, then pay securely with Stripe. {pkg ? `All ${pkg.total_visits} visits are paid today.` : props.deposit > 0 ? "A deposit secures your appointment." : "Your appointment is confirmed as soon as payment completes."}</p>
+    </div>
+    <div className="booking-receipt__layout">
+      <div className="booking-receipt__card">
+        <h2>{pkg ? "Your package" : "Your appointment"}</h2>
+        <dl className="booking-receipt__details">
+          <div><dt>Service</dt><dd>{props.serviceName}<br /><small className="booking-review__muted">{props.typeLabel}</small></dd></div>
+          {pkg && <div><dt>Package</dt><dd>{pkg.name}<br /><small className="booking-review__muted">{pkg.total_visits} visits, one each month{packagePrice?.label ? ` · ${packagePrice.label}` : ""}</small></dd></div>}
+          {(props.sizeLabel || props.registration) && <div><dt>Vehicle</dt><dd>{[props.registration, props.sizeLabel].filter(Boolean).join(" · ")}</dd></div>}
+          {pkg ? months.map((month, index) => {
+            const slot = index === 0 ? firstSlot : extraVisits[index - 1];
+            return <div key={month.from}><dt>Visit {index + 1}</dt><dd>{slot ? when(slot.start_at) : <>{month.label}<br /><small className="booking-review__muted">Book later in your account</small></>}</dd></div>;
+          }) : <div><dt>Appointment</dt><dd>{when(firstSlot.start_at)}<br /><small className="booking-review__muted">UK time · Auto Opulence, Unit 7 Consensus House, Norwich NR6 7BW</small></dd></div>}
+        </dl>
+
+        <h3>Price</h3>
+        <dl className="booking-receipt__details booking-review__prices">
+          {pkg && packagePrice ? <>
+            <div><dt>{pkg.total_visits} visits × {bookingMoney(perVisit || 0, currency)}</dt><dd>{bookingMoney(packagePrice.amount, currency)}</dd></div>
+            {saving > 0 && <div><dt>You save</dt><dd className="booking-review__saving">{bookingMoney(saving, currency)}<br /><small className="booking-review__muted">vs {bookingMoney(props.visitPrice || 0, currency)} per single visit</small></dd></div>}
+          </> : <>
+            <div><dt>{props.serviceName}{props.sizeLabel ? ` (${props.sizeLabel})` : ""}</dt><dd>{bookingMoney(props.sizePrice ?? props.total, currency)}</dd></div>
+            {props.extras.map(extra => <div key={extra.addon_id}><dt>{extra.name}</dt><dd>{bookingMoney(extra.price_adjustment, currency)}</dd></div>)}
+          </>}
+          <div className="booking-review__total"><dt>Total</dt><dd>{bookingMoney(props.total, currency)}</dd></div>
+          {props.deposit > 0 && <div><dt>Balance on the day</dt><dd>{bookingMoney(props.total - props.deposit, currency)}</dd></div>}
+          <div className="booking-receipt__order"><dt>Pay today</dt><dd>{bookingMoney(payToday, currency)}</dd></div>
+        </dl>
+
+        <h3>Your details</h3>
+        <dl className="booking-receipt__details">
+          <div><dt>Name</dt><dd>{values.firstName} {values.lastName}</dd></div>
+          <div><dt>Email</dt><dd>{values.email}</dd></div>
+          <div><dt>Mobile</dt><dd>{values.mobile}</dd></div>
+          <div><dt>Address</dt><dd>{[values.address1, values.address2, props.city, props.postcode].filter(Boolean).map((line, i) => <span key={i}>{line}<br /></span>)}</dd></div>
+        </dl>
+
+        {pkg && <p className="booking-package-disclaimer"><strong>{PACKAGE_DISCLAIMER}</strong>{later > 0 ? ` After payment, book your remaining ${later} visit${later === 1 ? "" : "s"} in your account — each in its own month.` : ""}</p>}
+        {props.error && <p className="booking-form-error" role="alert">{props.error}</p>}
+        {props.uncertain && <p className="booking-form-error">Please call us before trying again. We need to check whether the booking was received.</p>}
+        <div className="booking-actions">
+          <button type="button" className="button booking-review__pay" disabled={props.busy || props.uncertain} onClick={props.onPay}><Lock aria-hidden="true" />{props.busy ? "Preparing secure payment…" : `Pay now · ${bookingMoney(payToday, currency)}`}</button>
+          <button type="button" className="button button--ghost" disabled={props.busy} onClick={props.onEdit}>Edit booking</button>
+        </div>
+        <p className="booking-review__muted">You'll be taken to Stripe's secure checkout. Card, Apple Pay and Google Pay accepted.</p>
+      </div>
+      <aside className="booking-receipt__support" aria-label="Help with your booking">
+        <span className="section-kicker">Here to help</span><h2>Questions before you pay?</h2>
+        <p>Our team can check availability, prices or package terms with you.</p>
+        <a href="tel:03300536925"><Phone aria-hidden="true" /><span><small>Call our team</small>0330 053 6925</span></a>
+        <a href="mailto:valeting@autoopulence.co.uk"><Mail aria-hidden="true" /><span><small>Email us</small>valeting@autoopulence.co.uk</span></a>
+        <a href="/contact"><MapPin aria-hidden="true" /><span><small>Visit us</small>Unit 7 Consensus House<br />St Faiths Road<br />Norwich, NR6 7BW</span></a>
+      </aside>
+    </div>
+  </section>;
+});
