@@ -1,0 +1,9 @@
+/* Styles for the stand-in booking calendar (shims/calendar.tsx). */
+.ao-cal{display:grid;gap:.6rem;padding:.75rem;border:1px solid var(--border);border-radius:.75rem;background:#fff}
+.ao-cal-head{display:flex;align-items:center;justify-content:space-between}
+.ao-cal-head button{width:2rem;height:2rem;border-radius:.5rem;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:1.1rem}
+.ao-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.25rem;text-align:center}
+.ao-cal-grid small{color:var(--muted-foreground);font-size:.75rem}
+.ao-cal-day{aspect-ratio:1;border:0;border-radius:.5rem;background:var(--accent);cursor:pointer;font:inherit}
+.ao-cal-day:disabled{background:transparent;color:#b5c0c6;cursor:default}
+.ao-cal-day[data-selected]{background:var(--primary);color:#fff}

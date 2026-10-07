@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "autoopulence",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Pre-bundled by tools/static-export/build-worker.mjs; uploaded as-is.
+  "main": "./worker/dist/index.js",
+  "no_bundle": true,
+  "assets": {
+    "directory": "./dist/",
+    "binding": "ASSETS",
+    // Every request goes through the Worker first so www and http can be redirected to https://autoopulence.co.uk.
+    "run_worker_first": true,
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  "vars": {
+    "SIMPLYBOOK_COMPANY_LOGIN": "racecargraphics",
+    "SMTP_FROM_EMAIL": "valeting@autoopulence.co.uk",
+    "SMTP_FROM_NAME": "Auto Opulence Website"
+  },
+  "observability": { "enabled": true },
+  // Keep secrets and variables added in the Cloudflare dashboard when deploying from GitHub
+  "keep_vars": true
+}

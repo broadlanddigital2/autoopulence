@@ -1,0 +1,10 @@
+{
+  "name": "autoopulence",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev",
+    "rebuild": "cd tools/static-export && npm install --no-audit --no-fund && npm run build"
+  },
+  "devDependencies": { "wrangler": "^4.92.0" }
+}

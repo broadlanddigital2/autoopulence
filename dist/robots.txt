@@ -1,0 +1,5 @@
+User-Agent: *
+Allow: /
+
+Host: https://autoopulence.co.uk
+Sitemap: https://autoopulence.co.uk/sitemap.xml
