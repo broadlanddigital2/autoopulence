@@ -390,7 +390,22 @@ async function handle(request, env) {
     const handler = match?.[1][request.method];
     if (!match) return Response.json({ error: "Not found." }, { status: 404 });
     if (!handler) return Response.json({ error: "Method not allowed." }, { status: 405, headers: { allow: Object.keys(match[1]).filter((k) => k === "GET" || k === "POST").join(", ") } });
-    return handler(request);
+    if (!url.hostname.endsWith(".workers.dev")) return handler(request);
+    const logged = [];
+    const original = console.error;
+    console.error = (...args) => {
+      logged.push(args.map((a) => typeof a === "string" ? a : a instanceof Error ? a.message : JSON.stringify(a)).join(" "));
+      original(...args);
+    };
+    try {
+      const response = await handler(request);
+      if (response.status < 500 || !logged.length) return response;
+      const data = await response.clone().json().catch(() => null);
+      if (!data) return response;
+      return Response.json({ ...data, error: `${data.error || "Error"} [preview detail: ${logged.join(" | ").slice(0, 500)}]` }, { status: response.status });
+    } finally {
+      console.error = original;
+    }
   }
   return env.ASSETS.fetch(request);
 }
