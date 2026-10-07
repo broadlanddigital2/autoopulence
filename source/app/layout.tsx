@@ -31,8 +31,12 @@ export const metadata: Metadata = {
     images: [defaultSocialImage],
   },
   icons: {
-    icon: [{ url: "/auto-opulence-favicon.svg", type: "image/svg+xml", sizes: "any" }],
-    shortcut: "/auto-opulence-favicon.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/auto-opulence-favicon.svg", type: "image/svg+xml", sizes: "any" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   robots: {
     index: true,

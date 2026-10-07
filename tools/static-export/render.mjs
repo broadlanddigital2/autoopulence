@@ -57,7 +57,7 @@ function headTags(page) {
   const icons = m.icons || {};
   for (const i of list(icons.icon)) { const x = typeof i === "string" ? { url: i } : i; t.push(`<link rel="icon" href="${esc(x.url)}"${x.type ? ` type="${esc(x.type)}"` : ""}${x.sizes ? ` sizes="${esc(x.sizes)}"` : ""}>`); }
   for (const i of list(icons.shortcut)) t.push(`<link rel="shortcut icon" href="${esc(typeof i === "string" ? i : i.url)}">`);
-  for (const i of list(icons.apple)) t.push(`<link rel="apple-touch-icon" href="${esc(typeof i === "string" ? i : i.url)}">`);
+  for (const i of list(icons.apple)) { const x = typeof i === "string" ? { url: i } : i; t.push(`<link rel="apple-touch-icon" href="${esc(x.url)}"${x.sizes ? ` sizes="${esc(x.sizes)}"` : ""}>`); }
   return t.filter(Boolean).join("\n");
 }
 
