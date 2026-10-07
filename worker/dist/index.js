@@ -68,7 +68,10 @@ async function verifyCaptchaChallenge(token, answer, secret) {
 }
 
 // ../../worker/src/shims/runtime-env.ts
+var aliases = { SMTP_PASSWORD: "SENDGRID_API_KEY" };
 function runtimeEnv(name, fallback = "") {
+  const preferred = aliases[name] && currentEnv?.[aliases[name]];
+  if (typeof preferred === "string" && preferred.trim()) return preferred.trim();
   const value = currentEnv?.[name];
   return typeof value === "string" && value.trim() || fallback;
 }

@@ -56,7 +56,7 @@ Add these as **Secrets**:
 
 | Name | What |
 | --- | --- |
-| `SMTP_PASSWORD` | SendGrid API key (needs *Mail Send* permission) |
+| `SENDGRID_API_KEY` (or `SMTP_PASSWORD`) | SendGrid API key (needs *Mail Send* permission). `SENDGRID_API_KEY` wins if both are set. |
 | `ENQUIRY_CAPTCHA_SECRET` | Any long random string |
 | `IDEAL_POSTCODES_API_KEY` | Postcode lookup key |
 
