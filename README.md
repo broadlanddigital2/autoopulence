@@ -69,8 +69,8 @@ Optional: `SMTP_TO_EMAIL`, `SMTP_CC_EMAIL` (who receives enquiries; the code has
       Build command empty, deploy command `npx wrangler deploy`.
 - [ ] Add the secrets above, then redeploy.
 - [ ] Test on the `*.workers.dev` address (it is kept out of Google automatically).
-- [ ] `autoopulence.co.uk` must be a zone in this Cloudflare account. Then Settings → Domains & Routes → add
-      **both** `autoopulence.co.uk` and `www.autoopulence.co.uk` as Custom Domains (the Worker redirects www).
+- [x] Live domain: `wrangler.jsonc` routes `autoopulence.co.uk/*` and `www.autoopulence.co.uk/*` to the Worker
+      (the zone's DNS records are unchanged; removing the routes hands the domain back to the old host).
 - [ ] Make a test booking on the live domain and check it appears in the CRM, the Stripe payment returns to
       `/booking/payment-complete`, and the confirmation email arrives.
 - [ ] Search Console: resubmit `https://autoopulence.co.uk/sitemap.xml`.

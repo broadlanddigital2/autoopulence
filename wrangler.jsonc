@@ -18,6 +18,12 @@
     "SMTP_FROM_EMAIL": "valeting@autoopulence.co.uk",
     "SMTP_FROM_NAME": "Auto Opulence Website"
   },
+  // Live domain: every request for autoopulence.co.uk and www goes to this Worker (DNS records stay as they are;
+  // the Worker redirects www and http to https://autoopulence.co.uk). Remove these to hand the domain back.
+  "routes": [
+    { "pattern": "autoopulence.co.uk/*", "zone_name": "autoopulence.co.uk" },
+    { "pattern": "www.autoopulence.co.uk/*", "zone_name": "autoopulence.co.uk" }
+  ],
   "observability": { "enabled": true },
   // Keep secrets and variables added in the Cloudflare dashboard when deploying from GitHub
   "keep_vars": true
