@@ -64,7 +64,11 @@ function headTags(page) {
 // Third-party script from app/layout.tsx (EnquiryBot chat launcher).
 const layoutScripts = `<script type="text/javascript" src="https://launcher.enquirybot.com/index.js" data-bot-id="99b5f5bc-3f84-4f5d-a655-ed9eacd4558c" defer></script>`;
 
+// The CRM booking widget (booking form, payment receipt, login, account) is loaded only where a page embeds it.
+const CRM_WIDGET = '<script src="https://crm.racecargraphics.uk/embed/booking.js" defer></script>';
+
 function documentHtml({ head, body, route }) {
+  if (body.includes("data-crm-booking")) head += "\n" + CRM_WIDGET;
   return `<!DOCTYPE html>
 <html lang="en-GB"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

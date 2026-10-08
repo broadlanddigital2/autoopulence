@@ -1,0 +1,1 @@
+import{b as n,c as o,e as r}from"./chunk-M2QACEQF.js";o();var t=n(r(),1);function c({data:e}){return(0,t.jsx)("script",{type:"application/ld+json",dangerouslySetInnerHTML:{__html:JSON.stringify(e).replace(/</g,"\\u003c")}})}export{c as a};

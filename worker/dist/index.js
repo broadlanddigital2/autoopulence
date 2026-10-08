@@ -368,26 +368,11 @@ var apiRoutes = [
   [/^\/api\/enquiry\/?$/, route_exports],
   [/^\/api\/address-lookup\/?$/, route_exports3]
 ];
-var CRM_BOOKING_URL = "https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/booking-order-flow";
-var CRM_PUBLISHABLE_KEY = "sb_publishable_KLK1Ucd9ilVSwzSGL1vkug_3SGGh4NF";
-async function crmBooking(request, env) {
-  if (request.method !== "POST") return Response.json({ error: "POST required" }, { status: 405, headers: { allow: "POST" } });
-  const body = await request.text();
-  if (body.length > 2e5) return Response.json({ error: "Request too large." }, { status: 413 });
-  const headers = { "content-type": "application/json", apikey: String(env.CRM_PUBLISHABLE_KEY || CRM_PUBLISHABLE_KEY) };
-  const auth = request.headers.get("authorization");
-  if (auth?.startsWith("Bearer ")) headers.authorization = auth;
-  const ip = request.headers.get("cf-connecting-ip");
-  if (ip) headers["x-forwarded-for"] = ip;
-  const upstream = await fetch(String(env.CRM_BOOKING_URL || CRM_BOOKING_URL), { method: "POST", headers, body });
-  return new Response(upstream.body, { status: upstream.status, headers: { "content-type": upstream.headers.get("content-type") || "application/json", "cache-control": "no-store, private" } });
-}
 async function handle(request, env) {
   const url = new URL(request.url);
   if (url.hostname === `www.${CANONICAL_HOST}` || url.hostname === CANONICAL_HOST && url.protocol === "http:") {
     return Response.redirect(`https://${CANONICAL_HOST}${url.pathname}${url.search}`, 301);
   }
-  if (url.pathname === "/api/crm/booking") return crmBooking(request, env);
   if (url.pathname.startsWith("/api/")) {
     const match = apiRoutes.find(([pattern]) => pattern.test(url.pathname));
     const handler = match?.[1][request.method];

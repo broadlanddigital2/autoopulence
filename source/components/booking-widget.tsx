@@ -1,5 +1,4 @@
-import { ServiceBookingForm } from "@/components/ServiceBookingForm";
-import { bookingTypeForCategorySlug } from "@/lib/booking-services";
+import { CrmBooking } from "@/components/crm-booking";
 
 export function BookingWidget({
   initialCategory = "vehicle-valeting",
@@ -16,9 +15,6 @@ export function BookingWidget({
         <p>Choose your service, select a live appointment and complete payment through our secure Stripe checkout.</p>
       </div>
     </header>
-    <ServiceBookingForm
-      initialType={bookingTypeForCategorySlug(initialCategory)}
-      initialService={initialService}
-    />
+    <CrmBooking mode="form" category={initialCategory} service={initialService} />
   </div>;
 }

@@ -26,8 +26,8 @@ test("enquiry forms collect split names, optional uploads and a signed security 
   assert.match(smtp, /attachments: EmailAttachment\[\]/);
 });
 
-test("bookings return from Stripe to this website's payment page", async () => {
-  const [vehicleCare, form] = await Promise.all([source("lib/vehicle-care.ts"), source("components/ServiceBookingForm.tsx")]);
-  assert.match(vehicleCare, /bookingPaymentCompletePath = "\/booking\/payment-complete"/);
-  assert.match(form, /success_url: `\$\{origin\}\$\{bookingPaymentCompletePath\}\?session_id=\{CHECKOUT_SESSION_ID\}`/);
+test("booking pages use the CRM booking widget", async () => {
+  const widget = await source("components/crm-booking.tsx");
+  assert.match(widget, /data-crm-booking=\{mode\}/);
+  assert.match(widget, /data-payment-url="\/booking\/payment-complete"/);
 });

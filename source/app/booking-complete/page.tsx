@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BookingPaymentComplete } from "@/components/BookingPaymentComplete";
+import { CrmBooking } from "@/components/crm-booking";
 import { JsonLd } from "@/components/json-ld";
 import { Footer, Header } from "@/components/site-chrome";
 import { localBusinessSchema, siteUrl } from "@/lib/seo";
@@ -17,5 +17,5 @@ export const metadata: Metadata = {
 
 export default function BookingCompletePage() {
   const schema = { "@context": "https://schema.org", "@graph": [localBusinessSchema, { "@type": "WebPage", "@id": `${pageUrl}/#webpage`, url: pageUrl, name: title, description, about: { "@id": `${siteUrl}/#business` }, inLanguage: "en-GB" }] };
-  return <><JsonLd data={schema} /><Header /><main className="booking-payment-page"><BookingPaymentComplete /></main><Footer /></>;
+  return <><JsonLd data={schema} /><Header /><main className="booking-payment-page"><CrmBooking mode="payment-complete" /></main><Footer /></>;
 }
