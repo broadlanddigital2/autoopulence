@@ -7,7 +7,7 @@ The Auto Opulence site (autoopulence.co.uk), hosted on Cloudflare. Same setup as
 | `dist/` | **The live website.** 82 static pages + images, sitemap.xml, robots.txt, 404 page. This is what Cloudflare serves. |
 | `source/` | The original Next.js project. Edit content and pages here. |
 | `tools/static-export/` | Converts `source/` into `dist/`, and bundles the Worker. |
-| `worker/` | Small server that runs in front of `dist/`: redirects `www.` and `http://` to `https://autoopulence.co.uk`, forwards booking calls to the Race Car Graphics CRM (`/api/crm/booking`), and runs the site's own API routes from `source/app/api` (enquiry form + emails, security question, postcode lookup). `worker/dist/index.js` is generated. |
+| `worker/` | Small server that runs in front of `dist/`: redirects `www.` and `http://` to `https://autoopulence.co.uk`, and runs the site's own API routes from `source/app/api` (enquiry form + emails, security question, postcode lookup). `worker/dist/index.js` is generated. |
 | `wrangler.jsonc` | Cloudflare config (Worker name `autoopulence`, serves `dist/`, runs the Worker first on every request). |
 
 ## Deploying
@@ -36,19 +36,16 @@ using the existing SendGrid key (`SMTP_PASSWORD`). See `worker/src/shims/nodemai
 
 ## Bookings
 
-Bookings, customer accounts and payments use the **Race Car Graphics CRM** — the same system as racecargraphics.uk
-(Supabase project `dipjypzrfigkzuarlsov`, business unit *Auto Opulence* `8a8a2f45-…`). Services, prices, vehicle
-sizes, extras, packages and availability are managed in the CRM; the booking form loads them live. Payment is
-Stripe checkout run by the CRM, which returns customers to `/booking/payment-complete`.
+Bookings, payments, customer login and accounts are the **CRM booking widget**, shared with every brand site
+(Race Car Graphics, LeMan Cave): `https://crm.racecargraphics.uk/embed/booking.js`. All booking rules — services,
+prices, availability, 24-hour minimum notice, packages, Stripe payment, emails and urgent requests — live in the CRM
+(repo `race-car-graphics-crm`, `supabase/functions/booking-order-flow` and `embed/booking`). Change them there and
+every site updates; nothing here needs rebuilding.
 
-- Booking form: `source/components/ServiceBookingForm.tsx` (shared with RCG's site)
-- Customer login (emailed 6-digit code, no password) and account: `source/components/CustomerAccount.tsx`
-  (`/login`, `/signup`, `/account`). Customers have one account across Auto Opulence and Race Car Graphics.
-- CRM client: `source/lib/crm-booking.ts`; catalogue helpers: `source/lib/vehicle-care.ts`
-- The browser calls `/api/crm/booking` on this site and the Worker forwards it to the CRM, so the CRM doesn't need
-  autoopulence.co.uk on its list of allowed browser origins.
-- `source/lib/crm/vehicle-care.json` is a copy of the catalogue, refreshed by `npm run rebuild`
-  (`tools/static-export/fetch-crm.mjs`); the form uses it until the live catalogue loads.
+- `source/components/crm-booking.tsx` places the widget (Auto Opulence business id, links, postcode lookup).
+- Used by the booking panel on the home, category and service pages, and by `/booking/payment-complete`,
+  `/login`, `/signup` and `/account`. The build adds the widget script to those pages only.
+- Minimum notice: CRM → Ecommerce settings → *Minimum booking notice* (currently 1440 minutes = 24 hours).
 
 ## Settings (Cloudflare → Workers & Pages → autoopulence → Settings → Variables and Secrets)
 
