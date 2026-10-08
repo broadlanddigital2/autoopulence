@@ -10,6 +10,9 @@ import { bookingDate, bookingMoney, bookingPaymentCompletePath, careAudience, ca
 import { BookingError, bookingRequest, currentSession, loadAvailableDates, loadAvailableSlots, loadCatalogue, loadCustomerProfile, requestEmailCode, signInWithEmailCode, signOut as crmSignOut, type CrmCustomer, type CrmServiceOrder } from "@/lib/crm-booking";
 import { Calendar } from "@/components/ui/calendar";
 import { BookingAddressFields } from "./BookingAddressFields";
+import { UrgentRequest } from "./UrgentRequest";
+
+const URGENT_PHONE = "0330 053 6925";
 
 const vehicleSizeExamples: Record<VehicleSize, { title: string; description: string; examples: string[] }> = {
   small: { title: "Small car", description: "Compact city cars and short three-door hatchbacks.", examples: ["Fiat 500", "Toyota Aygo", "Volkswagen up!", "MINI 3-Door Hatch", "Ford Ka"] },
@@ -509,6 +512,8 @@ export function ServiceBookingForm({ initialType, initialService = "" }: { initi
           {!bookAllVisits && <p className="booking-service-note">After payment, book each remaining visit in its month from <a href="/account?section=packages">your account</a> — sign in with your email and we'll send you a code. We'll email a confirmation for each one.</p>}
         </div>}
       </fieldset>
+      <UrgentRequest businessUnitId={careBusinessUnitId} serviceId={selectedService?.id} serviceName={selectedService?.name} vehicleSize={hasSizeChoices ? sizeLabels[vehicleSize] : undefined} phone={URGENT_PHONE}
+        defaults={() => { const f = formRef.current; const v = (n: string) => (f?.elements.namedItem(n) as HTMLInputElement | null)?.value || ""; return { firstName: v("firstName") || client?.first_name, lastName: v("lastName") || client?.last_name, email: v("email") || client?.email, mobile: v("mobile") || client?.mobile, registration: v("registration") }; }} />
       <fieldset disabled={bookingBusy || bookingUncertain}>
         <legend><span>{String(5 + (packages.length ? 1 : 0) - (hasSizeChoices ? 0 : 1)).padStart(2, "0")}</span> Your details</legend>
         <div className="booking-form-grid">

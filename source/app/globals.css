@@ -1086,3 +1086,16 @@
 .account-nav button:hover,.account-nav button.is-active{color:#fff}
 .booking-plan-options label.is-selected{color:#fff}
 .booking-plan__badge{color:#fff}
+
+/* Urgent request panel on the booking form (components/UrgentRequest.tsx) */
+.booking-urgent{margin:22px 0;padding:18px 20px;border:1px solid #9fd8ee;border-left:4px solid var(--primary);border-radius:12px;background:#fff}
+.booking-urgent>svg,.booking-urgent__prompt>svg{width:24px;height:24px;color:var(--primary);flex:none}
+.booking-urgent__prompt{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center}
+.booking-urgent__prompt strong,.booking-urgent--sent strong{display:block;color:var(--foreground);font-size:1rem}
+.booking-urgent p{margin:4px 0 0;color:var(--muted-foreground);font-size:.92rem;line-height:1.5}
+.booking-urgent__panel{display:grid;gap:14px;margin-top:16px;padding-top:16px;border-top:1px solid #dbeef6}
+.booking-urgent__panel .booking-field textarea{width:100%;min-height:84px;padding:12px 14px;border:1px solid var(--input);border-radius:8px;font:inherit;background:#f7fbfd;resize:vertical}
+.booking-urgent__panel .booking-actions{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.booking-urgent__panel .booking-actions a{color:#087eac;font-weight:700}
+.booking-urgent--sent{display:flex;gap:14px;align-items:flex-start;background:var(--accent)}
+@media (max-width:640px){.booking-urgent__prompt{grid-template-columns:auto minmax(0,1fr)}.booking-urgent__prompt .button{grid-column:1/-1;justify-self:start}}
