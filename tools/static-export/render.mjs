@@ -64,6 +64,10 @@ function headTags(page) {
 // Third-party script from app/layout.tsx (EnquiryBot chat launcher).
 const layoutScripts = `<script type="text/javascript" src="https://launcher.enquirybot.com/index.js" data-bot-id="99b5f5bc-3f84-4f5d-a655-ed9eacd4558c" defer></script>`;
 
+// Insights visit recorder (CRM): starts only after "Accept analytics" (ao_cookie_consent = accepted); typing is hidden.
+const INSIGHTS = `<script src="https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/web-recorder?asset=t.js" data-site="8dbd8fb9-191b-497c-aa4f-5c02cf10c020" defer></script>
+<script>(function(){var K="ao_cookie_consent";function sync(v){var go=function(){window.Insights&&window.Insights.consent(v==="accepted")};if(window.Insights)go();else window.addEventListener("load",go)}try{if(localStorage.getItem(K)==="accepted")sync("accepted");var set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){set.apply(this,arguments);try{if(this===window.localStorage&&k===K)sync(String(v))}catch(e){}}}catch(e){}})();</script>`;
+
 // The CRM booking widget (booking form, payment receipt, login, account) is loaded only where a page embeds it.
 const CRM_WIDGET = '<script src="https://crm.racecargraphics.uk/embed/booking.js" defer></script>';
 
@@ -75,6 +79,7 @@ function documentHtml({ head, body, route }) {
 ${head}
 <link rel="stylesheet" href="/_static/site.css">
 <script type="module" src="/_static/app.js"></script>
+${INSIGHTS}
 </head><body class="antialiased"><div id="root"${route ? ` data-route="${esc(route)}"` : ""}>${body}</div>${layoutScripts}</body></html>
 `;
 }

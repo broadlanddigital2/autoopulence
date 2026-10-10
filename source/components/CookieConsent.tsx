@@ -44,7 +44,7 @@ export function CookieConsent() {
       <Script id="google-tags" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${googleAdsId}');gtag('config','${analyticsId}',{'anonymize_ip':true});`}</Script>
     </>}
     {open && <section className="cookie-consent" role="dialog" aria-modal="false" aria-labelledby="cookie-consent-title" aria-describedby="cookie-consent-description">
-      <div><strong id="cookie-consent-title">Your cookie choices</strong><p id="cookie-consent-description">We use essential technology for secure bookings and customer accounts. With your permission, Google Analytics and Google Ads help us understand how the website is used and measure advertising performance.</p><nav aria-label="Cookie information"><Link href="/cookies">Cookie Policy</Link><Link href="/privacy">Privacy Policy</Link></nav></div>
+      <div><strong id="cookie-consent-title">Your cookie choices</strong><p id="cookie-consent-description">We use essential technology for secure bookings and customer accounts. With your permission, Google Analytics, Google Ads and our own visit recorder (which replays how pages are used, with anything you type hidden) help us understand how the website is used and measure advertising performance.</p><nav aria-label="Cookie information"><Link href="/cookies">Cookie Policy</Link><Link href="/privacy">Privacy Policy</Link></nav></div>
       <div className="cookie-consent-actions"><button type="button" className="button button--ghost" onClick={() => save("rejected")}>Reject analytics</button><button type="button" className="button" onClick={() => save("accepted")}>Accept analytics</button></div>
     </section>}
   </>;
