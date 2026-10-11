@@ -5,13 +5,13 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
-// ../../worker/src/env.ts
+// worker/src/env.ts
 var currentEnv;
 function setEnv(env) {
   currentEnv = env;
 }
 
-// ../../source/app/api/enquiry/route.ts
+// source/app/api/enquiry/route.ts
 var route_exports = {};
 __export(route_exports, {
   POST: () => POST,
@@ -19,7 +19,7 @@ __export(route_exports, {
   runtime: () => runtime
 });
 
-// ../../source/lib/enquiry-captcha.ts
+// source/lib/enquiry-captcha.ts
 var encoder = new TextEncoder();
 var minimumSolveTime = 1500;
 var maximumChallengeAge = 20 * 60 * 1e3;
@@ -67,7 +67,7 @@ async function verifyCaptchaChallenge(token, answer, secret) {
   }
 }
 
-// ../../worker/src/shims/runtime-env.ts
+// worker/src/shims/runtime-env.ts
 var aliases = { SMTP_PASSWORD: "SENDGRID_API_KEY" };
 function runtimeEnv(name, fallback = "") {
   const preferred = aliases[name] && currentEnv?.[aliases[name]];
@@ -76,7 +76,7 @@ function runtimeEnv(name, fallback = "") {
   return typeof value === "string" && value.trim() || fallback;
 }
 
-// ../../worker/src/shims/fs-promises.ts
+// worker/src/shims/fs-promises.ts
 async function readFile(file) {
   const i = file.replace(/\\/g, "/").lastIndexOf("/public/");
   if (i < 0 || !currentEnv) throw new Error(`File not available in the Worker: ${file}`);
@@ -85,10 +85,10 @@ async function readFile(file) {
   return Buffer.from(await res.arrayBuffer());
 }
 
-// ../../source/lib/sendgrid-smtp.ts
+// source/lib/sendgrid-smtp.ts
 import path from "node:path";
 
-// ../../worker/src/shims/nodemailer.ts
+// worker/src/shims/nodemailer.ts
 function parse(a) {
   if (typeof a !== "string") return { email: a.address.trim(), ...a.name ? { name: a.name } : {} };
   const m = a.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
@@ -128,7 +128,7 @@ function createTransport(options) {
 }
 var nodemailer_default = { createTransport };
 
-// ../../source/lib/sendgrid-smtp.ts
+// source/lib/sendgrid-smtp.ts
 var enquiryEmailImageAssets = [
   { cid: "ao-logo", path: "/images/email/auto-opulence-logo.png", filename: "auto-opulence-logo.png", mimeType: "image/png" },
   { cid: "vehicle-valeting", path: "/images/email/vehicle-valeting.jpg", filename: "vehicle-valeting.jpg", mimeType: "image/jpeg" },
@@ -218,7 +218,7 @@ async function sendEnquiryEmails(config, enquiry, inlineImages, attachments = []
   });
 }
 
-// ../../source/app/api/enquiry/route.ts
+// source/app/api/enquiry/route.ts
 var dynamic = "force-dynamic";
 var runtime = "nodejs";
 var serviceLabels = {
@@ -297,7 +297,7 @@ async function POST(request) {
   }
 }
 
-// ../../source/app/api/enquiry/captcha/route.ts
+// source/app/api/enquiry/captcha/route.ts
 var route_exports2 = {};
 __export(route_exports2, {
   GET: () => GET,
@@ -314,7 +314,7 @@ async function GET() {
   });
 }
 
-// ../../source/app/api/address-lookup/route.ts
+// source/app/api/address-lookup/route.ts
 var route_exports3 = {};
 __export(route_exports3, {
   GET: () => GET2,
@@ -322,7 +322,7 @@ __export(route_exports3, {
   runtime: () => runtime3
 });
 
-// ../../source/lib/address-lookup.ts
+// source/lib/address-lookup.ts
 var reply = (body, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store, private", "X-Content-Type-Options": "nosniff" } });
 var unavailable = "Address lookup is unavailable right now. Please enter your address below.";
 function normalisePostcode(value) {
@@ -338,6 +338,20 @@ function bookingAddress(address, index) {
   if (!lines.length || !address.post_town || !postcode) return null;
   return { id: String(address.udprn || index), label: [...lines, address.post_town, postcode].join(", "), address1: lines[0], address2: lines.slice(1).join(", "), city: address.post_town, postcode };
 }
+var POSTCODE_LOOKUP_URL = "https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/postcode-lookup";
+async function crmLookup(request, postcode, apiKey, fetcher) {
+  const upstream = new URL(POSTCODE_LOOKUP_URL);
+  upstream.searchParams.set("postcode", postcode);
+  upstream.searchParams.set("key", apiKey);
+  const response = await fetcher(upstream.href, { redirect: "manual", signal: AbortSignal.timeout(12e3), headers: { Accept: "application/json", Origin: new URL(request.url).origin } });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.success || !Array.isArray(data.addresses)) {
+    console.error("Postcode lookup failed", { status: response.status, error: data.error });
+    return reply({ success: false, error: unavailable }, 503);
+  }
+  const addresses = data.addresses.map(bookingAddress).filter((address) => address !== null);
+  return reply({ success: true, postcode: data.postcode || postcode, addresses });
+}
 async function handleAddressLookup(request, apiKey, fetcher = fetch) {
   if (request.method !== "GET") return reply({ success: false, error: "Method not allowed." }, 405);
   const url = new URL(request.url);
@@ -349,6 +363,7 @@ async function handleAddressLookup(request, apiKey, fetcher = fetch) {
   if (!postcode) return reply({ success: false, error: "Enter a complete UK postcode, for example NR6 7BW." }, 400);
   if (!apiKey) return reply({ success: false, error: unavailable }, 503);
   try {
+    if (/^(pk|sk)_/.test(apiKey)) return await crmLookup(request, postcode, apiKey, fetcher);
     const upstream = new URL(`https://api.ideal-postcodes.co.uk/v1/postcodes/${encodeURIComponent(postcode)}`);
     upstream.searchParams.set("api_key", apiKey);
     const response = await fetcher(upstream.href, { redirect: "manual", signal: AbortSignal.timeout(12e3), headers: { Accept: "application/json" } });
@@ -366,14 +381,15 @@ async function handleAddressLookup(request, apiKey, fetcher = fetch) {
   }
 }
 
-// ../../source/app/api/address-lookup/route.ts
+// source/app/api/address-lookup/route.ts
 var dynamic3 = "force-dynamic";
 var runtime3 = "nodejs";
+var KEY = "pk_fb10a3e615a20434f6e5d99c";
 function GET2(request) {
-  return handleAddressLookup(request, runtimeEnv("IDEAL_POSTCODES_API_KEY"));
+  return handleAddressLookup(request, runtimeEnv("POSTCODE_LOOKUP_KEY") || KEY);
 }
 
-// ../../worker/src/index.ts
+// worker/src/index.ts
 var CANONICAL_HOST = "autoopulence.co.uk";
 var ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
 var apiRoutes = [

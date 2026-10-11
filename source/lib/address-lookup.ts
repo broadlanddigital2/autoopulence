@@ -18,6 +18,23 @@ export function bookingAddress(address: PostalAddress, index: number): BookingAd
   return { id: String(address.udprn || index), label: [...lines, address.post_town, postcode].join(', '), address1: lines[0], address2: lines.slice(1).join(', '), city: address.post_town, postcode };
 }
 
+// Our own postcode lookup in the CRM (Royal Mail PAF data). Keys are made in the CRM: Workspace → Postcode lookup.
+// Website keys (pk_…) are public and only work from the sites listed on the key, so this server sends the site's address.
+export const POSTCODE_LOOKUP_URL = 'https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/postcode-lookup';
+async function crmLookup(request: Request, postcode: string, apiKey: string, fetcher: typeof fetch): Promise<Response> {
+  const upstream = new URL(POSTCODE_LOOKUP_URL);
+  upstream.searchParams.set('postcode', postcode);
+  upstream.searchParams.set('key', apiKey);
+  const response = await fetcher(upstream.href, { redirect: 'manual', signal: AbortSignal.timeout(12000), headers: { Accept: 'application/json', Origin: new URL(request.url).origin } });
+  const data = await response.json().catch(() => ({})) as { success?: boolean; postcode?: string; addresses?: (PostalAddress & { id?: string })[]; error?: string };
+  if (!response.ok || !data.success || !Array.isArray(data.addresses)) {
+    console.error('Postcode lookup failed', { status: response.status, error: data.error });
+    return reply({ success: false, error: unavailable }, 503);
+  }
+  const addresses = data.addresses.map(bookingAddress).filter((address): address is BookingAddress => address !== null);
+  return reply({ success: true, postcode: data.postcode || postcode, addresses });
+}
+
 export async function handleAddressLookup(request: Request, apiKey: string, fetcher: typeof fetch = fetch): Promise<Response> {
   if (request.method !== 'GET') return reply({ success: false, error: 'Method not allowed.' }, 405);
   const url = new URL(request.url);
@@ -29,6 +46,7 @@ export async function handleAddressLookup(request: Request, apiKey: string, fetc
   if (!postcode) return reply({ success: false, error: 'Enter a complete UK postcode, for example NR6 7BW.' }, 400);
   if (!apiKey) return reply({ success: false, error: unavailable }, 503);
   try {
+    if (/^(pk|sk)_/.test(apiKey)) return await crmLookup(request, postcode, apiKey, fetcher);
     const upstream = new URL(`https://api.ideal-postcodes.co.uk/v1/postcodes/${encodeURIComponent(postcode)}`);
     upstream.searchParams.set('api_key', apiKey);
     const response = await fetcher(upstream.href, { redirect: 'manual', signal: AbortSignal.timeout(12000), headers: { Accept: 'application/json' } });
