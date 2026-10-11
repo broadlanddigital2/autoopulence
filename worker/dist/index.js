@@ -375,6 +375,7 @@ function GET2(request) {
 
 // ../../worker/src/index.ts
 var CANONICAL_HOST = "autoopulence.co.uk";
+var ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
 var apiRoutes = [
   [/^\/api\/enquiry\/captcha\/?$/, route_exports2],
   [/^\/api\/enquiry\/?$/, route_exports],
@@ -419,7 +420,14 @@ var index_default = {
       console.error("Unhandled error", error instanceof Error ? error.stack || error.message : error);
       response = Response.json({ error: "Something went wrong. Please call 0330 053 6925." }, { status: 500 });
     }
-    if (new URL(request.url).hostname.endsWith(".workers.dev")) {
+    const preview = new URL(request.url).hostname.endsWith(".workers.dev");
+    const bot = String(env.ENQUIRY_BOT || "preview");
+    if ((bot === "live" || bot === "preview" && preview) && (response.headers.get("content-type") || "").includes("text/html")) {
+      response = new HTMLRewriter().on("body", { element(body) {
+        body.append(ENQUIRY_BOT_SCRIPT, { html: true });
+      } }).transform(response);
+    }
+    if (preview) {
       response = new Response(response.body, response);
       response.headers.set("X-Robots-Tag", "noindex, nofollow");
     }

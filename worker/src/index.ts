@@ -10,6 +10,8 @@ import * as captcha from "../../source/app/api/enquiry/captcha/route";
 import * as addressLookup from "../../source/app/api/address-lookup/route";
 
 const CANONICAL_HOST = "autoopulence.co.uk";
+// The CRM enquiry bot (chat assistant). Its answers, pages and leads are managed in the CRM.
+const ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
 type Handler = (request: Request) => Response | Promise<Response>;
 type RouteModule = Partial<Record<"GET" | "POST", Handler>>;
 
@@ -58,8 +60,13 @@ export default {
       console.error("Unhandled error", error instanceof Error ? error.stack || error.message : error);
       response = Response.json({ error: "Something went wrong. Please call 0330 053 6925." }, { status: 500 });
     }
+    const preview = new URL(request.url).hostname.endsWith(".workers.dev");
+    const bot = String(env.ENQUIRY_BOT || "preview");
+    if ((bot === "live" || (bot === "preview" && preview)) && (response.headers.get("content-type") || "").includes("text/html")) {
+      response = new HTMLRewriter().on("body", { element(body) { body.append(ENQUIRY_BOT_SCRIPT, { html: true }); } }).transform(response);
+    }
     // Keep the workers.dev preview address out of Google; only the real domain should be indexed.
-    if (new URL(request.url).hostname.endsWith(".workers.dev")) {
+    if (preview) {
       response = new Response(response.body, response);
       response.headers.set("X-Robots-Tag", "noindex, nofollow");
     }
