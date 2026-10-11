@@ -229,6 +229,18 @@ var serviceLabels = {
 };
 var allowedFileTypes = /* @__PURE__ */ new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 var text = (value, maximum) => typeof value === "string" ? value.trim().slice(0, maximum) : "";
+function withAdClick(pageUrl, request) {
+  const raw = (request.headers.get("cookie") || "").split(/;\s*/).find((c) => c.startsWith("ins_ad="))?.slice(7) || "";
+  if (!raw || !/^https?:\/\//.test(pageUrl)) return pageUrl;
+  try {
+    const url = new URL(pageUrl);
+    for (const [k, v] of new URLSearchParams(decodeURIComponent(raw)))
+      if (/^(gclid|gbraid|wbraid|utm_(source|medium|campaign|term|content))$/.test(k) && !url.searchParams.has(k)) url.searchParams.set(k, v.slice(0, 300));
+    return url.toString().slice(0, 2048);
+  } catch {
+    return pageUrl;
+  }
+}
 async function POST(request) {
   try {
     const body = await request.formData();
@@ -241,7 +253,7 @@ async function POST(request) {
     const businessSector = text(body.get("businessSector"), 120);
     const service = businessSector ? `${selectedService} \u2014 ${businessSector}` : selectedService;
     const message = text(body.get("message"), 4e3);
-    const sourceUrl = text(body.get("sourceUrl"), 2048) || text(request.headers.get("referer"), 2048) || "Not available";
+    const sourceUrl = withAdClick(text(body.get("sourceUrl"), 2048) || text(request.headers.get("referer"), 2048) || "Not available", request);
     const submittedAt = new Intl.DateTimeFormat("en-GB", {
       dateStyle: "full",
       timeStyle: "long",
