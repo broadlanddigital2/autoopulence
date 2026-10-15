@@ -13,6 +13,8 @@ const CANONICAL_HOST = "autoopulence.co.uk";
 // The CRM enquiry bot (chat assistant). Its answers, pages and leads are managed in the CRM.
 // CRM site search & AI assistant (CRM → Marketing → Site search & AI). Always added; switched on/off in the CRM.
 const SITE_SEARCH_SCRIPT = '<script src="https://crm.racecargraphics.uk/embed/site-search.js" data-key="cf3dec2d53f08dd72a8af483" defer></script>';
+// Search icon in the header, beside Customer login. Hidden until the site search script switches it on.
+const SITE_SEARCH_BUTTON = '<button type="button" class="customer-login-link" data-site-search hidden aria-label="Search the site" style="display:none;background:none;cursor:pointer;font:inherit"><svg stroke="currentColor" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" height="17" width="17"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span>Search</span></button>';
 const ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
 type Handler = (request: Request) => Response | Promise<Response>;
 type RouteModule = Partial<Record<"GET" | "POST", Handler>>;
@@ -68,7 +70,11 @@ export default {
       response = new HTMLRewriter().on("body", { element(body) { body.append(ENQUIRY_BOT_SCRIPT, { html: true }); } }).transform(response);
     }
     if ((response.headers.get("content-type") || "").includes("text/html")) {
-      response = new HTMLRewriter().on("body", { element(body) { body.append(SITE_SEARCH_SCRIPT, { html: true }); } }).transform(response);
+      let searchButton = false;
+      response = new HTMLRewriter()
+        .on("header.site-header a.customer-login-link", { element(link) { if (!searchButton) { link.before(SITE_SEARCH_BUTTON, { html: true }); searchButton = true; } } })
+        .on("body", { element(body) { body.append(SITE_SEARCH_SCRIPT, { html: true }); } })
+        .transform(response);
     }
     // Keep the workers.dev preview address out of Google; only the real domain should be indexed.
     if (preview) {
