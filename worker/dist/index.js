@@ -391,6 +391,8 @@ function GET2(request) {
 
 // worker/src/index.ts
 var CANONICAL_HOST = "autoopulence.co.uk";
+// CRM site search & AI assistant (CRM → Marketing → Site search & AI). Always added; switched on/off in the CRM.
+var SITE_SEARCH_SCRIPT = '<script src="https://crm.racecargraphics.uk/embed/site-search.js" data-key="cf3dec2d53f08dd72a8af483" defer></script>';
 var ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
 var apiRoutes = [
   [/^\/api\/enquiry\/captcha\/?$/, route_exports2],
@@ -441,6 +443,11 @@ var index_default = {
     if ((bot === "live" || bot === "preview" && preview) && (response.headers.get("content-type") || "").includes("text/html")) {
       response = new HTMLRewriter().on("body", { element(body) {
         body.append(ENQUIRY_BOT_SCRIPT, { html: true });
+      } }).transform(response);
+    }
+    if ((response.headers.get("content-type") || "").includes("text/html")) {
+      response = new HTMLRewriter().on("body", { element(body) {
+        body.append(SITE_SEARCH_SCRIPT, { html: true });
       } }).transform(response);
     }
     if (preview) {
