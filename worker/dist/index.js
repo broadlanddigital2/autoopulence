@@ -5,13 +5,13 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
-// worker/src/env.ts
+// ../../worker/src/env.ts
 var currentEnv;
 function setEnv(env) {
   currentEnv = env;
 }
 
-// source/app/api/enquiry/route.ts
+// ../../source/app/api/enquiry/route.ts
 var route_exports = {};
 __export(route_exports, {
   POST: () => POST,
@@ -19,7 +19,7 @@ __export(route_exports, {
   runtime: () => runtime
 });
 
-// source/lib/enquiry-captcha.ts
+// ../../source/lib/enquiry-captcha.ts
 var encoder = new TextEncoder();
 var minimumSolveTime = 1500;
 var maximumChallengeAge = 20 * 60 * 1e3;
@@ -67,7 +67,7 @@ async function verifyCaptchaChallenge(token, answer, secret) {
   }
 }
 
-// worker/src/shims/runtime-env.ts
+// ../../worker/src/shims/runtime-env.ts
 var aliases = { SMTP_PASSWORD: "SENDGRID_API_KEY" };
 function runtimeEnv(name, fallback = "") {
   const preferred = aliases[name] && currentEnv?.[aliases[name]];
@@ -76,7 +76,7 @@ function runtimeEnv(name, fallback = "") {
   return typeof value === "string" && value.trim() || fallback;
 }
 
-// worker/src/shims/fs-promises.ts
+// ../../worker/src/shims/fs-promises.ts
 async function readFile(file) {
   const i = file.replace(/\\/g, "/").lastIndexOf("/public/");
   if (i < 0 || !currentEnv) throw new Error(`File not available in the Worker: ${file}`);
@@ -85,10 +85,10 @@ async function readFile(file) {
   return Buffer.from(await res.arrayBuffer());
 }
 
-// source/lib/sendgrid-smtp.ts
+// ../../source/lib/sendgrid-smtp.ts
 import path from "node:path";
 
-// worker/src/shims/nodemailer.ts
+// ../../worker/src/shims/nodemailer.ts
 function parse(a) {
   if (typeof a !== "string") return { email: a.address.trim(), ...a.name ? { name: a.name } : {} };
   const m = a.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
@@ -128,7 +128,7 @@ function createTransport(options) {
 }
 var nodemailer_default = { createTransport };
 
-// source/lib/sendgrid-smtp.ts
+// ../../source/lib/sendgrid-smtp.ts
 var enquiryEmailImageAssets = [
   { cid: "ao-logo", path: "/images/email/auto-opulence-logo.png", filename: "auto-opulence-logo.png", mimeType: "image/png" },
   { cid: "vehicle-valeting", path: "/images/email/vehicle-valeting.jpg", filename: "vehicle-valeting.jpg", mimeType: "image/jpeg" },
@@ -218,7 +218,7 @@ async function sendEnquiryEmails(config, enquiry, inlineImages, attachments = []
   });
 }
 
-// source/app/api/enquiry/route.ts
+// ../../source/app/api/enquiry/route.ts
 var dynamic = "force-dynamic";
 var runtime = "nodejs";
 var serviceLabels = {
@@ -297,7 +297,7 @@ async function POST(request) {
   }
 }
 
-// source/app/api/enquiry/captcha/route.ts
+// ../../source/app/api/enquiry/captcha/route.ts
 var route_exports2 = {};
 __export(route_exports2, {
   GET: () => GET,
@@ -314,7 +314,7 @@ async function GET() {
   });
 }
 
-// source/app/api/address-lookup/route.ts
+// ../../source/app/api/address-lookup/route.ts
 var route_exports3 = {};
 __export(route_exports3, {
   GET: () => GET2,
@@ -322,7 +322,7 @@ __export(route_exports3, {
   runtime: () => runtime3
 });
 
-// source/lib/address-lookup.ts
+// ../../source/lib/address-lookup.ts
 var reply = (body, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store, private", "X-Content-Type-Options": "nosniff" } });
 var unavailable = "Address lookup is unavailable right now. Please enter your address below.";
 function normalisePostcode(value) {
@@ -381,7 +381,7 @@ async function handleAddressLookup(request, apiKey, fetcher = fetch) {
   }
 }
 
-// source/app/api/address-lookup/route.ts
+// ../../source/app/api/address-lookup/route.ts
 var dynamic3 = "force-dynamic";
 var runtime3 = "nodejs";
 var KEY = "pk_fb10a3e615a20434f6e5d99c";
@@ -389,13 +389,9 @@ function GET2(request) {
   return handleAddressLookup(request, runtimeEnv("POSTCODE_LOOKUP_KEY") || KEY);
 }
 
-// worker/src/index.ts
+// ../../worker/src/index.ts
 var CANONICAL_HOST = "autoopulence.co.uk";
-// CRM site search & AI assistant (CRM → Marketing → Site search & AI). Always added; switched on/off in the CRM.
 var SITE_SEARCH_SCRIPT = '<script src="https://crm.racecargraphics.uk/embed/site-search.js" data-key="cf3dec2d53f08dd72a8af483" defer></script>';
-// Search icon in the header, beside Customer login. Added in the browser because the site's script re-renders the
-// header; hidden until the site search script switches it on.
-var SITE_SEARCH_BUTTON = `<script>(function(){var b='<button type="button" class="customer-login-link" data-site-search hidden aria-label="Search the site" style="display:none;background:none;cursor:pointer;font:inherit"><svg stroke="currentColor" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" height="17" width="17"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span>Search</span></button>';function add(){var a=document.querySelector("header.site-header a.customer-login-link");if(!a||document.querySelector("header.site-header [data-site-search]"))return;a.insertAdjacentHTML("beforebegin",b)}add();new MutationObserver(add).observe(document.documentElement,{childList:true,subtree:true})})()</script>`;
 var ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
 var apiRoutes = [
   [/^\/api\/enquiry\/captcha\/?$/, route_exports2],
@@ -450,7 +446,7 @@ var index_default = {
     }
     if ((response.headers.get("content-type") || "").includes("text/html")) {
       response = new HTMLRewriter().on("body", { element(body) {
-        body.append(SITE_SEARCH_BUTTON + SITE_SEARCH_SCRIPT, { html: true });
+        body.append(SITE_SEARCH_SCRIPT, { html: true });
       } }).transform(response);
     }
     if (preview) {
