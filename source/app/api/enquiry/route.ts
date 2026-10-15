@@ -79,6 +79,14 @@ export async function POST(request: Request) {
       ccEmail: runtimeEnv("SMTP_CC_EMAIL", "chris@racecargraphics.uk"),
     };
     if (!config.password) return Response.json({ error: "Email delivery is temporarily unavailable. Please call 0330 053 6925." }, { status: 503 });
+    // CRM monitoring (hourly form check): with the monitor token, everything above has been checked; ask the CRM to
+    // check the web form key too, then stop before any email is sent. Without a valid token nothing is sent either.
+    if (text(body.get("monitor"), 5) === "1") {
+      const crm = await fetch("https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/inbound-webform-email", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ form_key: "3ca8339d-bd85-443a-9662-3bbc287b15ff", subject: service, details: message, email, name: firstName + " " + lastName, page_url: sourceUrl, monitor: true, monitor_token: text(body.get("monitorToken"), 200) }) });
+      const result = await crm.json().catch(() => ({}));
+      return Response.json(crm.ok && result.monitor ? { ok: true, monitor: true, captcha: true, smtp_configured: true, crm: result } : { error: result.error || "CRM check failed (" + crm.status + ")" }, { status: crm.ok ? 200 : crm.status });
+    }
 
     const inlineImages = await loadEnquiryEmailImages();
     await sendEnquiryEmails(config, { firstName, lastName, phone, email, service, message, sourceUrl, submittedAt }, inlineImages, attachments);
