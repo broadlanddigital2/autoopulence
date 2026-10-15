@@ -19,8 +19,14 @@
     "SMTP_FROM_NAME": "Auto Opulence Website",
     // CRM enquiry bot: "preview" shows it only on the workers.dev preview address, "live" on autoopulence.co.uk too,
     // "off" nowhere.
-    "ENQUIRY_BOT": "preview"
+    "ENQUIRY_BOT": "preview",
+    // External uptime pinger (worker/src/uptime-pinger.ts): who gets the "CRM is down" emails. Comma separated.
+    "ALERT_EMAILS": "justin@broadlanddigital.co.uk"
   },
+  // Every 5 minutes: the external uptime pinger for the CRM.
+  "triggers": { "crons": ["*/5 * * * *"] },
+  // Remembers what the uptime pinger has already alerted on.
+  "kv_namespaces": [{ "binding": "UPTIME_PINGER", "id": "2eee1ee7f3b6496aa0e9e2dc6c0fdf46" }],
   // Live domain: every request for autoopulence.co.uk and www goes to this Worker (DNS records stay as they are;
   // the Worker redirects www and http to https://autoopulence.co.uk). Remove these to hand the domain back.
   "routes": [

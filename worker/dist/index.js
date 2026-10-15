@@ -435,9 +435,103 @@ async function handle(request, env) {
   }
   return env.ASSETS.fetch(request);
 }
+// worker/src/uptime-pinger.ts
+const TARGETS = [
+  {
+    name: "CRM (staff.racecargraphics.uk)",
+    url: "https://staff.racecargraphics.uk/",
+    check: async (r) => r.ok ? (await r.text()).includes("Race Car Graphics") ? null : "page loaded but looks wrong" : `HTTP ${r.status}`
+  },
+  {
+    name: "CRM database, functions and monitoring",
+    url: "https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/monitor?heartbeat=1",
+    check: async (r) => {
+      if (!r.ok) return `HTTP ${r.status}`;
+      const j = await r.json().catch(() => ({}));
+      return j.ok ? null : `the CRM's monitoring hasn't run for ${j.last_run_minutes_ago ?? "?"} minutes (scheduled jobs may have stopped)`;
+    }
+  },
+  {
+    name: "CRM booking and search scripts",
+    url: "https://crm.racecargraphics.uk/embed/booking.js",
+    check: async (r) => r.ok ? null : `HTTP ${r.status}`
+  },
+  {
+    name: "Race Car Graphics website",
+    url: "https://racecargraphics.uk/",
+    check: async (r) => r.ok ? null : `HTTP ${r.status}`
+  }
+];
+async function probe(t) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const r = await fetch(t.url, { headers: { "User-Agent": "RCG-Uptime-Pinger/1.0 (Cloudflare)" }, signal: AbortSignal.timeout(15e3), redirect: "follow" });
+      const problem = await t.check(r);
+      if (!problem) return null;
+      if (attempt) return problem;
+    } catch (error) {
+      if (attempt) return error instanceof Error ? error.name === "TimeoutError" ? "no answer within 15 seconds" : error.message : "request failed";
+    }
+    await new Promise((r) => setTimeout(r, 3e3));
+  }
+  return null;
+}
+async function email(env, subject, text) {
+  const key = String(env.SMTP_PASSWORD || ""), to = String(env.ALERT_EMAILS || "").split(/[\s,;]+/).filter((e) => e.includes("@"));
+  if (!key || !to.length) {
+    console.error("Uptime pinger: no SendGrid key or ALERT_EMAILS");
+    return;
+  }
+  const r = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      personalizations: [{ to: to.map((email2) => ({ email: email2 })) }],
+      from: { email: String(env.SMTP_FROM_EMAIL || "valeting@autoopulence.co.uk"), name: "CRM uptime alert" },
+      subject,
+      content: [{ type: "text/plain", value: text + "\n\nMonitoring: https://staff.racecargraphics.uk/dashboard/monitoring\n(Sent by the external pinger on Cloudflare, every 5 minutes.)" }]
+    })
+  });
+  if (!r.ok) console.error("Uptime pinger email failed", r.status, await r.text().catch(() => ""));
+}
+async function runUptimePinger(env) {
+  const kv = env.UPTIME_PINGER;
+  const before = JSON.parse(kv && await kv.get("state") || "{}");
+  const state = JSON.parse(JSON.stringify(before));
+  const results = await Promise.all(TARGETS.map(async (t) => ({ t, problem: await probe(t) })));
+  const down = [], up = [];
+  const now = /* @__PURE__ */ new Date();
+  for (const { t, problem } of results) {
+    const s = state[t.name] || { fails: 0 };
+    if (problem) {
+      s.fails += 1;
+      s.problem = problem;
+      s.since = s.since || now.toISOString();
+      if (s.fails >= 2 && !s.alerted) {
+        s.alerted = true;
+        down.push(`${t.name}: ${problem} (since ${new Date(s.since).toLocaleString("en-GB", { timeZone: "Europe/London" })})`);
+      }
+    } else {
+      if (s.alerted) up.push(`${t.name} is working again (was down from ${new Date(s.since || now).toLocaleString("en-GB", { timeZone: "Europe/London" })})`);
+      state[t.name] = { fails: 0 };
+      continue;
+    }
+    state[t.name] = s;
+  }
+  if (down.length) await email(env, `DOWN: ${down.length === 1 ? down[0].split(":")[0] : down.length + " CRM services"}`, "The external pinger can't reach:\n\n" + down.map((d) => "\u2022 " + d).join("\n"));
+  if (up.length) await email(env, `Back up: ${up.length === 1 ? up[0].split(" is working")[0] : up.length + " CRM services"}`, up.map((d) => "\u2022 " + d).join("\n"));
+  if (kv && JSON.stringify(state) !== JSON.stringify(before)) await kv.put("state", JSON.stringify(state));
+  return results.map(({ t, problem }) => ({ name: t.name, ok: !problem, problem }));
+}
+
 var index_default = {
+  // External uptime pinger for the CRM (every 5 minutes, wrangler.jsonc "triggers"). See uptime-pinger.ts.
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(runUptimePinger(env).catch((error) => console.error("Uptime pinger failed", error)));
+  },
   async fetch(request, env) {
     setEnv(env);
+    if (new URL(request.url).pathname === "/__uptime-pinger" && new URL(request.url).hostname.endsWith(".workers.dev")) return Response.json(await runUptimePinger(env));
     let response;
     try {
       response = await handle(request, env);

@@ -8,6 +8,7 @@ import { setEnv, type Env } from "./env";
 import * as enquiry from "../../source/app/api/enquiry/route";
 import * as captcha from "../../source/app/api/enquiry/captcha/route";
 import * as addressLookup from "../../source/app/api/address-lookup/route";
+import { runUptimePinger } from "./uptime-pinger";
 
 const CANONICAL_HOST = "autoopulence.co.uk";
 // The CRM enquiry bot (chat assistant). Its answers, pages and leads are managed in the CRM.
@@ -55,8 +56,14 @@ async function handle(request: Request, env: Env): Promise<Response> {
 }
 
 export default {
+  // External uptime pinger for the CRM (every 5 minutes, wrangler.jsonc "triggers"). See uptime-pinger.ts.
+  async scheduled(_event: unknown, env: Env, ctx: { waitUntil(p: Promise<unknown>): void }) {
+    ctx.waitUntil(runUptimePinger(env as never).catch((error) => console.error("Uptime pinger failed", error)));
+  },
   async fetch(request: Request, env: Env): Promise<Response> {
     setEnv(env);
+    // Run the uptime pinger by hand on the workers.dev preview address only (no emails unless something is down).
+    if (new URL(request.url).pathname === "/__uptime-pinger" && new URL(request.url).hostname.endsWith(".workers.dev")) return Response.json(await runUptimePinger(env as never));
     let response: Response;
     try {
       response = await handle(request, env);
