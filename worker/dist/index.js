@@ -393,8 +393,9 @@ function GET2(request) {
 var CANONICAL_HOST = "autoopulence.co.uk";
 // CRM site search & AI assistant (CRM → Marketing → Site search & AI). Always added; switched on/off in the CRM.
 var SITE_SEARCH_SCRIPT = '<script src="https://crm.racecargraphics.uk/embed/site-search.js" data-key="cf3dec2d53f08dd72a8af483" defer></script>';
-// Search icon in the header, beside Customer login. Hidden until the site search script switches it on.
-var SITE_SEARCH_BUTTON = '<button type="button" class="customer-login-link" data-site-search hidden aria-label="Search the site" style="display:none;background:none;cursor:pointer;font:inherit"><svg stroke="currentColor" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" height="17" width="17"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span>Search</span></button>';
+// Search icon in the header, beside Customer login. Added in the browser because the site's script re-renders the
+// header; hidden until the site search script switches it on.
+var SITE_SEARCH_BUTTON = `<script>(function(){var b='<button type="button" class="customer-login-link" data-site-search hidden aria-label="Search the site" style="display:none;background:none;cursor:pointer;font:inherit"><svg stroke="currentColor" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" height="17" width="17"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span>Search</span></button>';function add(){var a=document.querySelector("header.site-header a.customer-login-link");if(!a||document.querySelector("header.site-header [data-site-search]"))return;a.insertAdjacentHTML("beforebegin",b)}add();new MutationObserver(add).observe(document.documentElement,{childList:true,subtree:true})})()</script>`;
 var ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
 var apiRoutes = [
   [/^\/api\/enquiry\/captcha\/?$/, route_exports2],
@@ -448,14 +449,8 @@ var index_default = {
       } }).transform(response);
     }
     if ((response.headers.get("content-type") || "").includes("text/html")) {
-      let searchButton = false;
-      response = new HTMLRewriter().on("header.site-header a.customer-login-link", { element(link) {
-        if (!searchButton) {
-          link.before(SITE_SEARCH_BUTTON, { html: true });
-          searchButton = true;
-        }
-      } }).on("body", { element(body) {
-        body.append(SITE_SEARCH_SCRIPT, { html: true });
+      response = new HTMLRewriter().on("body", { element(body) {
+        body.append(SITE_SEARCH_BUTTON + SITE_SEARCH_SCRIPT, { html: true });
       } }).transform(response);
     }
     if (preview) {
