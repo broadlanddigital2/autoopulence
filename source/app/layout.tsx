@@ -52,7 +52,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en-GB">
-      <body className="antialiased"><Suspense fallback={null}><RouteTransitionLoader /></Suspense>{children}<a className="whatsapp-launcher" href="https://wa.me/+447383563859" target="_blank" rel="noopener noreferrer" aria-label="Chat with Auto Opulence on WhatsApp"><MessageCircle aria-hidden="true" /></a><CookieConsent /><script type="text/javascript" src="https://launcher.enquirybot.com/index.js" data-bot-id="99b5f5bc-3f84-4f5d-a655-ed9eacd4558c" defer /></body>
+      <body className="antialiased"><Suspense fallback={null}><RouteTransitionLoader /></Suspense>{children}<a className="whatsapp-launcher" href="https://wa.me/+447383563859" target="_blank" rel="noopener noreferrer" aria-label="Chat with Auto Opulence on WhatsApp"><MessageCircle aria-hidden="true" /></a><CookieConsent /><script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer /></body>
     </html>
   );
 }

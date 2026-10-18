@@ -29,6 +29,14 @@ export function CookieConsent() {
     return () => window.removeEventListener("ao:cookie-settings", showSettings);
   }, []);
 
+  // Tell the CRM enquiry bot whether it may remember this visitor (returning-visitor tracking).
+  useEffect(() => {
+    if (!choice) return;
+    const tracking = choice === "accepted";
+    (window as unknown as { __crmBotTracking?: boolean }).__crmBotTracking = tracking;
+    window.dispatchEvent(new CustomEvent("rcg-enquiry-bot-consent", { detail: { tracking } }));
+  }, [choice]);
+
   function save(next: Choice) {
     const withdrawing = choice === "accepted" && next === "rejected";
     window.localStorage.setItem(storageKey, next);
