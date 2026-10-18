@@ -62,7 +62,9 @@ function headTags(page) {
 }
 
 // Third-party script from app/layout.tsx (EnquiryBot chat launcher).
-const layoutScripts = `<script type="text/javascript" src="https://launcher.enquirybot.com/index.js" data-bot-id="99b5f5bc-3f84-4f5d-a655-ed9eacd4558c" defer></script>`;
+// CRM enquiry bot (replaced Boxly). It remembers returning visitors only after "Accept analytics".
+const layoutScripts = `<script>(function(){var K="ao_cookie_consent";try{window.__crmBotTracking=localStorage.getItem(K)==="accepted";var set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){set.apply(this,arguments);try{if(this===window.localStorage&&k===K){var t=String(v)==="accepted";window.__crmBotTracking=t;window.dispatchEvent(new CustomEvent("rcg-enquiry-bot-consent",{detail:{tracking:t}}))}}catch(e){}}}catch(e){}})();</script>
+<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>`;
 
 // Insights visit recorder (CRM): starts only after "Accept analytics" (ao_cookie_consent = accepted); typing is hidden.
 const INSIGHTS = `<script src="https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/web-recorder?asset=t.js" data-site="8dbd8fb9-191b-497c-aa4f-5c02cf10c020" defer></script>
