@@ -14603,6 +14603,20 @@ img {
 .crm-booking-page {
   padding-block: 56px 80px;
 }
+.customer-logout {
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.mobile-logout {
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
 @property --tw-translate-x {
   syntax: "*";
   inherits: false;

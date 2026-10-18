@@ -248,7 +248,7 @@ async function POST(request) {
     const firstName = text(body.get("firstName"), 80);
     const lastName = text(body.get("lastName"), 80);
     const phone = text(body.get("phone"), 40);
-    const email = text(body.get("email"), 254).toLowerCase();
+    const email2 = text(body.get("email"), 254).toLowerCase();
     const selectedService = serviceLabels[text(body.get("service"), 80)] || "General vehicle-care enquiry";
     const businessSector = text(body.get("businessSector"), 120);
     const service = businessSector ? `${selectedService} \u2014 ${businessSector}` : selectedService;
@@ -259,7 +259,7 @@ async function POST(request) {
       timeStyle: "long",
       timeZone: "Europe/London"
     }).format(/* @__PURE__ */ new Date());
-    if (!firstName || !lastName || !phone || !message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!firstName || !lastName || !phone || !message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email2)) {
       return Response.json({ error: "Please complete your first name, last name, phone number, email address, service and enquiry." }, { status: 400 });
     }
     const captchaSecret = runtimeEnv("ENQUIRY_CAPTCHA_SECRET") || runtimeEnv("SMTP_PASSWORD");
@@ -288,16 +288,17 @@ async function POST(request) {
       ccEmail: runtimeEnv("SMTP_CC_EMAIL", "chris@racecargraphics.uk")
     };
     if (!config.password) return Response.json({ error: "Email delivery is temporarily unavailable. Please call 0330 053 6925." }, { status: 503 });
-    // CRM monitoring (hourly form check): with the monitor token, everything above has been checked; ask the CRM to
-    // check the web form key too, then stop before any email is sent. Without a valid token nothing is sent either.
     if (text(body.get("monitor"), 5) === "1") {
-      const crm = await fetch("https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/inbound-webform-email", { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ form_key: "3ca8339d-bd85-443a-9662-3bbc287b15ff", subject: service, details: message, email, name: firstName + " " + lastName, page_url: sourceUrl, monitor: true, monitor_token: text(body.get("monitorToken"), 200) }) });
+      const crm = await fetch("https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/inbound-webform-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ form_key: "3ca8339d-bd85-443a-9662-3bbc287b15ff", subject: service, details: message, email: email2, name: firstName + " " + lastName, page_url: sourceUrl, monitor: true, monitor_token: text(body.get("monitorToken"), 200) })
+      });
       const result = await crm.json().catch(() => ({}));
       return Response.json(crm.ok && result.monitor ? { ok: true, monitor: true, captcha: true, smtp_configured: true, crm: result } : { error: result.error || "CRM check failed (" + crm.status + ")" }, { status: crm.ok ? 200 : crm.status });
     }
     const inlineImages = await loadEnquiryEmailImages();
-    await sendEnquiryEmails(config, { firstName, lastName, phone, email, service, message, sourceUrl, submittedAt }, inlineImages, attachments);
+    await sendEnquiryEmails(config, { firstName, lastName, phone, email: email2, service, message, sourceUrl, submittedAt }, inlineImages, attachments);
     return Response.json({ ok: true });
   } catch (error) {
     console.error("Enquiry delivery failed", error instanceof Error ? error.message : "Unknown error");
@@ -397,46 +398,8 @@ function GET2(request) {
   return handleAddressLookup(request, runtimeEnv("POSTCODE_LOOKUP_KEY") || KEY);
 }
 
-// ../../worker/src/index.ts
-var CANONICAL_HOST = "autoopulence.co.uk";
-var SITE_SEARCH_SCRIPT = '<script src="https://crm.racecargraphics.uk/embed/site-search.js" data-key="cf3dec2d53f08dd72a8af483" defer></script>';
-var ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
-var apiRoutes = [
-  [/^\/api\/enquiry\/captcha\/?$/, route_exports2],
-  [/^\/api\/enquiry\/?$/, route_exports],
-  [/^\/api\/address-lookup\/?$/, route_exports3]
-];
-async function handle(request, env) {
-  const url = new URL(request.url);
-  if (url.hostname === `www.${CANONICAL_HOST}` || url.hostname === CANONICAL_HOST && url.protocol === "http:") {
-    return Response.redirect(`https://${CANONICAL_HOST}${url.pathname}${url.search}`, 301);
-  }
-  if (url.pathname.startsWith("/api/")) {
-    const match = apiRoutes.find(([pattern]) => pattern.test(url.pathname));
-    const handler = match?.[1][request.method];
-    if (!match) return Response.json({ error: "Not found." }, { status: 404 });
-    if (!handler) return Response.json({ error: "Method not allowed." }, { status: 405, headers: { allow: Object.keys(match[1]).filter((k) => k === "GET" || k === "POST").join(", ") } });
-    if (!url.hostname.endsWith(".workers.dev")) return handler(request);
-    const logged = [];
-    const original = console.error;
-    console.error = (...args) => {
-      logged.push(args.map((a) => typeof a === "string" ? a : a instanceof Error ? a.message : JSON.stringify(a)).join(" "));
-      original(...args);
-    };
-    try {
-      const response = await handler(request);
-      if (response.status < 500 || !logged.length) return response;
-      const data = await response.clone().json().catch(() => null);
-      if (!data) return response;
-      return Response.json({ ...data, error: `${data.error || "Error"} [preview detail: ${logged.join(" | ").slice(0, 500)}]` }, { status: response.status });
-    } finally {
-      console.error = original;
-    }
-  }
-  return env.ASSETS.fetch(request);
-}
-// worker/src/uptime-pinger.ts
-const TARGETS = [
+// ../../worker/src/uptime-pinger.ts
+var TARGETS = [
   {
     name: "CRM (staff.racecargraphics.uk)",
     url: "https://staff.racecargraphics.uk/",
@@ -476,7 +439,7 @@ async function probe(t) {
   }
   return null;
 }
-async function email(env, subject, text) {
+async function email(env, subject, text2) {
   const key = String(env.SMTP_PASSWORD || ""), to = String(env.ALERT_EMAILS || "").split(/[\s,;]+/).filter((e) => e.includes("@"));
   if (!key || !to.length) {
     console.error("Uptime pinger: no SendGrid key or ALERT_EMAILS");
@@ -489,7 +452,7 @@ async function email(env, subject, text) {
       personalizations: [{ to: to.map((email2) => ({ email: email2 })) }],
       from: { email: String(env.SMTP_FROM_EMAIL || "valeting@autoopulence.co.uk"), name: "CRM uptime alert" },
       subject,
-      content: [{ type: "text/plain", value: text + "\n\nMonitoring: https://staff.racecargraphics.uk/dashboard/monitoring\n(Sent by the external pinger on Cloudflare, every 5 minutes.)" }]
+      content: [{ type: "text/plain", value: text2 + "\n\nMonitoring: https://staff.racecargraphics.uk/dashboard/monitoring\n(Sent by the external pinger on Cloudflare, every 5 minutes.)" }]
     })
   });
   if (!r.ok) console.error("Uptime pinger email failed", r.status, await r.text().catch(() => ""));
@@ -524,6 +487,44 @@ async function runUptimePinger(env) {
   return results.map(({ t, problem }) => ({ name: t.name, ok: !problem, problem }));
 }
 
+// ../../worker/src/index.ts
+var CANONICAL_HOST = "autoopulence.co.uk";
+var SITE_SEARCH_SCRIPT = '<script src="https://crm.racecargraphics.uk/embed/site-search.js" data-key="cf3dec2d53f08dd72a8af483" defer></script>';
+var ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
+var apiRoutes = [
+  [/^\/api\/enquiry\/captcha\/?$/, route_exports2],
+  [/^\/api\/enquiry\/?$/, route_exports],
+  [/^\/api\/address-lookup\/?$/, route_exports3]
+];
+async function handle(request, env) {
+  const url = new URL(request.url);
+  if (url.hostname === `www.${CANONICAL_HOST}` || url.hostname === CANONICAL_HOST && url.protocol === "http:") {
+    return Response.redirect(`https://${CANONICAL_HOST}${url.pathname}${url.search}`, 301);
+  }
+  if (url.pathname.startsWith("/api/")) {
+    const match = apiRoutes.find(([pattern]) => pattern.test(url.pathname));
+    const handler = match?.[1][request.method];
+    if (!match) return Response.json({ error: "Not found." }, { status: 404 });
+    if (!handler) return Response.json({ error: "Method not allowed." }, { status: 405, headers: { allow: Object.keys(match[1]).filter((k) => k === "GET" || k === "POST").join(", ") } });
+    if (!url.hostname.endsWith(".workers.dev")) return handler(request);
+    const logged = [];
+    const original = console.error;
+    console.error = (...args) => {
+      logged.push(args.map((a) => typeof a === "string" ? a : a instanceof Error ? a.message : JSON.stringify(a)).join(" "));
+      original(...args);
+    };
+    try {
+      const response = await handler(request);
+      if (response.status < 500 || !logged.length) return response;
+      const data = await response.clone().json().catch(() => null);
+      if (!data) return response;
+      return Response.json({ ...data, error: `${data.error || "Error"} [preview detail: ${logged.join(" | ").slice(0, 500)}]` }, { status: response.status });
+    } finally {
+      console.error = original;
+    }
+  }
+  return env.ASSETS.fetch(request);
+}
 var index_default = {
   // External uptime pinger for the CRM (every 5 minutes, wrangler.jsonc "triggers"). See uptime-pinger.ts.
   async scheduled(_event, env, ctx) {
