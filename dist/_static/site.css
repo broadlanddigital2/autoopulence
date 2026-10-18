@@ -1443,6 +1443,9 @@
   .text-white {
     color: var(--color-white);
   }
+  .uppercase {
+    text-transform: uppercase;
+  }
   .tabular-nums {
     --tw-numeric-spacing: tabular-nums;
     font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
@@ -14616,6 +14619,18 @@ img {
   cursor: pointer;
   width: 100%;
   text-align: left;
+}
+.enquiry-optional {
+  font-weight: 400;
+  opacity: .7;
+}
+.enquiry-reg-note {
+  display: block;
+  margin-top: 6px;
+  font-size: .8rem;
+  line-height: 1.45;
+  color: #5f6f76;
+  font-weight: 400;
 }
 @property --tw-translate-x {
   syntax: "*";

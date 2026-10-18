@@ -252,7 +252,11 @@ async function POST(request) {
     const selectedService = serviceLabels[text(body.get("service"), 80)] || "General vehicle-care enquiry";
     const businessSector = text(body.get("businessSector"), 120);
     const service = businessSector ? `${selectedService} \u2014 ${businessSector}` : selectedService;
-    const message = text(body.get("message"), 4e3);
+    const enquiryText = text(body.get("message"), 4e3);
+    const registration = text(body.get("registration"), 15).toUpperCase().replace(/[^A-Z0-9 ]/g, "");
+    const message = registration && enquiryText ? `Vehicle registration: ${registration}
+
+${enquiryText}` : enquiryText;
     const sourceUrl = withAdClick(text(body.get("sourceUrl"), 2048) || text(request.headers.get("referer"), 2048) || "Not available", request);
     const submittedAt = new Intl.DateTimeFormat("en-GB", {
       dateStyle: "full",

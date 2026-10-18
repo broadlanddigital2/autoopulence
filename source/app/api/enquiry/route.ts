@@ -40,7 +40,10 @@ export async function POST(request: Request) {
     const selectedService = serviceLabels[text(body.get("service"), 80)] || "General vehicle-care enquiry";
     const businessSector = text(body.get("businessSector"), 120);
     const service = businessSector ? `${selectedService} — ${businessSector}` : selectedService;
-    const message = text(body.get("message"), 4000);
+    const enquiryText = text(body.get("message"), 4000);
+    // Optional vehicle registration (helps us price accurately): put at the top of the enquiry for the team and the CRM.
+    const registration = text(body.get("registration"), 15).toUpperCase().replace(/[^A-Z0-9 ]/g, "");
+    const message = registration && enquiryText ? `Vehicle registration: ${registration}\n\n${enquiryText}` : enquiryText;
     const sourceUrl = withAdClick(text(body.get("sourceUrl"), 2048) || text(request.headers.get("referer"), 2048) || "Not available", request);
     const submittedAt = new Intl.DateTimeFormat("en-GB", {
       dateStyle: "full",
