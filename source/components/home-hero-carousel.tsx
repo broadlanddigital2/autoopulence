@@ -30,7 +30,7 @@ const slides = [
     kicker: "Long-term paint protection",
     title: "Seven-year ceramic protection.",
     text: "Deep gloss, easier maintenance and durable protection following the required decontamination and clay-bar preparation.",
-    price: "From £445",
+    price: "From £495",
     note: "Includes minimum preparation and coating",
     href: "/service/new-car-7-year-ceramic-coating",
     cta: "Explore ceramic coating",

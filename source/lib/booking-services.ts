@@ -95,8 +95,8 @@ export const bookingTypes: BookingType[] = [
   { id: "polish", label: "Vehicle Polishing", services: [
     { id: "stage-one", name: "Stage 1 Vehicle Machine Polish", prices: { small: 295, medium: 320, large: 345, extraLarge: 395 } },
     { id: "multistage", name: "Multistage Vehicle Polish", prices: { small: 345, medium: 370, large: 395, extraLarge: 445 } },
-    { id: "multistage-ceramic", name: "Multistage Polish with 7-Year Ceramic Coating", prices: { small: 595, medium: 645, large: 695, extraLarge: 795 } },
-    { id: "new-car-ceramic", name: "New Car 7-Year Ceramic Coating", prices: { small: 250, medium: 275, large: 300, extraLarge: 350 } },
+    { id: "multistage-ceramic", name: "Multistage Polish with 7-Year Ceramic Coating", prices: { small: 645, medium: 710, large: 775, extraLarge: 895 } },
+    { id: "new-car-ceramic", name: "New Car 7-Year Ceramic Coating", prices: { small: 300, medium: 340, large: 380, extraLarge: 450 } },
     { id: "soft-top-ceramic", name: "Soft Top Deep Clean plus Ceramic Coating", fixedPrice: 95 },
     { id: "soft-top-redye", name: "Soft Top Clean, Ceramic Coating & Re-Dye", fixedPrice: 195 },
     { id: "wheel-face", name: "Alloy Wheel Ceramic Coating — Face Only", fixedPrice: 195 },
