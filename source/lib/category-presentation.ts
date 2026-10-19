@@ -27,8 +27,8 @@ export const categoryComparisonFeatures: Record<string, ComparisonFeature[]> = {
   ],
   "vehicle-polishing": [
     { label: "Paint inspection and assessment", includedFor: ["stage-1-vehicle-machine-polish", "multistage-vehicle-polish", "multi-stage-machine-polish-inc-7-year-ceramic-coating", "new-car-7-year-ceramic-coating", "7-year-ceramic-coating-with-clay-bar-decontamination-wash", "3-plus-1-year-ceramic-coating"] },
-    { label: "Wash and paint decontamination", includedFor: ["stage-1-vehicle-machine-polish", "multistage-vehicle-polish", "multi-stage-machine-polish-inc-7-year-ceramic-coating", "7-year-ceramic-coating-with-clay-bar-decontamination-wash"] },
-    { label: "Clay-bar treatment", includedFor: ["7-year-ceramic-coating-with-clay-bar-decontamination-wash"] },
+    { label: "Wash and paint decontamination", includedFor: ["stage-1-vehicle-machine-polish", "multistage-vehicle-polish", "multi-stage-machine-polish-inc-7-year-ceramic-coating", "7-year-ceramic-coating-with-clay-bar-decontamination-wash", "3-plus-1-year-ceramic-coating"] },
+    { label: "Clay-bar treatment", includedFor: ["7-year-ceramic-coating-with-clay-bar-decontamination-wash", "3-plus-1-year-ceramic-coating"] },
     { label: "Two-day, two-coat ceramic (3 + 1 years)", includedFor: ["3-plus-1-year-ceramic-coating"] },
     { label: "Single-stage machine polish", includedFor: ["stage-1-vehicle-machine-polish"] },
     { label: "Multi-stage paint correction", includedFor: ["multistage-vehicle-polish", "multi-stage-machine-polish-inc-7-year-ceramic-coating"] },
