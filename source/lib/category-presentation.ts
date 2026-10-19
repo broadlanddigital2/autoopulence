@@ -70,7 +70,7 @@ const serviceCardImages: Record<string, string> = {
   "multi-stage-machine-polish-inc-7-year-ceramic-coating": "/images/services/vehicle-polishing/paint-correction-ceramic-coating-bmw-m4-norwich.webp",
   "new-car-7-year-ceramic-coating": "/images/services/vehicle-polishing/7-year-ceramic-coating-porsche-taycan-norwich.webp",
   "7-year-ceramic-coating-with-clay-bar-decontamination-wash": "/images/services/vehicle-polishing/7-year-ceramic-coating-porsche-taycan-norwich.webp",
-  "3-plus-1-year-ceramic-coating": "/images/services/vehicle-polishing/7-year-ceramic-coating-porsche-taycan-norwich.webp",
+  "3-plus-1-year-ceramic-coating": "/images/services/vehicle-polishing/3-plus-1-year-ceramic-coating-bmw-m5-norwich.webp",
   "soft-top-deep-clean-plus-ceramic-coating": "/images/services/vehicle-polishing/soft-top-clean-ceramic-mini-convertible-norwich.webp",
   "soft-top-deep-clean-ceramic-coating-re-dye-roof-only": "/images/services/vehicle-polishing/soft-top-redye-ceramic-bentley-continental-gtc-norwich.webp",
   "alloy-wheel-ceramic-coating-face-only": "/images/services/vehicle-polishing/alloy-wheel-face-ceramic-coating-audi-rs3-norwich.webp",
@@ -101,7 +101,7 @@ const serviceImageAlts: Record<string, string> = {
   "multistage-vehicle-polish": "Black Range Rover Velar undergoing multi-stage paint correction",
   "multi-stage-machine-polish-inc-7-year-ceramic-coating": "Dark grey BMW M4 receiving ceramic coating after multi-stage paint correction",
   "new-car-7-year-ceramic-coating": "Deep green Porsche Taycan receiving a seven-year ceramic coating",
-  "3-plus-1-year-ceramic-coating": "Glossy vehicle receiving a two-coat 3 + 1 year ceramic coating in Norwich",
+  "3-plus-1-year-ceramic-coating": "Black BMW M5 being hand-coated with a 3 + 1 year ceramic coating in the Auto Opulence unit, Norwich",
   "7-year-ceramic-coating-with-clay-bar-decontamination-wash": "Deep green Porsche Taycan with a seven-year ceramic coating after a clay-bar decontamination wash",
   "soft-top-deep-clean-plus-ceramic-coating": "Graphite grey MINI Convertible soft top receiving ceramic protection",
   "soft-top-deep-clean-ceramic-coating-re-dye-roof-only": "Navy Bentley Continental GTC soft top receiving re-dye and ceramic protection",
@@ -122,4 +122,13 @@ export function getServiceCardImage(serviceSlug: string, fallback: string) {
 
 export function getServiceImageAlt(serviceSlug: string, fallback: string) {
   return serviceImageAlts[serviceSlug] ?? fallback;
+}
+
+// Optional second photo for a service page's gallery (replaces the generic category tile).
+const serviceGalleryImages: Record<string, { src: string; alt: string }> = {
+  "3-plus-1-year-ceramic-coating": { src: "/images/services/vehicle-polishing/3-plus-1-year-ceramic-coating-beading-norwich.webp", alt: "Water beading on a ceramic-coated black bonnet after a 3 + 1 year ceramic coating" },
+};
+
+export function getServiceGalleryImage(serviceSlug: string) {
+  return serviceGalleryImages[serviceSlug];
 }
