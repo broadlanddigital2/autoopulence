@@ -495,6 +495,30 @@ async function runUptimePinger(env) {
 var CANONICAL_HOST = "autoopulence.co.uk";
 var SITE_SEARCH_SCRIPT = '<script src="https://crm.racecargraphics.uk/embed/site-search.js" data-key="cf3dec2d53f08dd72a8af483" defer></script>';
 var ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
+var CRM_ORIGIN = "https://crm.racecargraphics.uk";
+var CRM_PAGES = /^\/loan\/[^/]+\/?$/;
+var CRM_PAGE_REFERERS = /^\/loan(\/|$)/;
+async function fromCrm(request) {
+  const url = new URL(request.url);
+  const target = new URL(url.pathname + url.search, CRM_ORIGIN);
+  const headers = new Headers(request.headers);
+  headers.delete("host");
+  headers.delete("cookie");
+  headers.set("x-forwarded-host", url.host);
+  const upstream = await fetch(target, { method: request.method, headers, body: ["GET", "HEAD"].includes(request.method) ? void 0 : request.body, redirect: "manual" });
+  const response = new Response(upstream.body, upstream);
+  const location = response.headers.get("location");
+  if (location) {
+    try {
+      const l = new URL(location, target);
+      if (l.host === target.host) response.headers.set("location", l.pathname + l.search + l.hash);
+    } catch {
+    }
+  }
+  response.headers.delete("set-cookie");
+  if (CRM_PAGES.test(url.pathname)) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
+}
 var apiRoutes = [
   [/^\/api\/enquiry\/captcha\/?$/, route_exports2],
   [/^\/api\/enquiry\/?$/, route_exports],
@@ -518,16 +542,26 @@ async function handle(request, env) {
       original(...args);
     };
     try {
-      const response = await handler(request);
-      if (response.status < 500 || !logged.length) return response;
-      const data = await response.clone().json().catch(() => null);
-      if (!data) return response;
-      return Response.json({ ...data, error: `${data.error || "Error"} [preview detail: ${logged.join(" | ").slice(0, 500)}]` }, { status: response.status });
+      const response2 = await handler(request);
+      if (response2.status < 500 || !logged.length) return response2;
+      const data = await response2.clone().json().catch(() => null);
+      if (!data) return response2;
+      return Response.json({ ...data, error: `${data.error || "Error"} [preview detail: ${logged.join(" | ").slice(0, 500)}]` }, { status: response2.status });
     } finally {
       console.error = original;
     }
   }
-  return env.ASSETS.fetch(request);
+  if (CRM_PAGES.test(url.pathname)) return fromCrm(request);
+  const response = await env.ASSETS.fetch(request);
+  if (response.status === 404) {
+    if (url.pathname.startsWith("/_next/")) return fromCrm(request);
+    try {
+      const ref = new URL(request.headers.get("referer") || "");
+      if (ref.host === url.host && CRM_PAGE_REFERERS.test(ref.pathname)) return fromCrm(request);
+    } catch {
+    }
+  }
+  return response;
 }
 var index_default = {
   // External uptime pinger for the CRM (every 5 minutes, wrangler.jsonc "triggers"). See uptime-pinger.ts.
@@ -545,6 +579,7 @@ var index_default = {
       response = Response.json({ error: "Something went wrong. Please call 0330 053 6925." }, { status: 500 });
     }
     const preview = new URL(request.url).hostname.endsWith(".workers.dev");
+    if (CRM_PAGES.test(new URL(request.url).pathname)) return response;
     const bot = String(env.ENQUIRY_BOT || "preview");
     if ((bot === "live" || bot === "preview" && preview) && (response.headers.get("content-type") || "").includes("text/html")) {
       response = new HTMLRewriter().on("body", { element(body) {

@@ -17,6 +17,26 @@ const SITE_SEARCH_SCRIPT = '<script src="https://crm.racecargraphics.uk/embed/si
 // The search icon in the header is part of the site (source/components/site-chrome.tsx, data-site-search, hidden
 // until the site search script switches it on). Adding it from here broke React hydration and blanked the booking form.
 const ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
+// Customer pages rendered by the CRM app (loan vehicle form) are served under autoopulence.co.uk, so customers stay
+// on this site. Their scripts/images (/_next/..., logos) come from the CRM when the site itself doesn't have them.
+const CRM_ORIGIN = "https://crm.racecargraphics.uk";
+const CRM_PAGES = /^\/loan\/[^/]+\/?$/;
+const CRM_PAGE_REFERERS = /^\/loan(\/|$)/;
+async function fromCrm(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const target = new URL(url.pathname + url.search, CRM_ORIGIN);
+  const headers = new Headers(request.headers);
+  headers.delete("host"); headers.delete("cookie");
+  headers.set("x-forwarded-host", url.host);
+  const upstream = await fetch(target, { method: request.method, headers, body: ["GET", "HEAD"].includes(request.method) ? undefined : request.body, redirect: "manual" });
+  const response = new Response(upstream.body, upstream);
+  const location = response.headers.get("location");
+  if (location) { try { const l = new URL(location, target); if (l.host === target.host) response.headers.set("location", l.pathname + l.search + l.hash); } catch { /* leave as is */ } }
+  response.headers.delete("set-cookie");
+  if (CRM_PAGES.test(url.pathname)) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
+}
+
 type Handler = (request: Request) => Response | Promise<Response>;
 type RouteModule = Partial<Record<"GET" | "POST", Handler>>;
 
@@ -52,7 +72,13 @@ async function handle(request: Request, env: Env): Promise<Response> {
     } finally { console.error = original; }
   }
 
-  return env.ASSETS.fetch(request);
+  if (CRM_PAGES.test(url.pathname)) return fromCrm(request);
+  const response = await env.ASSETS.fetch(request);
+  if (response.status === 404) {
+    if (url.pathname.startsWith("/_next/")) return fromCrm(request);
+    try { const ref = new URL(request.headers.get("referer") || ""); if (ref.host === url.host && CRM_PAGE_REFERERS.test(ref.pathname)) return fromCrm(request); } catch { /* no referer */ }
+  }
+  return response;
 }
 
 export default {
@@ -72,6 +98,8 @@ export default {
       response = Response.json({ error: "Something went wrong. Please call 0330 053 6925." }, { status: 500 });
     }
     const preview = new URL(request.url).hostname.endsWith(".workers.dev");
+    // CRM pages (loan form) are left untouched: extra scripts would break their React page.
+    if (CRM_PAGES.test(new URL(request.url).pathname)) return response;
     const bot = String(env.ENQUIRY_BOT || "preview");
     if ((bot === "live" || (bot === "preview" && preview)) && (response.headers.get("content-type") || "").includes("text/html")) {
       response = new HTMLRewriter().on("body", { element(body) { body.append(ENQUIRY_BOT_SCRIPT, { html: true }); } }).transform(response);
