@@ -146,6 +146,7 @@ export const bookingServiceIdForSiteSlug: Record<string, string> = {
   "multi-stage-machine-polish-inc-7-year-ceramic-coating": "multistage-ceramic",
   "new-car-7-year-ceramic-coating": "new-car-ceramic",
   "7-year-ceramic-coating-with-clay-bar-decontamination-wash": "ceramic-clay-bundle",
+  "3-plus-1-year-ceramic-coating": "ceramic-three-plus-one",
   "soft-top-deep-clean-plus-ceramic-coating": "soft-top-ceramic",
   "soft-top-deep-clean-ceramic-coating-re-dye-roof-only": "soft-top-redye",
   "alloy-wheel-ceramic-coating-face-only": "wheel-face",
