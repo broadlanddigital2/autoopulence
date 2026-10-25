@@ -15,7 +15,7 @@
     "html_handling": "auto-trailing-slash"
   },
   "vars": {
-    "SMTP_FROM_EMAIL": "valeting@autoopulence.co.uk",
+    "SMTP_FROM_EMAIL": "noreply@autoopulence.co.uk",
     "SMTP_FROM_NAME": "Auto Opulence Website",
     // CRM enquiry bot: "preview" shows it only on the workers.dev preview address, "live" on autoopulence.co.uk too,
     // "off" nowhere.
