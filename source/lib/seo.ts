@@ -65,10 +65,24 @@ export function categoryDescription(category: Category) {
   return descriptions[category.slug] ?? category.intro;
 }
 
+// Search titles stay within ~60 characters (Google cuts the rest off); long service names use a shorter form.
+const shortServiceNames: Record<string, string> = {
+  "7-year-ceramic-coating-with-clay-bar-decontamination-wash": "7-Year Ceramic Coating & Clay Bar Wash",
+};
 export function serviceTitle(service: Service) {
-  return `${service.title} Norwich | Auto Opulence`;
+  const name = shortServiceNames[service.slug] ?? service.title;
+  return [`${name} Norwich | Auto Opulence`, `${name} | Auto Opulence`, `${name} Norwich`].find((t) => t.length <= 60) ?? name;
 }
 
+// Descriptions stay within 160 characters.
+const shortServiceDescriptions: Record<string, string> = {
+  "3-plus-1-year-ceramic-coating": "Clay bar wash, a 3-year ceramic coating and a second coat the next day for 4 years of protection. Size-based prices from Auto Opulence, Norwich.",
+};
 export function serviceDescription(service: Service) {
-  return `${service.short} View inclusions and size-based prices from Auto Opulence in Norwich, then book online.`;
+  if (shortServiceDescriptions[service.slug]) return shortServiceDescriptions[service.slug];
+  return [
+    `${service.short} View inclusions and size-based prices from Auto Opulence in Norwich, then book online.`,
+    `${service.short} Size-based prices from Auto Opulence in Norwich; book online.`,
+    `${service.short} Book online with Auto Opulence, Norwich.`,
+  ].find((d) => d.length <= 160) ?? service.short.slice(0, 157).replace(/\s+\S*$/, "") + "…";
 }
