@@ -121,7 +121,7 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
         <Link href="/locations" className="back-link"><ArrowLeft size={17} /> All locations</Link>
         <div className="service-hero-copy">
           <p className="kicker">Serving drivers from {location.name}</p>
-          <h1>Car valeting for {location.name}.</h1>
+          <h1>{`Car valeting for ${location.name}.`}</h1>
           <p>{location.intro}</p>
           <div className="location-hero-actions"><Link href="/#book" className="button">Request a booking <ArrowRight size={18} /></Link><a href={mapDirections} target="_blank" rel="noreferrer" className="location-text-link"><Navigation size={17} /> Plan the route</a></div>
         </div>

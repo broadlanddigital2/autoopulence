@@ -21,7 +21,7 @@ export const locations: LocationPage[] = [
   {
     slug: "norwich",
     name: "Norwich",
-    title: "Car Valeting & Detailing Norwich | Auto Opulence",
+    title: "Norwich Car Valeting & Ceramic Coating | Auto Opulence",
     description: "Professional car valeting, hand washing, machine polishing, ceramic coatings and valet bay hire at Auto Opulence in Norwich, Norfolk.",
     intro: "Auto Opulence provides professional vehicle care from a dedicated Norwich facility. Drivers can choose routine hand washing, complete valeting, paint enhancement, ceramic protection or a fully equipped bay-hire session.",
     journey: "Our facility is at Unit 7 Consensus House, St Faiths Road, Norwich, NR6 7BW. Every appointment is confirmed in advance so the right time, equipment and service can be prepared for your vehicle.",

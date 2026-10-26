@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT = process.env.OUT || path.resolve(HERE, "../../dist");
+const decode = (s) => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 const OWN = /^https?:\/\/(www\.)?autoopulence\.co\.uk(?=\/)/i;
 
 function size(file) {
@@ -33,17 +34,16 @@ function size(file) {
   return null;
 }
 const local = (src) => {
-  const s = src.replace(OWN, "");
+  const s = decode(src).replace(OWN, "");
   if (!s.startsWith("/") || s.startsWith("//")) return null;
   try { return decodeURIComponent(s.split(/[?#]/)[0]); } catch { return s.split(/[?#]/)[0]; }
 };
 const webpFor = (src) => {
   const p = local(src); if (!p || !/\.(png|jpe?g)$/i.test(p)) return null;
   const w = p.replace(/\.(png|jpe?g)$/i, ".webp");
-  return fs.existsSync(path.join(OUT, w)) ? src.replace(OWN, "").replace(/\.(png|jpe?g)(?=([?#]|$))/i, ".webp") : null;
+  return fs.existsSync(path.join(OUT, w)) ? encodeURI(w).replace(/&/g, "&amp;") : null;
 };
 const attr = (tag, name) => { const m = new RegExp(`\\s${name}="([^"]*)"`, "i").exec(tag); return m ? m[1] : null; };
-const decode = (s) => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 const enc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(path.join(d, e.name)) : e.name.endsWith(".html") ? [path.join(d, e.name)] : []);
