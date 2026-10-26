@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: siteUrl, changeFrequency: "weekly", priority: 1 },
     { url: `${siteUrl}/services`, changeFrequency: "monthly", priority: 0.95 },
+    { url: `${siteUrl}/ceramic-coating`, changeFrequency: "monthly", priority: 0.95 },
     { url: `${siteUrl}/contact`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${siteUrl}/about`, changeFrequency: "monthly", priority: 0.85 },
     { url: `${siteUrl}/gallery`, changeFrequency: "monthly", priority: 0.8 },

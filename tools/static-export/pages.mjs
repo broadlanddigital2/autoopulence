@@ -8,6 +8,7 @@ export const staticPages = {
   "/booking/payment-complete": "app/booking/payment-complete/page",
   "/business-sectors": "app/business-sectors/page",
   "/case-studies": "app/case-studies/page",
+  "/ceramic-coating": "app/ceramic-coating/page",
   "/contact": "app/contact/page",
   "/cookies": "app/cookies/page",
   "/enquiry-complete": "app/enquiry-complete/page",
