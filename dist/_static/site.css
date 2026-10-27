@@ -14834,6 +14834,39 @@ img {
     background: #fff;
   }
 }
+.crm-page-copy {
+  padding: clamp(48px, 7vw, 90px) 0;
+}
+.crm-page-copy .shell > * {
+  max-width: 860px;
+}
+.crm-page-copy h2 {
+  margin: 0 0 18px;
+}
+.crm-page-copy p {
+  margin: 0 0 14px;
+  line-height: 1.7;
+}
+.crm-page-copy__faqs {
+  margin-top: 28px;
+}
+.crm-page-copy__faqs h3 {
+  margin: 0 0 12px;
+}
+.crm-page-copy details {
+  border-top: 1px solid rgba(127,127,127,.25);
+  padding: 14px 0;
+}
+.crm-page-copy details:last-child {
+  border-bottom: 1px solid rgba(127,127,127,.25);
+}
+.crm-page-copy summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.crm-page-copy details p {
+  margin: 10px 0 0;
+}
 @property --tw-translate-x {
   syntax: "*";
   inherits: false;

@@ -1,0 +1,34 @@
+# Rebuilds the website with the page fixes made in the CRM (SEO optimiser / Google Ads optimiser → Apply) and commits
+# the regenerated dist/ — Cloudflare then deploys it. Runs hourly and on demand (Actions → Publish from CRM → Run workflow).
+name: Publish from CRM
+on:
+  schedule:
+    - cron: "47 * * * *"
+  workflow_dispatch:
+  repository_dispatch:
+    types: [crm-publish]
+permissions:
+  contents: write
+concurrency:
+  group: publish-from-crm
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Fetch CRM page fixes and build site
+        run: npm run rebuild
+      - name: Commit if anything changed
+        run: |
+          git config user.name "ao-crm-publisher"
+          git config user.email "publisher@autoopulence.co.uk"
+          git add -A dist source/lib/crm
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Publish from CRM ($(date -u +%Y-%m-%dT%H:%MZ))"
+          git pull --rebase
+          git push

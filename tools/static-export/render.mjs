@@ -87,10 +87,23 @@ ${INSIGHTS}
 `;
 }
 
+// SEO title / description changes made in the CRM (SEO and Google Ads optimisers → Apply); see fetch-crm.mjs.
+let fixes = {};
+try { fixes = JSON.parse(fs.readFileSync(path.resolve(HERE, "../../source/lib/crm/page-fixes.json"), "utf8")); } catch { /* none */ }
+function withFixes(route, m) {
+  const f = fixes[route];
+  if (!f || (!f.meta_title && !f.meta_description)) return m;
+  const out = { ...m };
+  if (f.meta_title) out.title = { absolute: f.meta_title };
+  if (f.meta_description) out.description = f.meta_description;
+  for (const k of ["openGraph", "twitter"]) if (out[k] ?? root[k]) out[k] = { ...(out[k] ?? root[k]), ...(f.meta_title ? { title: f.meta_title } : {}), ...(f.meta_description ? { description: f.meta_description } : {}) };
+  return out;
+}
+
 const routes = await S.allRoutes();
 for (const route of routes) {
   globalThis.__AO_ROUTE = route;
-  const head = headTags(await S.pageMetadata(route));
+  const head = headTags(withFixes(route, await S.pageMetadata(route)));
   const body = S.renderToString(await S.pageElement(route));
   const file = path.join(OUT, route === "/" ? "index.html" : route.slice(1) + ".html");
   fs.mkdirSync(path.dirname(file), { recursive: true });
