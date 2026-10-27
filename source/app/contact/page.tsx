@@ -4,7 +4,7 @@ import { Clock3, Mail, MapPin, Phone } from "lucide-react";
 import { Header, Footer } from "@/components/site-chrome";
 import { EnquiryForm } from "@/components/enquiry-form";
 import { JsonLd } from "@/components/json-ld";
-import { defaultSocialImage, localBusinessSchema, siteUrl } from "@/lib/seo";
+import { defaultSocialImage, googleProfileUrl, localBusinessSchema, openingHours, siteUrl } from "@/lib/seo";
 
 const title = "Contact Auto Opulence | Vehicle Care Norwich";
 const description = "Contact Auto Opulence in Norwich for vehicle valeting, hand washing, machine polishing, ceramic coatings and professional valet bay hire enquiries.";
@@ -27,10 +27,10 @@ export default function ContactPage() {
       <aside className="nap-card" aria-label="Auto Opulence contact details">
         <div><p className="kicker">Name, address & phone</p><h2>Auto Opulence</h2><p>Vehicle valeting and detailing specialists in Norwich, Norfolk.</p></div>
         <address>
-          <a href="https://www.google.com/maps/search/?api=1&query=Unit+7+Consensus+House+St+Faiths+Road+Norwich+NR6+7BW" target="_blank" rel="noreferrer"><MapPin /><span><strong>Visit us</strong>Unit 7 Consensus House<br />St Faiths Road<br />Norwich, Norfolk<br />NR6 7BW</span></a>
+          <a href={googleProfileUrl} target="_blank" rel="noreferrer"><MapPin /><span><strong>Visit us</strong>Unit 7 Consensus House<br />St Faiths Road<br />Norwich, Norfolk<br />NR6 7BW</span></a>
           <a href="tel:03300536925"><Phone /><span><strong>Call us</strong>0330 053 6925</span></a>
           <a href="mailto:valeting@autoopulence.co.uk"><Mail /><span><strong>Email us</strong>valeting@autoopulence.co.uk</span></a>
-          <div><Clock3 /><span><strong>Appointments</strong>Please contact us to confirm availability.</span></div>
+          <div><Clock3 /><span><strong>Opening hours</strong>{openingHours.map((h) => <span key={h.label} className="nap-hours">{h.label}: {h.opens}–{h.closes}</span>)}By appointment. Please book or contact us to confirm availability.</span></div>
         </address>
         <Link href="/#book" className="button">Book a service</Link>
       </aside>

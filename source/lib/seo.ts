@@ -3,6 +3,20 @@ import type { Category, Service } from "@/lib/services";
 export const siteUrl = "https://autoopulence.co.uk";
 export const defaultSocialImage = "/images/about/about-auto-opulence-norwich-hero.webp";
 
+// The Google Business Profile listing (from the CRM's Google connection). Map links on the site point here, and the
+// schema below names it, so Google can tie the website to the listing.
+export const googleProfileUrl = "https://maps.google.com/maps?cid=11216099845330076837";
+export const googlePlaceId = "ChIJs4y3e8rj2UcRpYQ2RmKXp5s";
+// Directions to the listing itself (not just the street address) from an optional starting point.
+export const directionsUrl = (origin?: string) =>
+  `https://www.google.com/maps/dir/?api=1${origin ? `&origin=${encodeURIComponent(origin)}` : ""}&destination=${encodeURIComponent("Auto Opulence, Unit 7 Consensus House, St Faiths Road, Norwich NR6 7BW")}&destination_place_id=${googlePlaceId}`;
+// Opening hours, matching the Google Business Profile. Shown on the contact page and in the schema.
+export const openingHours = [
+  { label: "Monday to Friday", days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], opens: "08:30", closes: "17:30" },
+  { label: "Saturday", days: ["Saturday"], opens: "10:00", closes: "17:00" },
+  { label: "Sunday", days: ["Sunday"], opens: "10:00", closes: "16:00" },
+];
+
 export const localBusinessSchema = {
   "@type": ["AutoWash", "LocalBusiness"],
   "@id": `${siteUrl}/#business`,
@@ -17,7 +31,10 @@ export const localBusinessSchema = {
   sameAs: [
     "https://www.instagram.com/autoopulencedetailing",
     "https://www.facebook.com/autoopulence",
+    googleProfileUrl,
   ],
+  hasMap: googleProfileUrl,
+  openingHoursSpecification: openingHours.map((h) => ({ "@type": "OpeningHoursSpecification", dayOfWeek: h.days, opens: h.opens, closes: h.closes })),
   contactPoint: {
     "@type": "ContactPoint",
     telephone: "+443300536925",
