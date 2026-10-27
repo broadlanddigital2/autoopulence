@@ -8,7 +8,7 @@ import { getCaseStudy } from "@/lib/case-studies";
 import { getLocation, locations } from "@/lib/content";
 import { getServiceCardImage, getServiceImageAlt } from "@/lib/category-presentation";
 import { categories, getService, getServiceFromPrice, getServicePrices, type Service } from "@/lib/services";
-import { localBusinessSchema, siteUrl } from "@/lib/seo";
+import { directionsUrl, localBusinessSchema, siteUrl } from "@/lib/seo";
 
 const comparisonRows = [
   { slug: "vehicle-washing", bestFor: "Routine cleaning and paint preparation", scope: "Hand washing, vacuum options and bonded-contamination removal", from: "£30" },
@@ -61,7 +61,7 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
     const nearby = getLocation(nearbySlug);
     return nearby ? [nearby] : [];
   });
-  const mapDirections = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(`${location.name}, Norfolk`)}&destination=${encodeURIComponent("Unit 7 Consensus House, St Faiths Road, Norwich, NR6 7BW")}`;
+  const mapDirections = directionsUrl(`${location.name}, Norfolk`);
 
   const serviceNode = {
     "@type": "Service",
