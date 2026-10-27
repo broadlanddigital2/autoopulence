@@ -30,7 +30,7 @@ const lowest = Math.min(...mainServices.map((m) => fromNumber(m.service)));
 const seven = fromNumber(svc("7-year-ceramic-coating-with-clay-bar-decontamination-wash"));
 const highest = Math.max(...mainServices.map((m) => Number(getServicePrices(m.service).extraLarge.amount)));
 
-const TITLE = `Ceramic Coating Norwich | From £${lowest} | Auto Opulence`;
+const TITLE = `Ceramic Coating Norwich | Prices & Cost from £${lowest} | Auto Opulence`;
 const DESCRIPTION = `Professional Gyeon ceramic coating in Norwich. 4-year and 7-year packages from £${lowest}, clear prices for every vehicle size, plus wheel and soft-top coatings.`;
 const HERO = getServiceCardImage("7-year-ceramic-coating-with-clay-bar-decontamination-wash", "/images/categories/vehicle-polishing.webp");
 const HERO_ALT = getServiceImageAlt("7-year-ceramic-coating-with-clay-bar-decontamination-wash", "Ceramic coated car at Auto Opulence in Norwich");
