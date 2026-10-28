@@ -643,6 +643,98 @@ async function addPostsToSitemap(xml, opts) {
   return xml.includes("</urlset>") ? xml.replace("</urlset>", urls.join("\n") + "\n</urlset>") : xml;
 }
 
+// ../../worker/src/ai-visibility.js
+var RPC = "https://dipjypzrfigkzuarlsov.supabase.co/rest/v1/rpc/seo_ai_crawler_hit";
+var KEY2 = "sb_publishable_KLK1Ucd9ilVSwzSGL1vkug_3SGGh4NF";
+var CRAWLERS = [
+  [/OAI-SearchBot/i, "OAI-SearchBot"],
+  [/ChatGPT-User/i, "ChatGPT-User"],
+  [/GPTBot/i, "GPTBot"],
+  [/Claude-SearchBot/i, "Claude-SearchBot"],
+  [/Claude-User/i, "Claude-User"],
+  [/ClaudeBot|anthropic-ai/i, "ClaudeBot"],
+  [/Perplexity-User/i, "Perplexity-User"],
+  [/PerplexityBot/i, "PerplexityBot"],
+  [/Google-Extended/i, "Google-Extended"],
+  [/Googlebot|Google-InspectionTool|GoogleOther/i, "Googlebot"],
+  [/bingbot|BingPreview/i, "Bingbot"],
+  [/Applebot/i, "Applebot"],
+  [/meta-externalagent|meta-externalfetcher/i, "Meta-ExternalAgent"],
+  [/Amazonbot/i, "Amazonbot"],
+  [/DuckAssistBot/i, "DuckAssistBot"],
+  [/MistralAI-User/i, "MistralAI-User"],
+  [/CCBot/i, "CCBot"],
+  [/Bytespider/i, "Bytespider"]
+];
+var ASSISTANT_HOSTS = [
+  [/(^|\.)chatgpt\.com$|(^|\.)chat\.openai\.com$/, "ChatGPT"],
+  [/(^|\.)claude\.ai$/, "Claude"],
+  [/(^|\.)perplexity\.ai$/, "Perplexity"],
+  [/^gemini\.google\.com$|^bard\.google\.com$/, "Gemini"],
+  [/^copilot\.microsoft\.com$|^copilot\.cloud\.microsoft$|^m365\.cloud\.microsoft$/, "Copilot"],
+  [/(^|\.)meta\.ai$/, "Meta AI"],
+  [/(^|\.)deepseek\.com$/, "DeepSeek"],
+  [/(^|\.)grok\.com$/, "Grok"],
+  [/^chat\.mistral\.ai$/, "Le Chat"],
+  [/^duck\.ai$/, "DuckDuckGo AI"]
+];
+var UTM = [
+  [/chatgpt|openai/i, "ChatGPT"],
+  [/claude|anthropic/i, "Claude"],
+  [/perplexity/i, "Perplexity"],
+  [/gemini/i, "Gemini"],
+  [/copilot/i, "Copilot"],
+  [/meta\.ai/i, "Meta AI"],
+  [/deepseek/i, "DeepSeek"],
+  [/grok/i, "Grok"],
+  [/mistral/i, "Le Chat"]
+];
+function crawlerName(ua) {
+  for (const [re, name] of CRAWLERS) if (re.test(ua || "")) return name;
+  return null;
+}
+function assistantName(request, url) {
+  const utm = url.searchParams.get("utm_source") || "";
+  if (utm) {
+    for (const [re, name] of UTM) if (re.test(utm)) return name;
+  }
+  try {
+    const ref = new URL(request.headers.get("referer") || "");
+    if (ref.host !== url.host) {
+      for (const [re, name] of ASSISTANT_HOSTS) if (re.test(ref.hostname)) return name;
+    }
+  } catch {
+  }
+  return null;
+}
+function trackAi(request, response, ctx, { feedKey, countPreview = false }) {
+  try {
+    if (!ctx || !feedKey || !["GET", "HEAD"].includes(request.method)) return;
+    const url = new URL(request.url);
+    if (!countPreview && url.hostname.endsWith(".workers.dev")) return;
+    if (/^\/(_static|_next|api|media|responsive|images)\//.test(url.pathname)) return;
+    const ua = request.headers.get("user-agent") || "";
+    const crawler = crawlerName(ua);
+    let hit = null;
+    if (crawler) {
+      const cf = request.cf || {};
+      const verified = !!(cf.verifiedBotCategory || cf.botManagement && cf.botManagement.verifiedBot);
+      hit = { crawler, path: url.pathname, status: response.status, verified };
+    } else if (response.status < 400 && (response.headers.get("content-type") || "").includes("text/html") && !/bot|crawl|spider|preview/i.test(ua)) {
+      const assistant = assistantName(request, url);
+      if (assistant) hit = { assistant, path: url.pathname };
+    }
+    if (!hit) return;
+    ctx.waitUntil(fetch(RPC, {
+      method: "POST",
+      headers: { apikey: KEY2, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_key: feedKey, p_hits: [hit] })
+    }).catch(() => {
+    }));
+  } catch {
+  }
+}
+
 // ../../worker/src/index.ts
 var BLOG = {
   feedUrl: "https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/seo-blog",
@@ -771,7 +863,7 @@ var index_default = {
   async scheduled(_event, env, ctx) {
     ctx.waitUntil(runUptimePinger(env).catch((error) => console.error("Uptime pinger failed", error)));
   },
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     setEnv(env);
     if (new URL(request.url).pathname === "/__uptime-pinger" && new URL(request.url).hostname.endsWith(".workers.dev")) return Response.json(await runUptimePinger(env));
     let response;
@@ -794,6 +886,7 @@ var index_default = {
         body.append(SITE_SEARCH_SCRIPT, { html: true });
       } }).transform(response);
     }
+    trackAi(request, response, ctx, { feedKey: BLOG.feedKey });
     if (preview) {
       response = new Response(response.body, response);
       response.headers.set("X-Robots-Tag", "noindex, nofollow");

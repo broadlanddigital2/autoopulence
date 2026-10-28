@@ -8,6 +8,7 @@ Telephone: 0330 053 6925
 Email: valeting@autoopulence.co.uk
 Instagram: https://www.instagram.com/autoopulencedetailing
 Facebook: https://www.facebook.com/autoopulence
+Opening hours: Monday to Friday 08:30–17:30, Saturday 10:00–17:00, Sunday 10:00–16:00 (bookings online, with live availability)
 
 ## Primary service categories
 
@@ -18,17 +19,6 @@ Facebook: https://www.facebook.com/autoopulence
 
 Each category page links to individual service pages containing descriptions, included work, vehicle-size pricing, FAQs, related services, galleries and booking options.
 
-## Important pages
-
-- [Book vehicle-care services](https://autoopulence.co.uk/#book)
-- [About Auto Opulence](https://autoopulence.co.uk/about)
-- [Contact and directions](https://autoopulence.co.uk/contact)
-- [Vehicle-care locations](https://autoopulence.co.uk/locations)
-- [Business vehicle sectors](https://autoopulence.co.uk/business-sectors)
-- [Vehicle-care guides and advice](https://autoopulence.co.uk/guides)
-- [Case studies](https://autoopulence.co.uk/case-studies)
-- [Image gallery](https://autoopulence.co.uk/gallery)
-- [XML sitemap](https://autoopulence.co.uk/sitemap.xml)
 
 ## Booking and pricing
 
@@ -40,4 +30,102 @@ Auto Opulence is based in Norwich and serves customers across Norfolk. Location 
 
 ## Content guidance
 
-Use the canonical URLs above when citing Auto Opulence. Service pages are the authoritative source for current inclusions and prices. Contact Auto Opulence directly for vehicle-specific recommendations, availability and final booking confirmation.
+Use the canonical URLs below when citing Auto Opulence. Service pages are the authoritative source for current inclusions and prices. Contact Auto Opulence directly for vehicle-specific recommendations, availability and final booking confirmation.
+
+## Service categories
+
+- [Choose the right care for your vehicle](https://autoopulence.co.uk/services): Explore professional vehicle valeting, hand washing, machine polishing, ceramic coating and valet bay hire services in Norwich.
+- [Vehicle Valeting](https://autoopulence.co.uk/category/vehicle-valeting): Compare professional vehicle valeting in Norwich, including interior, exterior, deep-clean and restoration options with clear size-based prices.
+- [Vehicle Washing](https://autoopulence.co.uk/category/vehicle-washing): Compare professional hand washing and paint decontamination services in Norwich, with clear inclusions and prices for every vehicle size.
+- [Vehicle Polishing](https://autoopulence.co.uk/category/vehicle-polishing): Compare machine polishing, paint correction and ceramic coating services in Norwich, with clear inclusions and vehicle-size prices.
+- [Valet Bay Hire](https://autoopulence.co.uk/category/valet-bay-hire): Hire a professional indoor valeting and detailing bay in Norwich, with spotless water, lighting, drainage and equipment for public or trade use.
+
+## Services, inclusions and prices
+
+- [Ceramic Coating in Norwich](https://autoopulence.co.uk/ceramic-coating): Professional Gyeon ceramic coating in Norwich. 4-year and 7-year packages from £445, clear prices for every vehicle size, plus wheel and soft-top coatings. From £95.
+- [Premium Exterior Car Valet](https://autoopulence.co.uk/service/premium-exterior-car-valet): A methodical exterior clean and finish for a sharper, glossier vehicle. View inclusions and size-based prices from Auto Opulence in Norwich. From £40.
+- [Premium Interior Car Valet](https://autoopulence.co.uk/service/premium-interior-car-valet): Deep cabin cleaning for a fresher and more comfortable drive. View inclusions and size-based prices from Auto Opulence in Norwich. From £40.
+- [Premium Exterior & Interior Valet](https://autoopulence.co.uk/service/premium-exterior-interior-valet): Complete care inside and out in one coordinated service. View inclusions and size-based prices from Auto Opulence in Norwich. From £70.
+- [Deep Interior Clean](https://autoopulence.co.uk/service/deep-interior-clean-neglected): Focused cleaning for heavily used, marked or neglected interiors. View inclusions and size-based prices from Auto Opulence in Norwich. From £70.
+- [Factory Restored Valet](https://autoopulence.co.uk/service/factory-restored-interior-valet): Deep interior restoration with multi-stage exterior paint correction. View inclusions and size-based prices from Auto Opulence in Norwich. From £330.
+- [Soft Top Deep Clean & Valet](https://autoopulence.co.uk/service/soft-top-deep-clean-and-exterior-valet): Specialist convertible roof cleaning with exterior care. View inclusions and size-based prices from Auto Opulence in Norwich. From £150.
+- [Exterior Trim Rejuvenation](https://autoopulence.co.uk/service/exterior-trim-rejuvenation): Restore faded exterior plastics and tired trim. View inclusions and size-based prices from Auto Opulence in Norwich. From £20.
+- [Engine Bay Detailing](https://autoopulence.co.uk/service/engine-bay-detailing): Careful cleaning and presentation of accessible engine-bay surfaces. View inclusions and size-based prices from Auto Opulence in Norwich. From £50.
+- [Hand Car Wash](https://autoopulence.co.uk/service/hand-car-wash-norwich): A safe wash and dry for regular vehicle maintenance. View inclusions and size-based prices from Auto Opulence in Norwich. From £30.
+- [Hand Wash & Vacuum](https://autoopulence.co.uk/service/hand-car-wash-and-vacuum-norwich): Exterior maintenance plus a tidy, refreshed cabin. View inclusions and size-based prices from Auto Opulence in Norwich. From £49.
+- [Two-Step Decontamination Wash](https://autoopulence.co.uk/service/exterior-full-decontamination-wash): Remove bonded iron and tar before applying protection. View inclusions and size-based prices from Auto Opulence in Norwich. From £80.
+- [Clay Bar Decontamination Wash](https://autoopulence.co.uk/service/exterior-full-decontamination-wash-with-clay-bar): A complete decontamination process for a noticeably smoother finish. View inclusions and size-based prices from Auto Opulence in Norwich. From £195.
+- [Stage 1 Machine Polish](https://autoopulence.co.uk/service/stage-1-vehicle-machine-polish): Enhance gloss and reduce light swirls in a single polishing stage. View inclusions and size-based prices from Auto Opulence in Norwich. From £295.
+- [Multi-Stage Paint Correction](https://autoopulence.co.uk/service/multistage-vehicle-polish): Deeper correction for more visible swirls and paint defects. View inclusions and size-based prices from Auto Opulence in Norwich. From £345.
+- [Paint Correction + 7-Year Ceramic](https://autoopulence.co.uk/service/multi-stage-machine-polish-inc-7-year-ceramic-coating): Correct the finish, then lock in long-term ceramic protection. View inclusions and size-based prices from Auto Opulence in Norwich. From £645.
+- [7-Year Ceramic Coating](https://autoopulence.co.uk/service/new-car-7-year-ceramic-coating): Add durable ceramic protection after full paint decontamination. View inclusions and size-based prices from Auto Opulence in Norwich. From £300.
+- [7-Year Ceramic Coating + Clay Bar Decontamination Wash](https://autoopulence.co.uk/service/7-year-ceramic-coating-with-clay-bar-decontamination-wash): Full clay-bar decontamination and a 7-year ceramic coating, booked together in one visit. Size-based prices from Auto Opulence in Norwich;. From £495.
+- [3 + 1 Year Ceramic Coating](https://autoopulence.co.uk/service/3-plus-1-year-ceramic-coating): Clay bar wash, a 3-year ceramic coating and a second coat the next day for 4 years of protection. Size-based prices from Auto Opulence, Norwich. From £445.
+- [Soft Top Clean + Ceramic](https://autoopulence.co.uk/service/soft-top-deep-clean-plus-ceramic-coating): Deep-clean and protect a fabric convertible roof. View inclusions and size-based prices from Auto Opulence in Norwich. From £95.
+- [Soft Top Clean, Re-Dye + Ceramic](https://autoopulence.co.uk/service/soft-top-deep-clean-ceramic-coating-re-dye-roof-only): Refresh colour and add durable weather protection. View inclusions and size-based prices from Auto Opulence in Norwich. From £195.
+- [Alloy Wheel Coating — On Vehicle](https://autoopulence.co.uk/service/alloy-wheel-ceramic-coating-face-only): Help wheel faces resist brake dust and road contamination. View inclusions and size-based prices from Auto Opulence in Norwich. From £195.
+- [Wheels-Off Ceramic Coating](https://autoopulence.co.uk/service/full-wheels-off-ceramic-coating): Complete ceramic protection across wheel faces and barrels. View inclusions and size-based prices from Auto Opulence in Norwich. From £280.
+- [Public Hire — 2 Hours](https://autoopulence.co.uk/service/public-hire-2-hours): A focused session for washing or light vehicle care. View inclusions and size-based prices from Auto Opulence in Norwich. From £80.
+- [Public Hire — 3 Hours](https://autoopulence.co.uk/service/public-hire-3-hours): Extra time for a more thorough wash and detail. View inclusions and size-based prices from Auto Opulence in Norwich.
+- [Public Hire — Full Day](https://autoopulence.co.uk/service/public-hire-full-day): A full day for in-depth vehicle care projects. View inclusions and size-based prices from Auto Opulence in Norwich. From £200.
+- [Public Hire — Weekend](https://autoopulence.co.uk/service/public-hire-weekend): The time and space for a complete detailing project. View inclusions and size-based prices from Auto Opulence in Norwich. From £350.
+- [Trade Hire — 3 Hours](https://autoopulence.co.uk/service/trade-hire-3-hours): Professional facilities for a compact trade booking. View inclusions and size-based prices from Auto Opulence in Norwich. From £50.
+- [Trade Hire — Full Day](https://autoopulence.co.uk/service/trade-hire-full-day): Dedicated professional workspace for a complete working day. View inclusions and size-based prices from Auto Opulence in Norwich. From £140.
+- [Trade Hire — Day + Overnight](https://autoopulence.co.uk/service/trade-hire-overnight): Extended access for jobs that need curing or extra time. View inclusions and size-based prices from Auto Opulence in Norwich. From £170.
+
+## Areas served
+
+- [Vehicle care worth the journey](https://autoopulence.co.uk/locations): Explore areas served by Auto Opulence for vehicle valeting, hand washing, machine polishing, ceramic coatings and valet bay hire near Norwich.
+- [Car valeting for Norwich](https://autoopulence.co.uk/locations/norwich): Professional car valeting, hand washing, machine polishing, ceramic coatings and valet bay hire at Auto Opulence in Norwich, Norfolk. From £70.
+- [Car valeting for Wymondham](https://autoopulence.co.uk/locations/wymondham): Vehicle valeting, polishing, ceramic coatings and professional hand washing for Wymondham drivers at Auto Opulence near Norwich. From £49.
+- [Car valeting for Dereham](https://autoopulence.co.uk/locations/dereham): Professional vehicle valeting, hand washing and paint correction for Dereham and central Norfolk customers at Auto Opulence Norwich. From £70.
+- [Car valeting for Aylsham](https://autoopulence.co.uk/locations/aylsham): Book professional car valeting, detailing, machine polishing or ceramic coating near Aylsham with Auto Opulence in Norwich. From £49.
+- [Car valeting for North Walsham](https://autoopulence.co.uk/locations/north-walsham): Professional vehicle valeting, hand washing, paint polishing and ceramic coatings for North Walsham drivers visiting our Norwich studio. From £80.
+- [Car valeting for Great Yarmouth](https://autoopulence.co.uk/locations/great-yarmouth): Vehicle valeting, machine polishing and ceramic protection for Great Yarmouth customers at Auto Opulence in Norwich, Norfolk. From £195.
+- [Car valeting for Attleborough](https://autoopulence.co.uk/locations/attleborough): Professional hand washing, vehicle valeting, paint correction and ceramic coatings for Attleborough drivers at our Norwich studio. From £49.
+
+## Business and trade valeting
+
+- [Commercial vehicle care shaped around the work](https://autoopulence.co.uk/business-sectors): Fleet valeting, dealership preparation, taxi cleaning, lease-return care, garage support and trade detailing bay hire in Norwich and Norfolk.
+- [Fleet valeting in Norwich and Norfolk](https://autoopulence.co.uk/business-sectors/fleet-valeting): Flexible fleet valeting, washing and vehicle presentation services for businesses in Norwich and Norfolk from Auto Opulence. From £49.
+- [Car dealership valeting in Norwich](https://autoopulence.co.uk/business-sectors/car-dealership-valeting): Professional dealership vehicle preparation, stock valeting and paint enhancement services at Auto Opulence in Norwich, Norfolk. From £70.
+- [Taxi and private-hire valeting in Norwich](https://autoopulence.co.uk/business-sectors/taxi-private-hire-valeting): Interior and exterior valeting for taxis and private-hire vehicles in Norwich, with practical booking options from Auto Opulence. From £49.
+- [Lease-return valeting in Norwich](https://autoopulence.co.uk/business-sectors/lease-return-valeting): Prepare a leased vehicle for return with professional interior cleaning, exterior valeting and paint enhancement in Norwich, Norfolk. From £70.
+- [Valeting support for Norwich garages and bodyshops](https://autoopulence.co.uk/business-sectors/garage-bodyshop-support): Vehicle valeting, paint finishing and equipped indoor bay support for garages and bodyshops at Auto Opulence in Norwich, Norfolk. From £50.
+- [Trade detailing bay hire in Norwich](https://autoopulence.co.uk/business-sectors/trade-detailer-bay-hire): Hire an indoor professional valeting and detailing bay in Norwich with lighting, drainage, spotless water and specialist equipment. From £50.
+
+## Guides and advice
+
+- [Make a better-informed choice](https://autoopulence.co.uk/guides): Practical Norwich car-care guides covering valeting, hand washing, decontamination, machine polishing, ceramic coatings, lease returns and valet bay hire.
+- [How Often Should You Valet a Car?](https://autoopulence.co.uk/guides/how-often-should-you-valet-a-car): Learn how often to valet a car based on mileage, family use, pets, work and seasonal conditions, with practical advice from Auto Opulence Norwich.
+- [Vehicle Size Guide](https://autoopulence.co.uk/guides/vehicle-size-guide): Compare Auto Opulence Small, Medium, Large and Extra Large vehicle bands before booking valeting, washing or machine polishing in Norwich.
+- [Hand Wash vs Automatic Car Wash](https://autoopulence.co.uk/guides/hand-car-wash-vs-automatic): Compare professional hand washing with automatic car washes and understand how contact, wheels, drying and contamination can affect vehicle paintwork.
+- [Stage 1 vs Multi-Stage Polishing](https://autoopulence.co.uk/guides/stage-one-vs-multistage-polishing): Compare Stage 1 machine polishing and multi-stage paint correction, including defects, process, limitations and prices in Norwich.
+- [Ceramic Coating Aftercare](https://autoopulence.co.uk/guides/ceramic-coating-aftercare): Learn how to wash and maintain a ceramic-coated car, protect water behaviour, manage contamination and avoid common aftercare mistakes.
+- [Choosing Valet Bay Hire](https://autoopulence.co.uk/guides/choosing-valet-bay-hire): Compare public, trade, full-day, weekend and overnight valet bay hire options at Auto Opulence’s equipped indoor Norwich studio.
+- [Standard Valet vs Deep Interior Clean](https://autoopulence.co.uk/guides/standard-valet-vs-deep-interior-clean): Compare a complete car valet with deep interior cleaning for stains, pet hair, embedded dirt and neglected vehicle cabins in Norwich.
+- [Decontamination Wash vs Clay Bar](https://autoopulence.co.uk/guides/decontamination-wash-vs-clay-bar): Compare chemical vehicle decontamination with clay-bar treatment for tar, iron fallout and bonded paint contamination in Norwich.
+- [Ceramic Coating vs Car Wax](https://autoopulence.co.uk/guides/ceramic-coating-vs-car-wax): Compare ceramic coating and car wax for gloss, durability, maintenance, preparation and vehicle paint protection in Norwich.
+- [How to Prepare a Car for Lease Return](https://autoopulence.co.uk/guides/prepare-car-for-lease-return): Use this practical lease-return preparation checklist for cleaning, interiors, paint assessment and vehicle handover in Norwich.
+- [What Does Machine Polishing Remove?](https://autoopulence.co.uk/guides/what-does-machine-polishing-remove): Understand which swirls, haze, oxidation and scratches machine polishing may improve, plus the defects it cannot safely remove.
+- [How Much Does Car Valeting Cost in Norwich?](https://autoopulence.co.uk/guides/car-valeting-cost-norwich): Compare published car washing, valeting, polishing, ceramic coating and valet bay hire starting prices from Auto Opulence Norwich.
+- [How to Maintain a Professionally Valeted Car](https://autoopulence.co.uk/guides/maintain-professionally-valeted-car): Keep a professionally valeted car cleaner for longer with practical interior, exterior and seasonal maintenance advice from Auto Opulence.
+- [Car Cleaning Before Vehicle Graphics or Wrapping](https://autoopulence.co.uk/guides/car-cleaning-before-vehicle-graphics): Prepare a car or van for vinyl graphics and wrapping with safe washing and decontamination advice from Auto Opulence and Race Car Graphics.
+- [Ceramic Protection for Vehicle Graphics and Wraps](https://autoopulence.co.uk/guides/ceramic-protection-for-vehicle-graphics): Learn how compatible ceramic protection may help maintain vehicle graphics and wraps, plus preparation, limitations and aftercare advice.
+- [What to Bring to a Valet Bay Hire Session](https://autoopulence.co.uk/guides/what-to-bring-valet-bay-hire): Prepare for Auto Opulence valet bay hire with a practical checklist covering products, consumables, equipment, timing and safe working.
+
+## Case studies
+
+- [Every vehicle tells a different story](https://autoopulence.co.uk/case-studies): Explore Auto Opulence vehicle valeting, washing, polishing and ceramic coating case studies, including galleries, services used and customer reviews.
+- [Mercedes CLA45 Indoor Detailing Bay Hire](https://autoopulence.co.uk/case-studies/mercedes-cla45-indoor-detailing-bay-hire): Mercedes CLA45 detailing bay hire case study featuring an indoor wash, machine polish and ceramic coating in an air-conditioned Norwich studio.
+- [Audi TT Valet Bay Hire](https://autoopulence.co.uk/case-studies/audi-tt-valet-bay-hire): Audi TT valet bay hire case study showing how a private owner used our indoor detailing bay and their own car-care products in Norwich.
+- [Volvo XC60 End-of-Lease Valet](https://autoopulence.co.uk/case-studies/volvo-xc60-end-of-lease-valet): Volvo XC60 end-of-lease valeting case study covering deep interior cleaning, boot-carpet care, scratch reduction and collection in Norwich.
+- [BMW E21 3 Series Restoration Detail](https://autoopulence.co.uk/case-studies/bmw-e21-3-series-restoration-detail): BMW E21 3 Series detailing case study featuring an interior deep clean, paint correction, engine-bay detail and Gyeon ceramic coating in Norwich.
+- [Merl Grey Range Rover Sport](https://autoopulence.co.uk/case-studies/merl-grey-range-rover-sport-ceramic-coating): Merl Grey Range Rover Sport ceramic coating case study featuring a decontamination wash, spotless-water preparation and Gyeon seven-year protection in Norwich.
+
+## About, contact and other pages
+
+- [Care that shows in every reflection](https://autoopulence.co.uk): Professional vehicle valeting, hand car washing, machine polishing, ceramic coatings and fully equipped valet bay hire in Norwich, Norfolk.
+- [Let’s talk about your vehicle](https://autoopulence.co.uk/contact): Contact Auto Opulence in Norwich for vehicle valeting, hand washing, machine polishing, ceramic coatings and professional valet bay hire enquiries.
+- [Professional care, properly equipped](https://autoopulence.co.uk/about): Discover Auto Opulence in Norwich, our professional vehicle valeting, washing, polishing, ceramic coating and equipped valet bay hire services.
+- [Our work, grouped by vehicle](https://autoopulence.co.uk/gallery): Browse real Auto Opulence vehicle valeting, detailing, ceramic coating and valet bay hire photographs grouped by completed case study.

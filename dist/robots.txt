@@ -1,5 +1,22 @@
 User-Agent: *
 Allow: /
+Disallow: /api/
+Disallow: /loan/
+
+User-Agent: OAI-SearchBot
+User-Agent: ChatGPT-User
+User-Agent: GPTBot
+User-Agent: Claude-SearchBot
+User-Agent: Claude-User
+User-Agent: ClaudeBot
+User-Agent: PerplexityBot
+User-Agent: Perplexity-User
+User-Agent: Google-Extended
+User-Agent: Applebot-Extended
+User-Agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /loan/
 
 Host: https://autoopulence.co.uk
 Sitemap: https://autoopulence.co.uk/sitemap.xml
