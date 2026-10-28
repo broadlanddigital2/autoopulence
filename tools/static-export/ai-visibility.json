@@ -1,0 +1,40 @@
+{
+  "_readme": "Settings for ai-visibility.mjs (llms.txt and IndexNow). intro: the hand-written top of llms.txt; groups: [section title, path regex] in order, first match wins.",
+  "host": "autoopulence.co.uk",
+  "indexNowKey": "61f93d8b21b8b6b0bb484c580a509403",
+  "out": "../../dist",
+  "intro": "llms-intro.md",
+  "exclude": "^/(cookies|privacy|terms)",
+  "stripFromDescriptions": ",?\\s*(then\\s+)?(book online|call us|book now)[^.!]*[.!]?$",
+  "groups": [
+    [
+      "Service categories",
+      "^/(services|category)(/|$)"
+    ],
+    [
+      "Services, inclusions and prices",
+      "^/service/|^/ceramic-coating$"
+    ],
+    [
+      "Areas served",
+      "^/locations(/|$)"
+    ],
+    [
+      "Business and trade valeting",
+      "^/business-sectors(/|$)"
+    ],
+    [
+      "Guides and advice",
+      "^/guides(/|$)"
+    ],
+    [
+      "Case studies",
+      "^/case-studies(/|$)"
+    ],
+    [
+      "Blog",
+      "^/blog(/|$)"
+    ]
+  ],
+  "otherTitle": "About, contact and other pages"
+}

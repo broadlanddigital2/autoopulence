@@ -8,6 +8,7 @@ Telephone: 0330 053 6925
 Email: valeting@autoopulence.co.uk
 Instagram: https://www.instagram.com/autoopulencedetailing
 Facebook: https://www.facebook.com/autoopulence
+Opening hours: Monday to Friday 08:30–17:30, Saturday 10:00–17:00, Sunday 10:00–16:00 (bookings online, with live availability)
 
 ## Primary service categories
 
@@ -18,17 +19,6 @@ Facebook: https://www.facebook.com/autoopulence
 
 Each category page links to individual service pages containing descriptions, included work, vehicle-size pricing, FAQs, related services, galleries and booking options.
 
-## Important pages
-
-- [Book vehicle-care services](https://autoopulence.co.uk/#book)
-- [About Auto Opulence](https://autoopulence.co.uk/about)
-- [Contact and directions](https://autoopulence.co.uk/contact)
-- [Vehicle-care locations](https://autoopulence.co.uk/locations)
-- [Business vehicle sectors](https://autoopulence.co.uk/business-sectors)
-- [Vehicle-care guides and advice](https://autoopulence.co.uk/guides)
-- [Case studies](https://autoopulence.co.uk/case-studies)
-- [Image gallery](https://autoopulence.co.uk/gallery)
-- [XML sitemap](https://autoopulence.co.uk/sitemap.xml)
 
 ## Booking and pricing
 
@@ -40,4 +30,4 @@ Auto Opulence is based in Norwich and serves customers across Norfolk. Location 
 
 ## Content guidance
 
-Use the canonical URLs above when citing Auto Opulence. Service pages are the authoritative source for current inclusions and prices. Contact Auto Opulence directly for vehicle-specific recommendations, availability and final booking confirmation.
+Use the canonical URLs below when citing Auto Opulence. Service pages are the authoritative source for current inclusions and prices. Contact Auto Opulence directly for vehicle-specific recommendations, availability and final booking confirmation.

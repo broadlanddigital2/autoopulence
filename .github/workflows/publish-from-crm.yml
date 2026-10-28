@@ -23,12 +23,21 @@ jobs:
           node-version: 22
       - name: Fetch CRM page fixes and build site
         run: npm run rebuild
+      - name: Tell Bing (ChatGPT search) and other IndexNow engines about new or changed pages
+        working-directory: tools/static-export
+        run: |
+          node ai-visibility.mjs prepare
+          if [ -s gen-indexnow.json ] && ! node ai-visibility.mjs submit; then
+            echo "IndexNow refused the list; keeping the previous state so these pages are sent next time"
+            git checkout -- indexnow-state.json 2>/dev/null || rm -f indexnow-state.json
+          fi
       - name: Commit if anything changed
         run: |
           git config user.name "ao-crm-publisher"
           git config user.email "publisher@autoopulence.co.uk"
           # dist/ is the website and worker/dist/ the Worker built from worker/src (both deployed by Cloudflare).
           git add -A dist worker/dist source/lib/crm
+          if [ -f tools/static-export/indexnow-state.json ]; then git add tools/static-export/indexnow-state.json; fi
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
           git commit -m "Publish from CRM ($(date -u +%Y-%m-%dT%H:%MZ))"
           git pull --rebase --autostash

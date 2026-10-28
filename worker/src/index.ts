@@ -11,6 +11,8 @@ import * as addressLookup from "../../source/app/api/address-lookup/route";
 import { runUptimePinger } from "./uptime-pinger";
 // @ts-ignore plain JS module shared with the LeMan Cave and Race Car Graphics workers
 import { blogResponse, addPostsToSitemap } from "./crm-blog.js";
+// @ts-ignore plain JS module shared with the LeMan Cave and Race Car Graphics workers
+import { trackAi } from "./ai-visibility.js";
 
 // Blog: posts written and approved in the CRM (Marketing → Blog posts), rendered on request into the /blog shell page.
 const BLOG = {
@@ -140,7 +142,7 @@ export default {
   async scheduled(_event: unknown, env: Env, ctx: { waitUntil(p: Promise<unknown>): void }) {
     ctx.waitUntil(runUptimePinger(env as never).catch((error) => console.error("Uptime pinger failed", error)));
   },
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: { waitUntil(p: Promise<unknown>): void }): Promise<Response> {
     setEnv(env);
     // Run the uptime pinger by hand on the workers.dev preview address only (no emails unless something is down).
     if (new URL(request.url).pathname === "/__uptime-pinger" && new URL(request.url).hostname.endsWith(".workers.dev")) return Response.json(await runUptimePinger(env as never));
@@ -161,6 +163,8 @@ export default {
     if ((response.headers.get("content-type") || "").includes("text/html")) {
       response = new HTMLRewriter().on("body", { element(body) { body.append(SITE_SEARCH_SCRIPT, { html: true }); } }).transform(response);
     }
+    // AI assistants' crawler visits and the people they send, for the CRM (ai-visibility.js). Live domain only.
+    trackAi(request, response, ctx, { feedKey: BLOG.feedKey });
     // Keep the workers.dev preview address out of Google; only the real domain should be indexed.
     if (preview) {
       response = new Response(response.body, response);
