@@ -27,8 +27,9 @@ jobs:
         run: |
           git config user.name "ao-crm-publisher"
           git config user.email "publisher@autoopulence.co.uk"
-          git add -A dist source/lib/crm
+          # dist/ is the website and worker/dist/ the Worker built from worker/src (both deployed by Cloudflare).
+          git add -A dist worker/dist source/lib/crm
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
           git commit -m "Publish from CRM ($(date -u +%Y-%m-%dT%H:%MZ))"
-          git pull --rebase
+          git pull --rebase --autostash
           git push
