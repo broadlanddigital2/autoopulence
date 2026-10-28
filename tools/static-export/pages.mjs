@@ -4,6 +4,7 @@ export const staticPages = {
   "/": "app/page",
   "/about": "app/about/page",
   "/account": "app/account/page",
+  "/blog": "app/blog/page",
   "/booking-complete": "app/booking-complete/page",
   "/booking/payment-complete": "app/booking/payment-complete/page",
   "/business-sectors": "app/business-sectors/page",

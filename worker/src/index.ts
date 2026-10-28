@@ -9,6 +9,53 @@ import * as enquiry from "../../source/app/api/enquiry/route";
 import * as captcha from "../../source/app/api/enquiry/captcha/route";
 import * as addressLookup from "../../source/app/api/address-lookup/route";
 import { runUptimePinger } from "./uptime-pinger";
+// @ts-ignore plain JS module shared with the LeMan Cave and Race Car Graphics workers
+import { blogResponse, addPostsToSitemap } from "./crm-blog.js";
+
+// Blog: posts written and approved in the CRM (Marketing → Blog posts), rendered on request into the /blog shell page.
+const BLOG = {
+  feedUrl: "https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/seo-blog",
+  feedKey: "8c92192d-7364-4da2-9dab-0872a457aa84", // seo_sites.feed_key for Auto Opulence
+  origin: "https://autoopulence.co.uk",
+  basePath: "/blog",
+  shellPath: "/blog",
+  siteName: "Auto Opulence",
+  blogName: "Blog",
+  blogTitle: "Vehicle care blog",
+  kicker: "Auto Opulence blog · Norwich",
+  intro: "Car-care advice, seasonal tips and news from our indoor valeting and detailing studio in Norwich.",
+  guidesPath: "/guides",
+  ctaHtml: '<p><strong>Want it done properly?</strong> Choose a service and book online, or ask us about your vehicle.</p><p><a class="crmblog-btn" href="/services">View services</a> <a class="crmblog-btn2" href="/contact">Ask Auto Opulence</a></p>',
+  css: `.crmblog{max-width:860px;margin:0 auto;color:#101519}
+.crmblog-list{max-width:1180px}
+.crmblog-crumbs{font-size:.8rem;color:#5e6970;margin:0 0 18px}.crmblog-crumbs a{color:#5e6970}.crmblog-crumbs span:last-child{color:#089fd8}
+.crmblog-kicker,.crmblog-meta{margin:0 0 12px;color:#089fd8;font-size:.78rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.crmblog h1{margin:0 0 18px;font-size:clamp(2.6rem,5vw,4.6rem);line-height:.98;letter-spacing:-.055em}
+.crmblog-post h1{font-size:clamp(2.2rem,4vw,3.6rem)}
+.crmblog-intro,.crmblog-lead{font-size:1.15rem;color:#536168;max-width:720px;margin:0 0 34px}
+.crmblog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.crmblog-card{display:flex;flex-direction:column;background:#fff;border:1px solid #e3eaed;transition:.22s ease}
+.crmblog-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(28,52,63,.12)}
+.crmblog-card img,.crmblog-noimg{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;display:block;background:#dde5e8}
+.crmblog-cardbody{display:flex;flex-direction:column;gap:8px;padding:22px 22px 24px;border-top:4px solid #089fd8}
+.crmblog-card .crmblog-meta{margin:0;font-size:.7rem}
+.crmblog-card h2{margin:0;font-size:1.35rem;line-height:1.15}
+.crmblog-excerpt{color:#5e6970;font-size:.95rem}
+.crmblog-more{color:#089fd8;font-weight:800;font-size:.88rem}
+.crmblog-empty{color:#5e6970}.crmblog-empty a{color:#087eaa;font-weight:800}
+.crmblog-hero{width:100%;height:auto;margin:0 0 30px}
+.crmblog-body{font-size:1.08rem;line-height:1.75;color:#2c383e}
+.crmblog-body h2{margin:44px 0 14px;font-size:2rem;line-height:1.1;letter-spacing:-.035em;color:#101519}
+.crmblog-body h3{margin:28px 0 10px;font-size:1.3rem;color:#101519}
+.crmblog-body p{margin:0 0 18px}.crmblog-body ul,.crmblog-body ol{margin:0 0 18px;padding-left:24px}.crmblog-body li{margin:0 0 8px}
+.crmblog-body a{color:#087eaa;font-weight:800;text-decoration:underline;text-decoration-color:#9eddf4;text-underline-offset:3px}
+.crmblog-body blockquote{margin:0 0 18px;padding:14px 20px;border-left:4px solid #089fd8;background:#e8f2f6}
+.crmblog-cta{margin:44px 0 0;padding:30px;background:#e8f2f6}
+.crmblog-cta p{margin:0 0 14px}.crmblog-cta p:last-child{margin:0}
+.crmblog-btn,.crmblog-btn2{display:inline-flex;align-items:center;min-height:48px;margin:4px 10px 0 0;padding:0 22px;border-radius:4px;font-weight:800}
+.crmblog-btn{background:#089fd8;color:#fff}.crmblog-btn2{border:1px solid #87cbe3;color:#087eaa}
+.crmblog-back{margin:30px 0 0}.crmblog-back a{color:#087eaa;font-weight:800}`,
+};
 
 const CANONICAL_HOST = "autoopulence.co.uk";
 // The CRM enquiry bot (chat assistant). Its answers, pages and leads are managed in the CRM.
@@ -73,6 +120,13 @@ async function handle(request: Request, env: Env): Promise<Response> {
   }
 
   if (CRM_PAGES.test(url.pathname)) return fromCrm(request);
+  const blog = await blogResponse(request, env, BLOG);
+  if (blog) return blog;
+  if (url.pathname === "/sitemap.xml") {
+    const res = await env.ASSETS.fetch(request);
+    if (!res.ok) return res;
+    return new Response(await addPostsToSitemap(await res.text(), BLOG), { headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=300" } });
+  }
   const response = await env.ASSETS.fetch(request);
   if (response.status === 404) {
     if (url.pathname.startsWith("/_next/")) return fromCrm(request);
