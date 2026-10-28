@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Header, Footer } from "@/components/site-chrome";
+import { BlogSlot } from "@/components/blog-slot";
 
 // The blog list and posts are filled in by the worker at request time (worker/src/crm-blog.js) from the CRM's
 // approved posts (CRM: Marketing → Blog posts). This page is only the shell: header, footer and an empty slot.
@@ -12,5 +13,5 @@ export const metadata: Metadata = {
 };
 
 export default function BlogPage() {
-  return <><Header /><main><section className="section shell"><div data-crm-blog="slot"></div></section></main><Footer /></>;
+  return <><Header /><main><section className="section shell"><BlogSlot /></section></main><Footer /></>;
 }

@@ -49,9 +49,13 @@ function setHead(html, { title, description, url, image, jsonLd, noindex }) {
   return html.replace('</head>', `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script></head>`);
 }
 
-function fill(shell, inner) {
-  const re = /<div[^>]*data-crm-blog="slot"[^>]*>\s*<\/div>/i;
-  return re.test(shell) ? shell.replace(re, inner) : shell.replace(/<\/main>/i, inner + '</main>');
+// The blog goes into the slot for search engines and first paint. React sites re-render the page when it loads, so the
+// same HTML and title are also handed over in window.__crmBlog, and the site's blog slot component puts them back.
+function fill(shell, inner, title) {
+  const re = /(<div[^>]*data-crm-blog="slot"[^>]*>)\s*<\/div>/i;
+  const html = re.test(shell) ? shell.replace(re, (_m, open) => open + inner + '</div>') : shell.replace(/<\/main>/i, inner + '</main>');
+  const data = JSON.stringify({ title, html: inner }).replace(/</g, '\\u003c');
+  return html.replace('</head>', `<script>window.__crmBlog=${data}</script></head>`);
 }
 
 function listHtml(opts, posts) {
@@ -103,7 +107,7 @@ export async function blogResponse(request, env, opts) {
   if (path === base) {
     const posts = (await fetchPosts(opts)) || [];
     const title = `${opts.blogTitle} | ${opts.siteName}`;
-    const html = setHead(fill(shell, listHtml(opts, posts)), {
+    const html = setHead(fill(shell, listHtml(opts, posts), title), {
       title, description: opts.intro, url: origin + base, image: posts[0]?.image?.url,
       jsonLd: { '@context': 'https://schema.org', '@graph': [
         { '@type': 'Blog', name: opts.blogTitle, url: origin + base, publisher: { '@type': 'Organization', name: opts.siteName, url: origin },
@@ -121,7 +125,7 @@ export async function blogResponse(request, env, opts) {
     const nf = await env.ASSETS.fetch(new Request(new URL('/404', url.origin)));
     return new Response(nf.ok ? await nf.text() : 'Not found', { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   }
-  const html = setHead(fill(shell, postHtml(opts, p)), {
+  const html = setHead(fill(shell, postHtml(opts, p), `${p.metaTitle || p.title} | ${opts.siteName}`), {
     title: `${p.metaTitle || p.title} | ${opts.siteName}`, description: p.metaDescription || p.excerpt, url: origin + p.path, image: p.image?.url,
     jsonLd: { '@context': 'https://schema.org', '@graph': [
       { '@type': 'BlogPosting', headline: p.title, description: p.metaDescription || p.excerpt, url: origin + p.path, mainEntityOfPage: origin + p.path,
