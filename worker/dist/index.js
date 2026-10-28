@@ -491,7 +491,203 @@ async function runUptimePinger(env) {
   return results.map(({ t, problem }) => ({ name: t.name, ok: !problem, problem }));
 }
 
+// ../../worker/src/crm-blog.js
+var esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+var branded = (t, site) => {
+  const core = String(site).toLowerCase().split(/\s+/).slice(0, 2).join(" ");
+  return String(t).toLowerCase().includes(core) ? t : `${t} | ${site}`;
+};
+var date = (v) => v ? new Date(v).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" }) : "";
+async function fetchPosts(opts, slug = "") {
+  const url = `${opts.feedUrl}?key=${encodeURIComponent(opts.feedKey)}${slug ? "&slug=" + encodeURIComponent(slug) : ""}`;
+  try {
+    const r = await fetch(url, { cf: { cacheTtl: 120, cacheEverything: true } });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return Array.isArray(j.posts) ? j.posts : [];
+  } catch {
+    return null;
+  }
+}
+function setHead(html, { title, description, url, image, jsonLd, noindex }) {
+  const meta = (attr, name, content) => {
+    const re = new RegExp(`<meta[^>]*${attr}="${name}"[^>]*>`, "i");
+    const tag = `<meta ${attr}="${name}" content="${esc(content)}">`;
+    html = re.test(html) ? html.replace(re, tag) : html.replace("</head>", tag + "</head>");
+  };
+  html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${esc(title)}</title>`);
+  meta("name", "description", description);
+  meta("property", "og:title", title);
+  meta("property", "og:description", description);
+  meta("property", "og:url", url);
+  meta("property", "og:type", image ? "article" : "website");
+  if (image) {
+    meta("property", "og:image", image);
+    meta("name", "twitter:image", image);
+  }
+  meta("name", "twitter:title", title);
+  meta("name", "twitter:description", description);
+  if (noindex) meta("name", "robots", "noindex");
+  html = /<link[^>]*rel="canonical"[^>]*>/i.test(html) ? html.replace(/<link[^>]*rel="canonical"[^>]*>/i, `<link rel="canonical" href="${esc(url)}">`) : html.replace("</head>", `<link rel="canonical" href="${esc(url)}"></head>`);
+  html = html.replace(/<script type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/gi, (m) => /EntertainmentBusiness|LocalBusiness|AutoRepair|Organization/.test(m) && !/BreadcrumbList|WebPage|FAQPage/.test(m) ? m : "");
+  return html.replace("</head>", `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script></head>`);
+}
+function fill(shell, inner, title) {
+  const re = /(<div[^>]*data-crm-blog="slot"[^>]*>)\s*<\/div>/i;
+  const html = re.test(shell) ? shell.replace(re, (_m, open) => open + inner + "</div>") : shell.replace(/<\/main>/i, inner + "</main>");
+  const data = JSON.stringify({ title, html: inner }).replace(/</g, "\\u003c");
+  return html.replace("</head>", `<script>window.__crmBlog=${data}</script></head>`);
+}
+function listHtml(opts, posts) {
+  const base = opts.basePath;
+  const cards = posts.map((p) => `<a class="crmblog-card" href="${esc(p.path)}">
+${p.image ? `<img src="${esc(p.image.url)}" alt="${esc(p.image.alt)}" width="${p.image.width || 1536}" height="${p.image.height || 1024}" loading="lazy">` : '<span class="crmblog-noimg"></span>'}
+<span class="crmblog-cardbody"><span class="crmblog-meta">${esc(p.category || "Blog")} \xB7 ${esc(date(p.publishedAt))}</span>
+<h2>${esc(p.title)}</h2><span class="crmblog-excerpt">${esc(p.excerpt)}</span><span class="crmblog-more">Read more \u2192</span></span></a>`).join("\n");
+  return `<style>${opts.css}</style>
+<section class="crmblog crmblog-list">
+<nav class="crmblog-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> <span aria-hidden="true">/</span> <span>${esc(opts.blogName)}</span></nav>
+<p class="crmblog-kicker">${esc(opts.kicker)}</p>
+<h1>${esc(opts.blogTitle)}</h1>
+<p class="crmblog-intro">${esc(opts.intro)}</p>
+${posts.length ? `<div class="crmblog-grid">${cards}</div>` : `<p class="crmblog-empty">New posts are on their way. In the meantime, have a look at our <a href="${esc(opts.guidesPath || "/")}">guides</a>.</p>`}
+</section>`;
+}
+function postHtml(opts, p) {
+  return `<style>${opts.css}</style>
+<article class="crmblog crmblog-post">
+<nav class="crmblog-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> <span aria-hidden="true">/</span> <a href="${esc(opts.basePath)}">${esc(opts.blogName)}</a> <span aria-hidden="true">/</span> <span>${esc(p.title)}</span></nav>
+<p class="crmblog-meta">${esc(p.category || "Blog")} \xB7 <time datetime="${esc(p.publishedAt || "")}">${esc(date(p.publishedAt))}</time></p>
+<h1>${esc(p.title)}</h1>
+${p.excerpt ? `<p class="crmblog-lead">${esc(p.excerpt)}</p>` : ""}
+${p.image ? `<img class="crmblog-hero" src="${esc(p.image.url)}" alt="${esc(p.image.alt)}" width="${p.image.width || 1536}" height="${p.image.height || 1024}">` : ""}
+<div class="crmblog-body">${p.html}</div>
+<div class="crmblog-cta">${opts.ctaHtml || ""}</div>
+<p class="crmblog-back"><a href="${esc(opts.basePath)}">\u2190 All posts</a></p>
+</article>`;
+}
+async function blogResponse(request, env, opts) {
+  const url = new URL(request.url);
+  const base = opts.basePath;
+  const path2 = url.pathname.replace(/\/+$/, "") || "/";
+  if (path2 !== base && !path2.startsWith(base + "/")) return null;
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
+  const shellRes = await env.ASSETS.fetch(new Request(new URL(opts.shellPath, url.origin)));
+  if (!shellRes.ok) return null;
+  const shell = await shellRes.text();
+  const origin = opts.origin || url.origin;
+  const headers = { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=60" };
+  if (path2 === base) {
+    const posts2 = await fetchPosts(opts) || [];
+    const title = `${opts.blogTitle} | ${opts.siteName}`;
+    const html2 = setHead(fill(shell, listHtml(opts, posts2), title), {
+      title,
+      description: opts.intro,
+      url: origin + base,
+      image: posts2[0]?.image?.url,
+      jsonLd: { "@context": "https://schema.org", "@graph": [
+        {
+          "@type": "Blog",
+          name: opts.blogTitle,
+          url: origin + base,
+          publisher: { "@type": "Organization", name: opts.siteName, url: origin },
+          blogPost: posts2.slice(0, 20).map((p2) => ({ "@type": "BlogPosting", headline: p2.title, url: origin + p2.path, datePublished: p2.publishedAt }))
+        },
+        { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: origin + "/" }, { "@type": "ListItem", position: 2, name: opts.blogName, item: origin + base }] }
+      ] }
+    });
+    return new Response(request.method === "HEAD" ? null : html2, { headers });
+  }
+  const slug = path2.slice(base.length + 1);
+  const posts = /^[a-z0-9-]{1,120}$/.test(slug) ? await fetchPosts(opts, slug) : [];
+  const p = (posts || [])[0];
+  if (!p) {
+    const nf = await env.ASSETS.fetch(new Request(new URL("/404", url.origin)));
+    return new Response(nf.ok ? await nf.text() : "Not found", { status: 404, headers: { "Content-Type": "text/html; charset=utf-8" } });
+  }
+  const html = setHead(fill(shell, postHtml(opts, p), branded(p.metaTitle || p.title, opts.siteName)), {
+    title: branded(p.metaTitle || p.title, opts.siteName),
+    description: p.metaDescription || p.excerpt,
+    url: origin + p.path,
+    image: p.image?.url,
+    jsonLd: { "@context": "https://schema.org", "@graph": [
+      {
+        "@type": "BlogPosting",
+        headline: p.title,
+        description: p.metaDescription || p.excerpt,
+        url: origin + p.path,
+        mainEntityOfPage: origin + p.path,
+        datePublished: p.publishedAt,
+        dateModified: p.updatedAt || p.publishedAt,
+        image: p.image ? [p.image.url] : void 0,
+        keywords: (p.keywords || []).join(", "),
+        wordCount: p.wordCount || void 0,
+        inLanguage: "en-GB",
+        author: { "@type": "Organization", name: opts.siteName, url: origin },
+        publisher: { "@type": "Organization", name: opts.siteName, url: origin }
+      },
+      { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: origin + "/" }, { "@type": "ListItem", position: 2, name: opts.blogName, item: origin + base }, { "@type": "ListItem", position: 3, name: p.title, item: origin + p.path }] }
+    ] }
+  });
+  return new Response(request.method === "HEAD" ? null : html, { headers });
+}
+async function addPostsToSitemap(xml, opts) {
+  const posts = await fetchPosts(opts);
+  if (!posts) return xml;
+  const origin = opts.origin;
+  const listUrl = esc(origin + opts.basePath);
+  const urls = [
+    ...xml.includes(`<loc>${listUrl}</loc>`) ? [] : [`<url><loc>${listUrl}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`],
+    ...posts.map((p) => `<url><loc>${esc(origin + p.path)}</loc><lastmod>${esc(p.updatedAt || p.publishedAt || "")}</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>`)
+  ];
+  return xml.includes("</urlset>") ? xml.replace("</urlset>", urls.join("\n") + "\n</urlset>") : xml;
+}
+
 // ../../worker/src/index.ts
+var BLOG = {
+  feedUrl: "https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/seo-blog",
+  feedKey: "8c92192d-7364-4da2-9dab-0872a457aa84",
+  // seo_sites.feed_key for Auto Opulence
+  origin: "https://autoopulence.co.uk",
+  basePath: "/blog",
+  shellPath: "/blog",
+  siteName: "Auto Opulence",
+  blogName: "Blog",
+  blogTitle: "Vehicle care blog",
+  kicker: "Auto Opulence blog \xB7 Norwich",
+  intro: "Car-care advice, seasonal tips and news from our indoor valeting and detailing studio in Norwich.",
+  guidesPath: "/guides",
+  ctaHtml: '<p><strong>Want it done properly?</strong> Choose a service and book online, or ask us about your vehicle.</p><p><a class="crmblog-btn" href="/services">View services</a> <a class="crmblog-btn2" href="/contact">Ask Auto Opulence</a></p>',
+  css: `.crmblog{max-width:860px;margin:0 auto;color:#101519}
+.crmblog-list{max-width:1180px}
+.crmblog-crumbs{font-size:.8rem;color:#5e6970;margin:0 0 18px}.crmblog-crumbs a{color:#5e6970}.crmblog-crumbs span:last-child{color:#089fd8}
+.crmblog-kicker,.crmblog-meta{margin:0 0 12px;color:#089fd8;font-size:.78rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.crmblog h1{margin:0 0 18px;font-size:clamp(2.6rem,5vw,4.6rem);line-height:.98;letter-spacing:-.055em}
+.crmblog-post h1{font-size:clamp(2.2rem,4vw,3.6rem)}
+.crmblog-intro,.crmblog-lead{font-size:1.15rem;color:#536168;max-width:720px;margin:0 0 34px}
+.crmblog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.crmblog-card{display:flex;flex-direction:column;background:#fff;border:1px solid #e3eaed;transition:.22s ease}
+.crmblog-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(28,52,63,.12)}
+.crmblog-card img,.crmblog-noimg{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;display:block;background:#dde5e8}
+.crmblog-cardbody{display:flex;flex-direction:column;gap:8px;padding:22px 22px 24px;border-top:4px solid #089fd8}
+.crmblog-card .crmblog-meta{margin:0;font-size:.7rem}
+.crmblog-card h2{margin:0;font-size:1.35rem;line-height:1.15}
+.crmblog-excerpt{color:#5e6970;font-size:.95rem}
+.crmblog-more{color:#089fd8;font-weight:800;font-size:.88rem}
+.crmblog-empty{color:#5e6970}.crmblog-empty a{color:#087eaa;font-weight:800}
+.crmblog-hero{width:100%;height:auto;margin:0 0 30px}
+.crmblog-body{font-size:1.08rem;line-height:1.75;color:#2c383e}
+.crmblog-body h2{margin:44px 0 14px;font-size:2rem;line-height:1.1;letter-spacing:-.035em;color:#101519}
+.crmblog-body h3{margin:28px 0 10px;font-size:1.3rem;color:#101519}
+.crmblog-body p{margin:0 0 18px}.crmblog-body ul,.crmblog-body ol{margin:0 0 18px;padding-left:24px}.crmblog-body li{margin:0 0 8px}
+.crmblog-body a{color:#087eaa;font-weight:800;text-decoration:underline;text-decoration-color:#9eddf4;text-underline-offset:3px}
+.crmblog-body blockquote{margin:0 0 18px;padding:14px 20px;border-left:4px solid #089fd8;background:#e8f2f6}
+.crmblog-cta{margin:44px 0 0;padding:30px;background:#e8f2f6}
+.crmblog-cta p{margin:0 0 14px}.crmblog-cta p:last-child{margin:0}
+.crmblog-btn,.crmblog-btn2{display:inline-flex;align-items:center;min-height:48px;margin:4px 10px 0 0;padding:0 22px;border-radius:4px;font-weight:800}
+.crmblog-btn{background:#089fd8;color:#fff}.crmblog-btn2{border:1px solid #87cbe3;color:#087eaa}
+.crmblog-back{margin:30px 0 0}.crmblog-back a{color:#087eaa;font-weight:800}`
+};
 var CANONICAL_HOST = "autoopulence.co.uk";
 var SITE_SEARCH_SCRIPT = '<script src="https://crm.racecargraphics.uk/embed/site-search.js" data-key="cf3dec2d53f08dd72a8af483" defer></script>';
 var ENQUIRY_BOT_SCRIPT = '<script src="https://crm.racecargraphics.uk/rcg-enquiry-bot.js" data-bot-key="a13cbd35-f793-4389-b26e-8064e45ac31d" defer></script>';
@@ -552,6 +748,13 @@ async function handle(request, env) {
     }
   }
   if (CRM_PAGES.test(url.pathname)) return fromCrm(request);
+  const blog = await blogResponse(request, env, BLOG);
+  if (blog) return blog;
+  if (url.pathname === "/sitemap.xml") {
+    const res = await env.ASSETS.fetch(request);
+    if (!res.ok) return res;
+    return new Response(await addPostsToSitemap(await res.text(), BLOG), { headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=300" } });
+  }
   const response = await env.ASSETS.fetch(request);
   if (response.status === 404) {
     if (url.pathname.startsWith("/_next/")) return fromCrm(request);
