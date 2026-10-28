@@ -10,6 +10,8 @@
  */
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// "<title> | <site name>", unless the title already names the business.
+const branded = (t, site) => { const core = String(site).toLowerCase().split(/\s+/).slice(0, 2).join(' '); return String(t).toLowerCase().includes(core) ? t : `${t} | ${site}`; };
 const date = (v) => (v ? new Date(v).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' }) : '');
 
 /** Published posts from the CRM (cached at the edge for two minutes). */
@@ -125,8 +127,8 @@ export async function blogResponse(request, env, opts) {
     const nf = await env.ASSETS.fetch(new Request(new URL('/404', url.origin)));
     return new Response(nf.ok ? await nf.text() : 'Not found', { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   }
-  const html = setHead(fill(shell, postHtml(opts, p), `${p.metaTitle || p.title} | ${opts.siteName}`), {
-    title: `${p.metaTitle || p.title} | ${opts.siteName}`, description: p.metaDescription || p.excerpt, url: origin + p.path, image: p.image?.url,
+  const html = setHead(fill(shell, postHtml(opts, p), branded(p.metaTitle || p.title, opts.siteName)), {
+    title: branded(p.metaTitle || p.title, opts.siteName), description: p.metaDescription || p.excerpt, url: origin + p.path, image: p.image?.url,
     jsonLd: { '@context': 'https://schema.org', '@graph': [
       { '@type': 'BlogPosting', headline: p.title, description: p.metaDescription || p.excerpt, url: origin + p.path, mainEntityOfPage: origin + p.path,
         datePublished: p.publishedAt, dateModified: p.updatedAt || p.publishedAt, image: p.image ? [p.image.url] : undefined, keywords: (p.keywords || []).join(', '),
