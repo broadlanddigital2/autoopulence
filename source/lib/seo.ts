@@ -23,7 +23,7 @@ export const localBusinessSchema = {
   name: "Auto Opulence",
   description: "Professional vehicle valeting, hand car washing, machine polishing, ceramic coatings and equipped valet bay hire in Norwich, Norfolk.",
   url: siteUrl,
-  telephone: "+443300536925",
+  telephone: "+441603517142",
   email: "valeting@autoopulence.co.uk",
   priceRange: "££",
   image: `${siteUrl}/images/case-studies/merl-grey-range-rover-sport/range-rover-auto-opulence-ceramic-coating.webp`,
@@ -37,7 +37,7 @@ export const localBusinessSchema = {
   openingHoursSpecification: openingHours.map((h) => ({ "@type": "OpeningHoursSpecification", dayOfWeek: h.days, opens: h.opens, closes: h.closes })),
   contactPoint: {
     "@type": "ContactPoint",
-    telephone: "+443300536925",
+    telephone: "+441603517142",
     email: "valeting@autoopulence.co.uk",
     contactType: "customer service",
     areaServed: "GB",

@@ -151,7 +151,7 @@ export default {
       response = await handle(request, env);
     } catch (error) {
       console.error("Unhandled error", error instanceof Error ? error.stack || error.message : error);
-      response = Response.json({ error: "Something went wrong. Please call 0330 053 6925." }, { status: 500 });
+      response = Response.json({ error: "Something went wrong. Please call 01603 517142." }, { status: 500 });
     }
     const preview = new URL(request.url).hostname.endsWith(".workers.dev");
     // CRM pages (loan form) are left untouched: extra scripts would break their React page.

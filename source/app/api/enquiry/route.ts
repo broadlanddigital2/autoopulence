@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       additionalToEmails: ["3ca8339d-bd85-443a-9662-3bbc287b15ff@webform.autoopulence.co.uk"],
       ccEmail: runtimeEnv("SMTP_CC_EMAIL", "chris@racecargraphics.uk"),
     };
-    if (!config.password) return Response.json({ error: "Email delivery is temporarily unavailable. Please call 0330 053 6925." }, { status: 503 });
+    if (!config.password) return Response.json({ error: "Email delivery is temporarily unavailable. Please call 01603 517142." }, { status: 503 });
     // CRM monitoring (hourly form check): with the monitor token, everything above has been checked; ask the CRM to
     // check the web form key too, then stop before any email is sent. Without a valid token nothing is sent either.
     if (text(body.get("monitor"), 5) === "1") {
@@ -96,6 +96,6 @@ export async function POST(request: Request) {
     return Response.json({ ok: true });
   } catch (error) {
     console.error("Enquiry delivery failed", error instanceof Error ? error.message : "Unknown error");
-    return Response.json({ error: "We could not send your enquiry. Please try again or call 0330 053 6925." }, { status: 502 });
+    return Response.json({ error: "We could not send your enquiry. Please try again or call 01603 517142." }, { status: 502 });
   }
 }

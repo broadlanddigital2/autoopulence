@@ -28,7 +28,7 @@ export default function ContactPage() {
         <div><p className="kicker">Name, address & phone</p><h2>Auto Opulence</h2><p>Vehicle valeting and detailing specialists in Norwich, Norfolk.</p></div>
         <address>
           <a href={googleProfileUrl} target="_blank" rel="noreferrer"><MapPin /><span><strong>Visit us</strong>Unit 7 Consensus House<br />St Faiths Road<br />Norwich, Norfolk<br />NR6 7BW</span></a>
-          <a href="tel:03300536925"><Phone /><span><strong>Call us</strong>0330 053 6925</span></a>
+          <a href="tel:01603517142"><Phone /><span><strong>Call us</strong>01603 517142</span></a>
           <a href="mailto:valeting@autoopulence.co.uk"><Mail /><span><strong>Email us</strong>valeting@autoopulence.co.uk</span></a>
           <div><Clock3 /><span><strong>Opening hours</strong>{openingHours.map((h) => <span key={h.label} className="nap-hours">{h.label}: {h.opens}–{h.closes}</span>)}By appointment. Please book or contact us to confirm availability.</span></div>
         </address>

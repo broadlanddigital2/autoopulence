@@ -83,7 +83,7 @@ export default function CeramicCoatingPage() {
         <p className="kicker">Gyeon ceramic coating · Norwich</p>
         <h1>Ceramic Coating in Norwich</h1>
         <p>Long-lasting ceramic coating for your car&apos;s paintwork, applied in our indoor Norwich studio after a full decontamination wash. Choose 4 or 7 years of protection, with clear ceramic coating prices for every vehicle size.</p>
-        <div className="category-hero-actions"><a href="#prices" className="button">See prices <ArrowDown size={18} /></a><a href="#book" className="category-hero-text-link">Book a ceramic coating <ArrowDown size={17} /></a><a href="tel:03300536925" className="category-hero-text-link"><Phone size={16} /> 0330 053 6925</a></div>
+        <div className="category-hero-actions"><a href="#prices" className="button">See prices <ArrowDown size={18} /></a><a href="#book" className="category-hero-text-link">Book a ceramic coating <ArrowDown size={17} /></a><a href="tel:01603517142" className="category-hero-text-link"><Phone size={16} /> 01603 517142</a></div>
       </div><div className="service-hero-proof category-hero-proof"><strong>From £{lowest}</strong><span>4-year and 7-year packages · prices by vehicle size</span></div></div>
     </section>
 
@@ -139,6 +139,6 @@ export default function CeramicCoatingPage() {
 
     <section className="service-links shell"><h2>More ways to protect and refresh your car</h2><p>Pair a ceramic coating with <Link href="/category/vehicle-polishing">machine polishing and paint correction</Link>, keep it clean with a <Link href="/service/hand-car-wash-norwich">hand car wash</Link>, or see <Link href="/category/vehicle-valeting">vehicle valeting in Norwich</Link>. Not sure which package suits your paint? <Link href="/contact">Send us a photo and ask</Link>.</p></section>
 
-    <section className="contact-strip"><div className="shell"><div><p className="kicker">Not sure which coating to choose?</p><h2>Talk it through with us.</h2></div><div><a href="tel:03300536925" className="button">Call 0330 053 6925</a><Link href="/contact" className="inline-link">Send an enquiry <ArrowRight size={17} /></Link></div></div></section>
+    <section className="contact-strip"><div className="shell"><div><p className="kicker">Not sure which coating to choose?</p><h2>Talk it through with us.</h2></div><div><a href="tel:01603517142" className="button">Call 01603 517142</a><Link href="/contact" className="inline-link">Send an enquiry <ArrowRight size={17} /></Link></div></div></section>
   </main><Footer /></>;
 }

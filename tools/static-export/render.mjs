@@ -118,7 +118,7 @@ for (const route of routes) {
     h("section", { className: "booking-receipt shell", "aria-labelledby": "not-found-title" }, h("div", { className: "booking-receipt__intro" },
       h("span", { className: "section-kicker" }, "404 · Page not found"),
       h("h1", { id: "not-found-title" }, "We couldn't find that page."),
-      h("p", null, "It may have moved. Browse our services, or call us on 0330 053 6925."),
+      h("p", null, "It may have moved. Browse our services, or call us on 01603 517142."),
       h("p", { style: { display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 } }, h("a", { className: "button", href: "/services" }, "Browse services"), h("a", { className: "button button--ghost", href: "/" }, "Back to the home page"))))), h(S.Footer)));
   const head = headTags({ title: "Page not found | Auto Opulence", robots: { index: false, follow: true }, alternates: {}, openGraph: undefined, twitter: undefined });
   fs.writeFileSync(path.join(OUT, "404.html"), documentHtml({ head, body: body, route: null }).replace('<script type="module" src="/_static/app.js"></script>\n', ""));

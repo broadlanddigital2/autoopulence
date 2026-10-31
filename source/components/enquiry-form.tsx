@@ -41,7 +41,7 @@ export function EnquiryForm({ initialService = "", businessSector = "", title = 
       if (!response.ok || !result.question || !result.token) throw new Error();
       setCaptcha({ question: result.question, token: result.token });
     } catch {
-      setError("The security check could not load. Please refresh it or call 0330 053 6925.");
+      setError("The security check could not load. Please refresh it or call 01603 517142.");
     } finally {
       setCaptchaLoading(false);
     }
