@@ -1,0 +1,837 @@
+// Page-level SEO overlay (SEO optimiser, 2 Nov 2026). Each page's keywords are in the CRM (SEO optimiser → Page scores,
+// table seo_page_keywords); this file puts them where the weekly check looks: the H1, title, meta description, the hero
+// image's alt text, subheadings (H2) and FAQs. Templates read it with seoFor(path); <SeoExtra /> renders the extra
+// sections and FAQs (with FAQPage schema) at the end of the page's main content.
+// Keep the copy accurate: prices come from lib/services.ts ("{prices}" in a service section is replaced with the
+// service's own size prices), and nothing here should promise more than the service pages do.
+
+export type SeoSection = { heading: string; text: string };
+export type SeoFaq = { question: string; answer: string };
+export type PageSeo = {
+  title?: string;
+  description?: string;
+  h1?: string;
+  alt?: string;
+  kicker?: string;
+  sections?: SeoSection[];
+  faqHeading?: string;
+  faqs?: SeoFaq[];
+};
+
+const ADDRESS = "Unit 7 Consensus House, St Faiths Road, Norwich, NR6 7BW";
+
+export const pageSeo: Record<string, PageSeo> = {
+  // ---- Core pages -----------------------------------------------------------------------------------------------------
+  "/": {
+    h1: "Car valeting & detailing · Norwich",
+    description: "Car valeting and detailing, Norwich: hand car washing, interior and exterior valets, machine polishing, ceramic coating and indoor valet bay hire. Book online.",
+    alt: "Car valeting and detailing Norwich: pearl grey SUV inside the Auto Opulence indoor studio",
+    kicker: "Car valeting & detailing in Norwich",
+    sections: [
+      { heading: "Car valeting in Norwich, from a maintenance wash to a full reset", text: "Every Auto Opulence booking starts with the service and your vehicle size, so you can see the price before you book. A hand car wash starts from £30, a premium interior or exterior valet from £40 and a complete exterior and interior valet from £70. For heavily used cabins, the deep interior clean adds extra working time for embedded dirt, spills, pet hair and stale odours." },
+      { heading: "Car detailing in Norwich: polishing, paint correction and protection", text: "When washing alone no longer brings back the shine, our car valeting and detailing Norwich studio offers a Stage 1 machine polish from £295 and multi-stage paint correction from £345. Long-term protection follows with a 3 + 1 year or 7-year ceramic coating, applied indoors after a full decontamination wash so the coating bonds to clean, prepared paint." },
+      { heading: "Vehicle detailing in Norwich, under one roof", text: "All the work happens at our purpose-equipped indoor facility on St Faiths Road in north Norwich, with inspection lighting, a Kranzle K7 pressure washer, spotless water and extraction equipment. Enthusiasts and trade users can also hire the same valet bay for their own work, from £50 for a three-hour trade session or £80 for two hours of public hire." },
+    ],
+    faqHeading: "Car valeting and detailing FAQs",
+    faqs: [
+      { question: "Where is Auto Opulence?", answer: `We are at ${ADDRESS}, in north Norwich. Every appointment is booked in advance so the right time and equipment are ready for your vehicle.` },
+      { question: "How much does car valeting cost in Norwich?", answer: "Our prices are set by vehicle size. A hand car wash starts from £30, a premium interior or exterior valet from £40, a complete exterior and interior valet from £70 and a deep interior clean from £70. Each service page shows the price for Small, Medium, Large and Extra Large vehicles." },
+      { question: "What is the difference between car valeting and detailing?", answer: "Valeting cleans the vehicle inside and out. Detailing goes further, for example machine polishing to reduce swirls and restore gloss, or a ceramic coating for long-term protection." },
+      { question: "Can I book online?", answer: "Yes. Choose a service and your vehicle size and book online, or call 01603 517142 if you would like advice first." },
+      { question: "Can I hire the bay and clean my own car?", answer: "Yes. Public valet bay hire starts from £80 for two hours, and trade hire from £50 for a three-hour session, with an indoor bay, drainage, professional lighting, a pressure washer and spotless water." },
+    ],
+  },
+  "/about": {
+    h1: "Vehicle care specialists in Norwich, properly equipped.",
+    description: "Meet Auto Opulence, vehicle care specialists in Norwich: valeting, hand washing, machine polishing, ceramic coating and valet bay hire from one indoor studio.",
+    alt: "Vehicle care specialists Auto Opulence: detailed Range Rover Sport inside the Norwich studio",
+    sections: [
+      { heading: "Car detailing specialists in Norwich", text: "As vehicle care specialists, we match the treatment to the vehicle rather than selling one package to everyone. A well-kept daily driver may only need a hand wash or a premium valet; tired paintwork may need a Stage 1 machine polish or multi-stage correction before a ceramic coating. We inspect the vehicle first and explain what each option will and will not change." },
+      { heading: "Car care specialists for private, trade and business customers", text: "Private customers book washing, valeting, polishing and ceramic protection. Fleets, dealerships, taxi and private-hire drivers, lease-return customers, garages and bodyshops use our business routes, and professional detailers hire the equipped valet bay for their own customers' cars." },
+      { heading: "Our indoor detailing studio in Norwich", text: `The studio at ${ADDRESS} brings an indoor wash floor with drainage, a lighting tunnel for paint inspection, a Kranzle K7 pressure washer, inline spotless water and extraction equipment together in one controlled space, so the work is not at the mercy of the weather.` },
+    ],
+    faqs: [
+      { question: "What services does Auto Opulence offer?", answer: "Hand car washing, decontamination washes, interior and exterior valeting, deep interior cleaning, machine polishing and paint correction, ceramic coatings for paint, wheels and soft tops, and public or trade valet bay hire." },
+      { question: "Where is the studio?", answer: `${ADDRESS}. Customers travel from across Norfolk, including Wymondham, Dereham, Aylsham, North Walsham, Great Yarmouth and Attleborough.` },
+      { question: "Do you work on business vehicles?", answer: "Yes. We have routes for fleets, car dealerships, taxis and private hire, lease returns, garages and bodyshops, plus trade bay hire for professional detailers." },
+    ],
+  },
+  "/contact": {
+    h1: "Contact Auto Opulence in Norwich",
+    description: "Contact Auto Opulence in Norwich to book car valeting, ask about detailing, ceramic coating or valet bay hire. Call 01603 517142 or send us an enquiry.",
+    alt: "Contact Auto Opulence: indoor car valeting and detailing studio in Norwich",
+    sections: [
+      { heading: "Book car valeting in Norwich", text: "The quickest way to book car valeting is online: choose the service and your vehicle size on any service page and pick a time. If you are not sure which service suits the car, send the enquiry form with a few details or a photo, or call 01603 517142, and we will recommend the right level of work before you book." },
+      { heading: "Car detailing enquiries we can help with", text: "We regularly help with questions about paint correction, ceramic coating packages, soft-top cleaning, lease-return preparation, business vehicles and valet bay hire. Tell us the make and model, how the vehicle is used and the result you want, and we will reply with a recommendation and the published price for your vehicle size." },
+      { heading: "Auto Opulence opening hours and address", text: `We are at ${ADDRESS}. Opening hours are Monday to Friday 08:30–17:30, Saturday 10:00–17:00 and Sunday 10:00–16:00, by appointment. Please book or contact Auto Opulence first so we can confirm availability.` },
+    ],
+    faqs: [
+      { question: "How quickly will you reply to an enquiry?", answer: "We aim to respond to enquiries within 24 hours. For anything urgent, call 01603 517142." },
+      { question: "Can I just turn up?", answer: "All work is by appointment, so please book online or contact us first. That way the bay, equipment and working time are ready for your vehicle." },
+      { question: "Do you collect vehicles?", answer: "Collection can be discussed for some bookings, for example end-of-lease valets. Ask when you enquire and we will confirm what is possible." },
+    ],
+  },
+  "/services": {
+    h1: "Car valeting & detailing services in Norwich",
+    description: "Compare car valeting and detailing services in Norwich: hand washing, interior and exterior valets, paint correction, ceramic coating and valet bay hire.",
+    sections: [
+      { heading: "Car valeting services in Norwich, priced by vehicle size", text: "Each of our car valeting and detailing services has a published price for Small, Medium, Large and Extra Large vehicles, so you can see the cost before you book. A hand car wash starts from £30, a premium interior or exterior valet from £40 and a complete valet from £70." },
+      { heading: "Vehicle detailing services: paint correction and ceramic coating", text: "Machine polishing starts from £295 for a Stage 1 polish and £345 for multi-stage paint correction. Ceramic coating packages, including the wash, decontamination and preparation they need, start from £445 for the 3 + 1 year coating and £495 for the 7-year coating with a clay bar wash." },
+    ],
+  },
+  "/business-sectors": {
+    h1: "Business vehicle valeting, shaped around the work.",
+    description: "Business vehicle valeting in Norwich for fleets, dealerships, taxis, lease returns, garages and bodyshops, plus trade detailing bay hire. Request a quote.",
+    alt: "Business vehicle valeting at the Auto Opulence indoor facility in Norwich",
+    sections: [
+      { heading: "Commercial vehicle valeting in Norwich", text: "Our business vehicle valeting routes use the same published services as private customers, matched to each vehicle's size, use and condition. A regularly maintained company car may only need a hand wash and vacuum from £49, while a customer-facing vehicle may need a complete valet or a Stage 1 machine polish." },
+      { heading: "Business car valeting and commercial vehicle cleaning plans", text: "For repeat or multi-vehicle work, send the number and type of vehicles, their current condition, the frequency you need and your preferred dates. We will recommend a practical plan, confirm the price for each vehicle size and agree the expected completion window before the vehicles arrive." },
+    ],
+  },
+  "/gallery": {
+    h1: "Vehicle valeting & detailing gallery",
+    description: "Our vehicle valeting and detailing gallery: real photos of valets, paint correction, ceramic coatings and valet bay hire projects at our Norwich studio.",
+    alt: "Vehicle valeting and detailing gallery photo of a ceramic-coated Range Rover Sport",
+    sections: [
+      { heading: "Car detailing photos from real projects", text: "Every photo in this vehicle valeting and detailing gallery comes from a completed Auto Opulence project, grouped with the vehicle it belongs to. Open a case study to see the services used, how the work was carried out and the finished result." },
+      { heading: "Car valeting photos, paint correction and ceramic coating", text: "The gallery covers complete valets and deep interior cleans, single-stage machine polishing on original paint, Gyeon ceramic coatings, and private owners using our indoor valet bay. Use it to compare finishes before choosing a treatment for your own car." },
+      { heading: "Vehicle detailing projects in Norwich", text: `All of the work shown was carried out at our indoor studio at ${ADDRESS}. New projects are added as they are completed.` },
+    ],
+    faqs: [
+      { question: "Are these photos of your own work?", answer: "Yes. Every image is from a completed Auto Opulence project at our Norwich studio and links to its case study." },
+      { question: "Can I book the same treatment shown in a photo?", answer: "Yes. Each case study lists the services used, and each service page shows the price for your vehicle size and lets you book online." },
+    ],
+  },
+  "/guides": {
+    h1: "Vehicle valeting & detailing guides",
+    description: "Vehicle valeting and detailing guides from our Norwich studio: valeting frequency, prices, polishing, ceramic coating aftercare, lease returns and bay hire.",
+    alt: "Vehicle valeting and detailing guides: the Auto Opulence indoor facility in Norwich",
+    sections: [
+      { heading: "Car valeting advice in plain English", text: "Our vehicle valeting and detailing guides answer the questions customers ask most: how often to valet a car, what a valet costs in Norwich, whether a hand wash is safer than an automatic wash and how to prepare a car for a lease return." },
+      { heading: "Car detailing guides: polishing and ceramic coating", text: "The detailing guides explain what machine polishing can and cannot remove, the difference between Stage 1 and multi-stage correction, ceramic coating versus wax and how to look after a coated car. Each guide links to the relevant services and prices." },
+      { heading: "Vehicle care guides for valet bay hire", text: "Hiring the bay? Read how to choose between public and trade hire, short sessions and full days, and what to bring so you make the most of the time." },
+    ],
+    faqs: [
+      { question: "Who writes the guides?", answer: "The guides are written and reviewed by the Auto Opulence team, based on the work we carry out every day at our Norwich studio." },
+      { question: "Can I ask a question that is not covered?", answer: "Yes. Send us an enquiry with a few details about the vehicle and we will recommend the most suitable starting point." },
+    ],
+  },
+  "/case-studies": {
+    h1: "Vehicle valeting & detailing case studies",
+    description: "Vehicle valeting and detailing case studies from Norwich: an end-of-lease Volvo XC60, a BMW E21 restoration detail, ceramic coatings and valet bay hire.",
+    sections: [
+      { heading: "Car detailing projects in Norwich", text: "Each of our vehicle valeting and detailing case studies records the starting point, the services chosen, how the work was carried out and the finished result, with a photo gallery from the studio." },
+      { heading: "Ceramic coating and valet bay hire case studies", text: "Read how a Merl Grey Range Rover Sport was decontaminated and coated with a Gyeon seven-year coating, how a BMW E21 was restored without losing its original character, and how private owners used our indoor valet bay for their Audi TT and Mercedes CLA45." },
+    ],
+    faqs: [
+      { question: "Are the case studies real customer vehicles?", answer: "Yes. Every case study is a genuine project completed at the Auto Opulence studio in Norwich." },
+      { question: "How do I book similar work?", answer: "Each case study links to the services used. Open a service to see the price for your vehicle size and book online, or send us an enquiry." },
+    ],
+  },
+  "/locations": {
+    title: "Car Valeting Norfolk | Areas We Serve | Auto Opulence",
+    h1: "Car valeting Norfolk-wide, from one Norwich studio.",
+    description: "Car valeting Norfolk drivers travel for: washing, valeting, polishing, ceramic coating and bay hire at our Norwich studio, with guides for nearby towns.",
+    alt: "Car valeting Norfolk customers visit: the Auto Opulence indoor facility in Norwich",
+    sections: [
+      { heading: "Car detailing for Norfolk drivers", text: "Customers travel from Wymondham, Dereham, Aylsham, North Walsham, Great Yarmouth and Attleborough for the full range of car valeting Norfolk drivers need, from a maintenance hand wash to multi-stage paint correction and ceramic coating." },
+      { heading: "Vehicle valeting across Norfolk, one confirmed address", text: `All the work takes place at ${ADDRESS}. We do not run mobile vans or virtual branches; each local page explains the journey, the services most useful to drivers from that area and how appointments are planned.` },
+      { heading: "Car valeting locations in Norfolk", text: "Choose your town above for journey information, recommended services and local FAQs, or go straight to a service page to compare prices by vehicle size." },
+    ],
+    faqs: [
+      { question: "Do you offer mobile valeting?", answer: "No. All work is carried out at our indoor studio in Norwich, where the lighting, water and equipment are set up for careful work." },
+      { question: "Which areas do you cover?", answer: "Customers come from across Norfolk. We have local guides for Norwich, Wymondham, Dereham, Aylsham, North Walsham, Great Yarmouth and Attleborough." },
+    ],
+  },
+  "/blog": {
+    faqs: [
+      { question: "How often are new posts added?", answer: "New posts are added every few days, covering seasonal car care, cleaning advice and news from the studio." },
+      { question: "Can I ask about something I read here?", answer: "Yes. Send us an enquiry or call 01603 517142 and we will recommend the right service for your vehicle." },
+    ],
+    description: "Car care tips, cleaning advice and news from Auto Opulence, the indoor car valeting and detailing studio in Norwich. New posts every few days.",
+    kicker: "About the blog",
+    sections: [
+      { heading: "Car care tips from a Norwich detailing studio", text: "Our vehicle care blog shares practical advice from the work we carry out every day: keeping windows clear in winter, washing safely between valets, looking after a ceramic coating and spotting when the paint needs more than a wash." },
+      { heading: "Car cleaning advice and seasonal reminders", text: "Expect seasonal reminders, such as removing salt and traffic film after winter, plus short explainers on our services and the products and methods we use. For in-depth answers, our guides cover valeting frequency, prices, polishing, ceramic coating aftercare, lease returns and valet bay hire." },
+      { heading: "Car maintenance advice and booking help", text: "If a post describes a problem your vehicle has, the service pages show what each treatment includes and the price for your vehicle size. You can book online or ask us for a recommendation first." },
+    ],
+  },
+  "/cookies": {
+    title: "Cookie Policy | Auto Opulence Car Valeting Norwich",
+    description: "The Auto Opulence cookie policy: essential booking technology, optional Google Analytics cookies and how to change your cookie choices at any time.",
+    faqs: [
+      { question: "Can I change my cookie choice later?", answer: "Yes. Use “Cookie settings” in the footer or the button in section 2 of this cookie policy to accept or reject analytics at any time." },
+      { question: "Will rejecting cookies stop me booking?", answer: "No. Rejecting analytics does not stop you browsing, making an enquiry or booking. Essential technology for signing in and payment returns still works." },
+    ],
+  },
+  "/privacy": {
+    description: "The Auto Opulence privacy policy: what personal information we collect for enquiries and bookings, how we use and protect it, and your data protection rights.",
+    faqs: [
+      { question: "Who does this privacy policy apply to?", answer: "This privacy policy applies to anyone who contacts Auto Opulence, books a service, uses a customer account or browses this website." },
+      { question: "Do you store my card details?", answer: "No. Card details are entered into the secure payment service provided through our booking platform and Stripe. Auto Opulence does not receive or store your full card number." },
+      { question: "How do I ask for a copy of my data?", answer: "Email valeting@autoopulence.co.uk or write to Unit 7 Consensus House, St Faiths Road, Norwich, NR6 7BW. We may ask you to confirm your identity first." },
+    ],
+  },
+
+  // ---- Service categories -------------------------------------------------------------------------------------------
+  "/category/vehicle-valeting": {
+    title: "Car Valeting Norwich | Interior & Exterior | Auto Opulence",
+    description: "Car valeting in Norwich: premium interior, exterior and complete valets, deep interior cleaning and restoration valets, priced by vehicle size from £40.",
+    alt: "Car valeting in Norwich: interior and exterior valet at the Auto Opulence studio",
+    sections: [
+      { heading: "Interior car valeting", text: "The Premium Interior Car Valet covers a full vacuum including crevices, the dashboard, vents and controls, interior glass and trims, and upholstery and carpet treatment, from £40. For cabins with embedded dirt, spills, pet hair or stale odours, the Deep Interior Clean adds extra working time and extraction, from £70." },
+      { heading: "Exterior car valeting", text: "Our Premium Exterior Car Valet loosens road film before a safe hand wash, then cleans the wheels, tyres, trims and glass, dries the car carefully with microfibre and adds a protective finish, from £40. Faded plastics can be added with Exterior Trim Rejuvenation." },
+      { heading: "Complete car valeting: inside and out", text: "The Premium Exterior & Interior Valet resets the whole car in one appointment, from £70. For the deepest result, the Factory Restored Valet combines an intensive interior clean with multi-stage paint correction." },
+    ],
+    faqs: [
+      { question: "How much does car valeting cost in Norwich?", answer: "Prices depend on the service and vehicle size. A premium interior or exterior valet starts from £40, a complete exterior and interior valet from £70 and a deep interior clean from £70." },
+      { question: "Which valet should I choose?", answer: "Choose the exterior or interior valet when only one part of the car needs attention, the complete valet for both, and the deep interior clean for heavily used or neglected cabins. We inspect the car first and confirm the right service." },
+      { question: "Can I add extras to a valet?", answer: "Yes. Exterior Trim Rejuvenation is added to a Premium Exterior Car Valet, and Engine Bay Detailing (£50) is added to a suitable main valeting service." },
+      { question: "Do you offer valeting packages?", answer: "Some valets can be booked as a package of regular visits. Where a package is available, the service page shows the package price per visit." },
+    ],
+  },
+  "/category/vehicle-washing": {
+    h1: "Hand Car Washing in Norwich",
+    title: "Hand Car Washing Norwich | Vehicle Washing | Auto Opulence",
+    description: "Hand car washing in Norwich: a safe hand wash, wash and vacuum, two-step decontamination or clay bar wash, priced by vehicle size from £30. Book online.",
+    alt: "Hand car washing in Norwich: foam pre-wash at the Auto Opulence studio",
+    sections: [
+      { heading: "Professional car wash options in Norwich", text: "Hand car washing is the safest way to keep a car clean between valets. Choose a Hand Car Wash (from £30) for regular maintenance, or the Hand Wash & Vacuum (from £49) when the cabin needs a tidy too. Both use a pre-rinse and pre-wash, a safe contact wash and careful hand drying rather than automated brushes." },
+      { heading: "Car decontamination wash before polishing or protection", text: "When the paint feels rough after washing, the Two-Step Decontamination Wash (from £80) removes iron fallout and tar chemically. The Clay Bar Decontamination Wash (from £195) adds clay treatment for stubborn bonded deposits and is the minimum preparation for our ceramic coatings." },
+    ],
+    faqs: [
+      { question: "Is a hand car wash better than an automatic wash?", answer: "A hand wash gives more control over contact, wheels, badges and drying. Our guide to hand car wash vs automatic wash explains the differences in detail." },
+      { question: "How much is a hand car wash?", answer: "A Hand Car Wash costs £30 for a small car, £35 medium, £40 large and £50 extra large." },
+      { question: "When do I need a decontamination wash?", answer: "If the paint feels rough after a normal wash, or before machine polishing or a ceramic coating, a decontamination wash removes bonded iron, tar and contamination a standard wash leaves behind." },
+    ],
+  },
+  "/category/vehicle-polishing": {
+    h1: "Car Polishing & Paint Correction in Norwich",
+    title: "Car Polishing & Paint Correction Norwich | Auto Opulence",
+    description: "Car polishing in Norwich: Stage 1 machine polish, multi-stage paint correction and ceramic coating packages for paint, wheels and soft tops, from £295.",
+    alt: "Car polishing in Norwich: machine polishing paintwork under inspection lights",
+    sections: [
+      { heading: "Paint correction in Norwich", text: "Car polishing starts with an inspection. A Stage 1 Machine Polish (from £295) improves gloss and reduces light swirls and wash marring in a single stage. Multi-Stage Paint Correction (from £345) uses cutting and refining stages for deeper swirls and visible defects. The paint is inspected first so the least aggressive effective route is used." },
+      { heading: "Machine polishing and ceramic coating packages", text: "Lock in the finish with Paint Correction + 7-Year Ceramic (from £645), the 7-Year Ceramic Coating with Clay Bar Wash (from £495) or the 3 + 1 Year Ceramic Coating (from £445). Wheels and fabric soft tops can be coated as additional services." },
+    ],
+    faqs: [
+      { question: "What is the difference between Stage 1 and multi-stage polishing?", answer: "Stage 1 is a single polishing stage that improves gloss and reduces light swirls. Multi-stage correction uses cutting and refining stages to reduce deeper defects before refining the finish." },
+      { question: "Do I need paint correction before a ceramic coating?", answer: "Usually. A coating locks in the finish underneath it, so most paint benefits from polishing first. New cars may only need a decontamination wash, which is the minimum preparation for our coatings." },
+      { question: "Can every scratch be polished out?", answer: "No. Polishing can reduce swirls, haze and many light scratches, but deep scratches through the clear coat need a paint repair. We inspect the paint and explain what is realistic first." },
+    ],
+  },
+  "/category/valet-bay-hire": {
+    h1: "Valet Bay Hire in Norwich",
+    description: "Valet bay hire in Norwich: an indoor detailing bay with drainage, lighting, spotless water and a Kranzle K7 for public or trade use, from £50 per session.",
+    alt: "Valet bay hire in Norwich: the indoor Auto Opulence detailing bay",
+    sections: [
+      { heading: "Detailing bay hire for enthusiasts and trade", text: "Public valet bay hire is available for 2 hours (£80), 3 hours, a full day (£200) or a weekend (£350). Trade hire is for mobile valeters, detailers and automotive professionals: 3 hours for £50, a full day for £140, or day and overnight for £170." },
+      { heading: "Indoor car wash bay hire with professional equipment", text: "Every session includes the indoor wash floor and drainage, professional lighting, a Kranzle K7 pressure washer and inline spotless water, with wet vacuum, extraction and polishing equipment available. Bring your own products and consumables." },
+    ],
+    faqs: [
+      { question: "Can anyone hire the valet bay?", answer: "Yes. Public hire is for private owners and enthusiasts; trade hire is for mobile valeters, detailers and other automotive professionals." },
+      { question: "What do I need to bring?", answer: "Bring your own products and consumables, such as shampoo, towels, pads and polishes. Our guide to what to bring to a valet bay hire session has a full checklist." },
+      { question: "Can I leave a coating to cure overnight?", answer: "Yes, with Trade Hire — Day + Overnight. The vehicle must be collected by 8:30am the following morning." },
+    ],
+  },
+  "/ceramic-coating": {},
+
+  // ---- Main services ------------------------------------------------------------------------------------------------
+  "/service/premium-exterior-car-valet": {
+    h1: "Premium Exterior Car Valet in Norwich",
+    title: "Premium Exterior Car Valet Norwich | Auto Opulence",
+    description: "A premium exterior car valet in Norwich: pre-wash, safe hand wash, wheels, trims and glass, careful drying and a protective finish. From £40 by vehicle size.",
+    alt: "Premium exterior car valet in Norwich: glossy paintwork after a hand wash and dry",
+    sections: [
+      { heading: "Exterior car valeting in Norwich, step by step", text: "Our premium exterior car valet starts with a pre-wash to loosen road film, followed by a safe contact hand wash. The wheels, tyres, trims and glass are cleaned with dedicated products, the car is dried carefully with microfibre and a protective finishing treatment is applied." },
+      { heading: "Why choose a professional exterior car valet?", text: "It suits a well-kept car that needs a sharper, glossier finish without moving into paint correction. If the paint feels rough or shows swirls, we will tell you whether a decontamination wash or machine polish would make more difference." },
+      { heading: "Car exterior clean prices in Norwich", text: "{prices} Faded plastics can be refreshed at the same visit with Exterior Trim Rejuvenation." },
+    ],
+  },
+  "/service/premium-interior-car-valet": {
+    h1: "Premium Interior Car Valet in Norwich",
+    title: "Premium Interior Car Valet Norwich | Auto Opulence",
+    description: "A premium interior car valet in Norwich: full vacuum, dashboard, vents, glass, trims, upholstery and carpet treatment. From £40, priced by vehicle size.",
+    alt: "Premium interior car valet in Norwich: clean seats, dashboard and carpets",
+    sections: [
+      { heading: "Interior car valeting in Norwich: what we clean", text: "A premium interior car valet covers a full vacuum including crevices, the dashboard, vents and controls, interior glass and trims, and treatment for upholstery and carpets. Professional tools lift embedded debris and everyday grime, and each surface gets a suitable product." },
+      { heading: "A professional car interior valet or a deep clean?", text: "This valet suits cabins in everyday condition. If the interior has heavy staining, pet hair, spills or stale odours, the Deep Interior Clean allows more working time and extraction; we will advise when we inspect the car." },
+      { heading: "Car cabin cleaning prices in Norwich", text: "{prices} Add the Premium Exterior Car Valet, or book the Premium Exterior & Interior Valet, to clean the outside at the same visit." },
+    ],
+  },
+  "/service/premium-exterior-interior-valet": {
+    h1: "Premium Exterior and Interior Valet in Norwich",
+    title: "Premium Exterior and Interior Valet Norwich | Auto Opulence",
+    description: "A premium exterior and interior valet in Norwich: safe hand wash, wheels and glass, full vacuum, surfaces, carpets and upholstery in one visit. From £70.",
+    alt: "Premium exterior and interior valet in Norwich: car cleaned inside and out",
+    sections: [
+      { heading: "A full car valet in Norwich, inside and out", text: "The premium exterior and interior valet combines our exterior and interior processes so the whole car is reset in one appointment: a safe exterior wash and dry, wheel and glass detailing, a complete interior vacuum, and cleaning of surfaces, carpets and upholstery." },
+      { heading: "Interior and exterior car valet for everyday cars", text: "It suits daily drivers, family cars and vehicles being prepared for sale or lease return. Every stage is tailored to the car's condition; heavily soiled cabins may need the Deep Interior Clean instead." },
+      { heading: "Complete car valeting prices in Norwich", text: "{prices} Where a valeting package is available, the package price per visit is shown above." },
+    ],
+  },
+  "/service/deep-interior-clean-neglected": {
+    h1: "Deep Interior Clean in Norwich",
+    title: "Deep Interior Clean Norwich | Car Interior | Auto Opulence",
+    description: "A deep interior clean in Norwich for heavily used or neglected cars: pre-inspection, deep vacuum, extraction, fabric, carpet and hard-surface cleaning. From £70.",
+    alt: "Deep interior clean in Norwich: car carpet extraction cleaning",
+    sections: [
+      { heading: "Deep car interior cleaning in Norwich", text: "A deep interior clean gives more working time than a standard valet for embedded dirt, spills, pet hair and stale odours. It starts with a detailed pre-inspection, then a deep vacuum and extraction, fabric and carpet treatment, and a full clean and finish of the hard surfaces." },
+      { heading: "Neglected car interior cleaning: what to expect", text: "We will tell you before we start which marks are likely to lift and which may be permanent, such as worn fabric or old dye transfer. Our guide to a standard valet vs a deep interior clean explains when the extra time is worthwhile." },
+      { heading: "Car interior deep clean prices", text: "{prices}" },
+    ],
+  },
+  "/service/factory-restored-interior-valet": {
+    h1: "Factory Restored Valet in Norwich",
+    title: "Factory Restored Valet Norwich | Auto Opulence",
+    description: "Our Factory Restored Valet in Norwich combines a deep interior clean and extraction with multi-stage exterior paint correction for the most complete reset.",
+    alt: "Factory restored valet in Norwich: BMW E21 receiving paint correction",
+    sections: [
+      { heading: "Car restoration valet in Norwich", text: "The factory restored valet is our most comprehensive valet: an intensive deep interior clean and extraction, detailed cabin, trim and fabric treatment, an exterior wash and decontamination, then multi-stage paint correction and a final inspection." },
+      { heading: "Deep valet and paint correction in one booking", text: "It suits cars being brought back to their best, from a tired daily driver to a cherished classic. Our BMW E21 3 Series case study shows the approach on original paint and trim." },
+      { heading: "Factory restored valet prices", text: "Prices depend on vehicle size and are shown in the size table above. We inspect the paint and interior first and confirm what can realistically be achieved." },
+    ],
+  },
+  "/service/soft-top-deep-clean-and-exterior-valet": {
+    h1: "Soft Top Deep Clean & Valet in Norwich",
+    title: "Soft Top Deep Clean & Valet Norwich | Auto Opulence",
+    description: "A soft top deep clean and exterior valet in Norwich: fabric roof inspection, deep roof clean, exterior wash, glass and wheels. From £150 by vehicle size.",
+    alt: "Soft top deep clean in Norwich: convertible fabric roof being cleaned",
+    sections: [
+      { heading: "Convertible roof cleaning in Norwich", text: "The soft top deep clean starts with an inspection of the fabric roof, then a deep clean that removes built-up contamination using methods suited to delicate roof material." },
+      { heading: "Soft top cleaning and exterior valet together", text: "The rest of the car gets an exterior valet at the same visit: wash and dry, glass, wheels and an exterior finish. To protect the roof afterwards, add the Soft Top Clean + Ceramic." },
+      { heading: "Fabric car roof deep clean prices", text: "{prices}" },
+    ],
+  },
+  "/service/hand-car-wash-norwich": {
+    h1: "Hand Car Wash in Norwich",
+    title: "Hand Car Wash Norwich | From £30 | Auto Opulence",
+    description: "A professional hand car wash in Norwich: pre-rinse, pre-wash, safe contact wash, wheels and tyres and careful hand drying. From £30, priced by vehicle size.",
+    alt: "Hand car wash in Norwich: foam pre-wash on a car at Auto Opulence",
+    sections: [
+      { heading: "A professional hand car wash, step by step", text: "It removes loose dirt, traffic film and day-to-day contamination without harsh automated brushes: a pre-rinse and pre-wash, a safe contact wash, a wheel and tyre clean and careful hand drying, with dedicated products for bodywork, wheels and glass." },
+      { heading: "Safe car hand washing for regular maintenance", text: "Regular washing is the best way to keep a car looking good between valets. If the paint feels rough after washing, a decontamination wash removes the bonded iron and tar a normal wash leaves behind." },
+      { heading: "Hand car wash prices in Norwich", text: "{prices} Add an interior vacuum with the Hand Wash & Vacuum." },
+    ],
+  },
+  "/service/hand-car-wash-and-vacuum-norwich": {
+    h1: "Hand Wash and Vacuum in Norwich",
+    title: "Hand Wash and Vacuum Norwich | Auto Opulence",
+    description: "A hand wash and vacuum in Norwich: exterior hand wash, wheels and exterior glass, and a cabin, mats and boot vacuum. From £49, priced by vehicle size.",
+    alt: "Hand wash and vacuum in Norwich: car interior being vacuumed after a hand car wash",
+    sections: [
+      { heading: "Car wash and vacuum in Norwich", text: "The hand wash and vacuum combines a safe exterior hand wash with an interior vacuum for an efficient whole-car refresh: the exterior is washed, the wheels and exterior glass cleaned, and the cabin, mats and boot vacuumed, with an interior glass check." },
+      { heading: "Hand car wash with interior vacuum: who it suits", text: "It suits regularly maintained cars that need to look tidy inside and out. For a deeper clean of the dashboard, trims and upholstery, choose the Premium Exterior & Interior Valet." },
+      { heading: "Exterior wash and interior vacuum prices", text: "{prices}" },
+    ],
+  },
+  "/service/exterior-full-decontamination-wash": {
+    h1: "Two-Step Decontamination Wash in Norwich",
+    title: "Decontamination Wash Norwich | Two-Step | Auto Opulence",
+    description: "A two-step decontamination wash in Norwich removes bonded iron fallout and tar a normal wash leaves behind, ready for polishing or protection. From £80.",
+    alt: "Decontamination wash in Norwich: iron fallout remover working on paintwork",
+    sections: [
+      { heading: "Car decontamination wash in Norwich", text: "A decontamination wash targets contamination a standard wash cannot remove. After a safe multi-stage wash, chemical iron fallout and tar treatments leave the paint cleaner and smoother, and a protective finish is applied." },
+      { heading: "Iron and tar removal before polishing", text: "Bonded iron and tar make paint feel rough and get in the way of polishing and protection. Removing them first gives a cleaner surface to work on. For the most thorough preparation, the Clay Bar Decontamination Wash adds clay treatment." },
+      { heading: "Two-step decontamination wash prices", text: "{prices}" },
+    ],
+  },
+  "/service/exterior-full-decontamination-wash-with-clay-bar": {
+    h1: "Clay Bar Decontamination Wash in Norwich",
+    title: "Clay Bar Decontamination Wash Norwich | Auto Opulence",
+    description: "A clay bar decontamination wash in Norwich: pre-wash, contact wash, iron and tar removal, clay bar treatment, rinse, dry and protection. From £195.",
+    alt: "Clay bar decontamination wash in Norwich: clay treatment on car paintwork",
+    sections: [
+      { heading: "Clay bar car wash in Norwich", text: "Our clay bar decontamination wash is the most thorough wash preparation we offer: a pre-wash and contact wash, chemical iron and tar removal, then careful clay bar treatment to lift stubborn bonded deposits, followed by a final rinse, dry and protection." },
+      { heading: "Car clay bar treatment before a ceramic coating", text: "It is the minimum preparation for our 7-year ceramic coating, and a good starting point before machine polishing or vinyl graphics. Book it together with the coating as the 7-Year Ceramic Coating + Clay Bar Decontamination Wash." },
+      { heading: "Paint decontamination wash prices", text: "{prices}" },
+    ],
+  },
+  "/service/stage-1-vehicle-machine-polish": {
+    h1: "Stage 1 Machine Polish in Norwich",
+    title: "Stage 1 Machine Polish Norwich | Auto Opulence",
+    description: "A Stage 1 machine polish in Norwich improves gloss and reduces light swirls and wash marring in one stage, after a full wash and decontamination. From £295.",
+    alt: "Stage 1 machine polish in Norwich: polishing a car under inspection lights",
+    sections: [
+      { heading: "Single stage car polish in Norwich", text: "The Stage 1 machine polish improves clarity and gloss while reducing light swirls, wash marring and minor imperfections. The paint is inspected, washed and decontaminated, then machine polished in a single stage and finished with protection." },
+      { heading: "Car gloss enhancement polish or one-stage paint correction?", text: "It is a strong enhancement for daily drivers and well-kept cars. Deeper swirls and scratches may need multi-stage paint correction; our guide to Stage 1 vs multi-stage polishing explains the difference." },
+      { heading: "Stage 1 machine polish prices", text: "{prices}" },
+    ],
+  },
+  "/service/multistage-vehicle-polish": {
+    h1: "Multi-Stage Paint Correction in Norwich",
+    title: "Multi-Stage Paint Correction Norwich | Auto Opulence",
+    description: "Multi-stage paint correction in Norwich reduces visible swirls and defects with cutting and refining stages, then adds protection. From £345 by vehicle size.",
+    alt: "Multi-stage paint correction in Norwich: machine polishing swirl marks",
+    sections: [
+      { heading: "Multi-stage machine polishing in Norwich", text: "Multi-stage paint correction is for paintwork that needs more than a light enhancement. After a detailed paint assessment, wash and decontamination, cutting and refining stages progressively reduce defects before the finish is refined to a high gloss and protected." },
+      { heading: "Car paint correction and swirl mark removal", text: "Swirl marks, wash marring, haze and many light scratches can be reduced. Deep scratches through the clear coat need a paint repair; we check paint condition and previous repairs first and explain what is realistic." },
+      { heading: "Paint correction prices in Norwich", text: "{prices} Add long-term protection with Paint Correction + 7-Year Ceramic." },
+    ],
+  },
+  "/service/multi-stage-machine-polish-inc-7-year-ceramic-coating": {
+    h1: "Paint Correction & 7-Year Ceramic Coating in Norwich",
+    title: "Paint Correction & 7-Year Ceramic Coating | Auto Opulence",
+    description: "Paint correction and 7-year ceramic coating in Norwich: multi-stage polishing, panel preparation, coating, curing and final inspection. From £645.",
+    alt: "Paint correction and 7-year ceramic coating in Norwich: glossy coated paintwork",
+    sections: [
+      { heading: "Multi-stage polish and ceramic coating in one package", text: "Paint correction and 7-year ceramic coating, booked together: this package combines multi-stage paint correction with a durable 7-year ceramic coating. The paint is corrected first, every panel is prepared, and the coating is applied and left to cure before a final inspection." },
+      { heading: "Why ceramic coating with paint correction?", text: "A coating locks in the finish underneath it, so correcting the paint first means the gloss you see is the gloss that is protected. The coating improves water behaviour and makes the car easier to keep clean." },
+      { heading: "Long-term paint protection prices in Norwich", text: "{prices}" },
+    ],
+  },
+  "/service/7-year-ceramic-coating-with-clay-bar-decontamination-wash": {
+    h1: "7-Year Ceramic Coating & Clay Bar Wash in Norwich",
+    description: "A 7-year ceramic coating and clay bar wash in Norwich: full decontamination, panel preparation, coating and curing in one visit. From £495 by vehicle size.",
+    alt: "7-year ceramic coating and clay bar wash in Norwich: water beading on coated paint",
+    sections: [
+      { heading: "Ceramic coating with clay bar decontamination", text: "Everything the paint needs for long-term protection in one booking: the Clay Bar Decontamination Wash removes iron fallout, tar and bonded contamination, every panel is prepared, and a 7-year ceramic coating is applied and cured before a final inspection." },
+      { heading: "Clay bar and ceramic coating: how long it takes", text: "The 7-year ceramic coating and clay bar wash is booked as one appointment of about 10 working hours, so we keep the car until the next working day. A loan car or van can be requested when you book." },
+      { heading: "7-year ceramic protection prices in Norwich", text: "{prices} If the paint has visible swirls, Paint Correction + 7-Year Ceramic corrects it before coating." },
+    ],
+  },
+  "/service/3-plus-1-year-ceramic-coating": {
+    h1: "3 + 1 Year Ceramic Coating in Norwich",
+    title: "3 + 1 Year Ceramic Coating Norwich | Auto Opulence",
+    description: "Our 3 + 1 year ceramic coating in Norwich: clay bar wash and a 3-year coating on day one, a second coat on day two for 4 years of protection. From £445.",
+    alt: "3 + 1 year ceramic coating in Norwich: water beading on a coated bonnet",
+    sections: [
+      { heading: "A 4-year ceramic coating in Norwich, in two coats", text: "Day one: the Clay Bar Decontamination Wash, panel preparation and a 3-year ceramic coating. It cures overnight, and on day two a second coat adds an extra year, so the 3 + 1 year ceramic coating gives 4 years of protection in total." },
+      { heading: "Why a two-coat ceramic coating?", text: "Without the second coat the protection is rated for 3 years; with it, 4 years. You get deeper gloss, strong water beading and paintwork that stays easier to clean. We need the car for a full working day plus about 2 hours the next day; a loan car or van can be requested." },
+      { heading: "Ceramic car coating prices in Norwich", text: "{prices}" },
+    ],
+  },
+
+  // ---- Additional services ------------------------------------------------------------------------------------------
+  "/service/exterior-trim-rejuvenation": {
+    h1: "Exterior Trim Rejuvenation in Norwich",
+    title: "Exterior Trim Rejuvenation Norwich | Auto Opulence",
+    description: "Exterior trim rejuvenation in Norwich restores faded plastics, rubber and trim. Added to a Premium Exterior Car Valet, from £20 by vehicle size.",
+    alt: "Exterior trim rejuvenation in Norwich: faded plastic trim restored",
+    sections: [
+      { heading: "Car plastic trim restoration in Norwich", text: "Exterior trim rejuvenation is for plastics, rubber and trim that have faded through age and exposure. The trim is checked, cleaned and prepared, then a rejuvenating treatment is applied for a deeper, more even finish." },
+      { heading: "Faded exterior trim restoration with an exterior valet", text: "{prices}" },
+    ],
+  },
+  "/service/engine-bay-detailing": {
+    h1: "Engine Bay Detailing in Norwich",
+    title: "Engine Bay Detailing Norwich | Auto Opulence",
+    description: "Engine bay detailing in Norwich: assessment, controlled cleaning of accessible areas, plastic and painted-surface treatment and careful drying. £50 add-on.",
+    alt: "Engine bay detailing in Norwich: cleaned engine bay of a classic BMW",
+    sections: [
+      { heading: "Engine bay cleaning in Norwich, done carefully", text: "Engine bay detailing starts with an assessment of the bay, so sensitive components are identified before any cleaning. Accessible covers, painted areas and plastics are cleaned in a controlled way, treated, dried carefully and inspected." },
+      { heading: "Car engine detailing as an engine bay valet add-on", text: "{prices} Our BMW E21 restoration detail case study includes an engine bay detail." },
+    ],
+  },
+  "/service/new-car-7-year-ceramic-coating": {
+    h1: "7-Year Ceramic Coating in Norwich",
+    title: "7-Year Ceramic Coating Norwich | Auto Opulence",
+    description: "A 7-year ceramic coating in Norwich, applied after a full clay bar decontamination wash for gloss, water beading and easier cleaning. From £300 add-on.",
+    alt: "7-year ceramic coating in Norwich: water beading on a coated black bonnet",
+    sections: [
+      { heading: "Seven-year car ceramic coating: how it is applied", text: "The 7-year ceramic coating is applied after the paint has had at least our Clay Bar Decontamination Wash. The paint is assessed and every panel prepared, then the coating is applied and left to cure before a final inspection." },
+      { heading: "Long-lasting ceramic coating in Norwich: what it does", text: "A ceramic coating improves gloss and water behaviour and makes the car easier to keep clean. It does not stop stone chips or scratches, and it still needs safe washing; our ceramic coating aftercare guide explains how to look after it." },
+      { heading: "Ceramic coating for new cars: prices", text: "{prices}" },
+    ],
+  },
+  "/service/soft-top-deep-clean-plus-ceramic-coating": {
+    h1: "Soft Top Clean & Ceramic Coating in Norwich",
+    title: "Soft Top Clean & Ceramic Coating Norwich | Auto Opulence",
+    description: "Soft top clean and ceramic coating in Norwich: fabric roof assessment, deep clean, controlled drying and a hydrophobic roof coating. £95 additional service.",
+    alt: "Soft top clean and ceramic coating in Norwich: water beading on a fabric roof",
+    sections: [
+      { heading: "Convertible roof ceramic coating in Norwich", text: "The fabric roof is assessed, deep cleaned and rinsed, dried in a controlled way and then coated with a hydrophobic ceramic protection that helps it repel water and future contamination." },
+      { heading: "Soft top protection: fabric roof cleaning and coating with a valet", text: "The soft top clean and ceramic coating is added to a suitable main valeting or polishing service. {prices} For a faded roof, the Soft Top Clean, Re-Dye + Ceramic also restores the colour." },
+    ],
+  },
+  "/service/soft-top-deep-clean-ceramic-coating-re-dye-roof-only": {
+    h1: "Soft Top Re-Dye, Clean & Ceramic in Norwich",
+    title: "Soft Top Re-Dye, Clean & Ceramic Norwich | Auto Opulence",
+    description: "Soft top re-dye in Norwich: deep roof clean, colour restoration and ceramic protection for tired fabric convertible roofs. £195 additional service.",
+    alt: "Soft top re-dye in Norwich: convertible fabric roof after colour restoration",
+    sections: [
+      { heading: "Convertible roof re-dye in Norwich", text: "A full restoration package for tired fabric roofs: a deep roof clean, a colour restoration treatment, ceramic protection and a final check for an even finish." },
+      { heading: "Convertible roof colour restoration, soft top cleaning and protection", text: "The soft top re-dye is added to a suitable main valeting or polishing service. {prices} If the colour is still good, the Soft Top Clean + Ceramic cleans and protects the roof without re-dyeing." },
+    ],
+  },
+  "/service/alloy-wheel-ceramic-coating-face-only": {
+    h1: "Alloy Wheel Ceramic Coating in Norwich (On Vehicle)",
+    title: "Alloy Wheel Ceramic Coating Norwich | Auto Opulence",
+    description: "Alloy wheel ceramic coating in Norwich for wheel faces, on the vehicle: deep clean, chemical decontamination, preparation and coating. £195 additional service.",
+    alt: "Alloy wheel ceramic coating in Norwich: coated alloy wheel face",
+    sections: [
+      { heading: "Wheel face ceramic protection, on the vehicle", text: "The visible faces of the alloy wheels are deep cleaned, chemically decontaminated and prepared while the wheels stay on the car, then the ceramic coating is applied so brake dust and road grime are easier to wash off." },
+      { heading: "Alloy wheel coating in Norwich: options", text: "{prices} To coat the barrels and inner faces too, choose the Wheels-Off Ceramic Coating." },
+    ],
+  },
+  "/service/full-wheels-off-ceramic-coating": {
+    h1: "Wheels-Off Ceramic Coating in Norwich",
+    title: "Wheels-Off Ceramic Coating Norwich | Auto Opulence",
+    description: "Wheels-off ceramic coating in Norwich: wheels removed so faces, barrels and hard-to-reach areas are cleaned, prepared, coated and refitted. £280 add-on.",
+    alt: "Wheels-off ceramic coating in Norwich: alloy wheel barrel being coated",
+    sections: [
+      { heading: "Wheel barrel ceramic coating", text: "The wheels are removed safely so the faces, barrels and harder-to-reach areas can be fully cleaned, prepared and coated, then refitted. It gives more complete protection than coating the faces on the car." },
+      { heading: "Wheels-off coating in Norwich: full alloy wheel ceramic coating prices", text: "{prices}" },
+    ],
+  },
+
+  // ---- Valet bay hire -----------------------------------------------------------------------------------------------
+  "/service/public-hire-2-hours": {
+    h1: "2-Hour Valet Bay Hire in Norwich",
+    title: "2-Hour Valet Bay Hire Norwich | Public Hire | Auto Opulence",
+    description: "2-hour valet bay hire in Norwich for private owners: indoor wash bay and drainage, Kranzle K7 pressure washer, spotless water and lighting. £80 a session.",
+    alt: "2-hour valet bay hire in Norwich: car inside the indoor detailing bay",
+    sections: [
+      { heading: "Public valet bay hire in Norwich", text: "Two hours of 2-hour valet bay hire in a professional indoor bay is ideal for a focused wash or light vehicle care, with the right space and equipment around you: an indoor wash bay and drainage, a Kranzle K7 pressure washer, inline spotless water and professional lighting." },
+      { heading: "2-hour detailing bay hire: what to bring", text: "Bring your own products and consumables. Our guide to what to bring to a valet bay hire session has a packing checklist, and the 3-hour or full-day sessions give more time for polishing." },
+      { heading: "Indoor car wash bay prices", text: "{prices}" },
+    ],
+  },
+  "/service/public-hire-3-hours": {
+    h1: "3-Hour Valet Bay Hire in Norwich",
+    title: "3-Hour Valet Bay Hire Norwich | Public Hire | Auto Opulence",
+    description: "3-hour valet bay hire in Norwich: an indoor climate-controlled bay with wash floor, drainage, wet vacuum, extraction and polishing equipment for private owners.",
+    alt: "3-hour valet bay hire in Norwich: indoor detailing bay with lighting",
+    sections: [
+      { heading: "Public detailing bay hire in Norwich", text: "3-hour valet bay hire gives private owners room to work through a detailed exterior or interior process without rushing, in an indoor climate-controlled bay with a wash and drainage floor, wet vacuum and extraction equipment, and polishing and detailing equipment." },
+      { heading: "3-hour detailing bay hire: planning the session", text: "Plan the job before you arrive and bring your own products and consumables. For multi-stage polishing or coating, a full day gives more time for each stage." },
+      { heading: "Indoor valet bay prices", text: "Contact us for the current 3-hour public hire price, or compare the 2-hour (£80), full-day (£200) and weekend (£350) sessions." },
+    ],
+  },
+  "/service/public-hire-full-day": {
+    h1: "Full Day Valet Bay Hire in Norwich",
+    title: "Full Day Valet Bay Hire Norwich | Public Hire | Auto Opulence",
+    description: "Full day valet bay hire in Norwich for enthusiasts: full-day indoor bay access, spotless water, pressure washer, lighting tunnel and wet vacuum. £200 a day.",
+    alt: "Full day valet bay hire in Norwich: car in the indoor detailing bay",
+    sections: [
+      { heading: "Day hire detailing bay in Norwich", text: "Full day valet bay hire suits enthusiasts tackling deeper cleaning, polishing or detailing in a purpose-built facility, with full-day access, spotless water, a pressure washer, a lighting tunnel, wet vacuum and detailing tools." },
+      { heading: "Full day car wash bay hire for bigger projects", text: "A full day leaves time to wash, decontaminate, polish and protect in sequence. For even longer projects, weekend hire gives extended access." },
+      { heading: "Public valet bay hire prices", text: "{prices}" },
+    ],
+  },
+  "/service/public-hire-weekend": {
+    h1: "Weekend Valet Bay Hire in Norwich",
+    title: "Weekend Valet Bay Hire Norwich | Public Hire | Auto Opulence",
+    description: "Weekend valet bay hire in Norwich for complete detailing projects: weekend access to a secure indoor bay with wash, polishing and detailing facilities. £350.",
+    alt: "Weekend valet bay hire in Norwich: indoor detailing bay with professional lighting",
+    sections: [
+      { heading: "Weekend detailing bay hire", text: "Weekend valet bay hire is for larger projects that need extended access to professional space, lighting and equipment: weekend bay access, a secure indoor working area, professional wash equipment and polishing and detailing facilities." },
+      { heading: "Detailing studio weekend hire: making the most of it", text: "Plan the stages, bring your own products and consumables and leave time for handback. Our guide to choosing valet bay hire compares every session length." },
+      { heading: "Indoor valet bay prices in Norwich", text: "{prices}" },
+    ],
+  },
+  "/service/trade-hire-3-hours": {
+    h1: "3-Hour Trade Bay Hire in Norwich",
+    title: "3-Hour Trade Bay Hire Norwich | Auto Opulence",
+    description: "3-hour trade bay hire in Norwich for mobile valeters and detailers: trade-ready indoor bay, drainage, Kranzle K7, spotless water and equipment. £50 a session.",
+    alt: "3-hour trade bay hire in Norwich: professional indoor detailing bay",
+    sections: [
+      { heading: "Trade detailing bay hire in Norwich", text: "3-hour trade bay hire is a flexible short session for mobile valeters, detailers and automotive professionals who need a well-equipped indoor space: a trade-ready bay, floor drainage, a Kranzle K7 with spotless water and access to specialist equipment." },
+      { heading: "Trade valet bay hire for customer work", text: "Use it when the weather or the customer's driveway is not suitable. For longer jobs, trade hire is also available for a full day (£140) or day and overnight (£170)." },
+      { heading: "Mobile valeter bay hire prices", text: "{prices}" },
+    ],
+  },
+  "/service/trade-hire-full-day": {
+    h1: "Full Day Trade Bay Hire in Norwich",
+    title: "Full Day Trade Bay Hire Norwich | Auto Opulence",
+    description: "Full day trade bay hire in Norwich: a dedicated indoor workspace with lighting tunnel, wet vacuum, extraction and wash, polish and detailing equipment. £140.",
+    alt: "Full day trade bay hire in Norwich: detailing bay with lighting tunnel",
+    sections: [
+      { heading: "Trade detailing bay day hire", text: "Full day trade bay hire gives trade users dependable indoor facilities and professional-grade valeting equipment for a complete working day, including the lighting tunnel, wet vacuum and extraction, and wash, polish and detailing equipment." },
+      { heading: "Professional valeting bay hire in Norwich", text: "It suits correction, coating and full valeting jobs for your own customers. If a coating needs to cure, the day and overnight option keeps the car indoors until the next morning." },
+      { heading: "Trade valet bay hire prices", text: "{prices}" },
+    ],
+  },
+  "/service/trade-hire-overnight": {
+    h1: "Overnight Trade Bay Hire in Norwich",
+    title: "Overnight Trade Bay Hire Norwich | Auto Opulence",
+    description: "Overnight trade bay hire in Norwich: day and overnight access to a fully equipped indoor bay for longer treatments and coating cure time. £170 per booking.",
+    alt: "Overnight trade bay hire in Norwich: car curing indoors in the detailing bay",
+    sections: [
+      { heading: "Trade valet bay overnight hire", text: "Overnight trade bay hire gives trade users day and overnight access to the indoor work environment and full bay equipment, so longer treatments can be finished and coatings can cure indoors." },
+      { heading: "Day and overnight detailing bay hire: timings", text: "The vehicle must be collected by 8:30am the morning after the overnight hire. {prices}" },
+      { heading: "A ceramic coating curing bay for trade users", text: "Many coatings need time indoors before the car goes out in the weather. The overnight option gives that time without tying up your own premises." },
+    ],
+  },
+
+  // ---- Locations ------------------------------------------------------------------------------------------------------
+  "/locations/norwich": {
+    title: "Norwich Car Valeting & Detailing | Auto Opulence",
+    h1: "Norwich car valeting & detailing.",
+    description: "Norwich car valeting and detailing at our indoor studio on St Faiths Road: hand washing, valets, machine polishing, ceramic coating and valet bay hire.",
+    alt: "Norwich car valeting at the indoor Auto Opulence detailing facility",
+  },
+  "/locations/wymondham": {
+    title: "Wymondham Car Valeting & Detailing | Auto Opulence",
+    h1: "Wymondham car valeting & detailing.",
+    description: "Wymondham car valeting, polishing, ceramic coating and hand washing at Auto Opulence in Norwich, with journey advice and services suited to A11 driving.",
+    alt: "Wymondham car valeting customers: decontamination wash at Auto Opulence",
+  },
+  "/locations/dereham": {
+    title: "Dereham Car Valeting & Detailing | Auto Opulence",
+    h1: "Dereham car valeting & detailing.",
+    description: "Dereham car valeting, hand washing, paint correction and ceramic coating at Auto Opulence in Norwich, with route advice and services for A47 drivers.",
+    alt: "Dereham car valeting customers: deep interior cleaning at Auto Opulence",
+  },
+  "/locations/aylsham": {
+    title: "Aylsham Car Valeting & Detailing | Auto Opulence",
+    h1: "Aylsham car valeting & detailing.",
+    description: "Aylsham car valeting, detailing, machine polishing and ceramic coating at Auto Opulence in Norwich, including soft-top care for convertibles. Book online.",
+    alt: "Aylsham car valeting customers: convertible soft-top cleaning at Auto Opulence",
+  },
+  "/locations/north-walsham": {
+    title: "North Walsham Car Valeting & Detailing | Auto Opulence",
+    h1: "North Walsham car valeting & detailing.",
+    description: "North Walsham car valeting, hand washing, paint polishing and ceramic coating at our Norwich studio, with journey advice and services for coastal driving.",
+    alt: "North Walsham car valeting customers: Stage 1 machine polishing at Auto Opulence",
+  },
+  "/locations/great-yarmouth": {
+    title: "Great Yarmouth Car Valeting & Detailing | Auto Opulence",
+    h1: "Great Yarmouth car valeting & detailing.",
+    description: "Great Yarmouth car valeting, decontamination, machine polishing and ceramic coating at Auto Opulence in Norwich, with services suited to coastal salt and grime.",
+    alt: "Great Yarmouth car valeting customers: seven-year ceramic coating at Auto Opulence",
+  },
+  "/locations/attleborough": {
+    title: "Attleborough Car Valeting & Detailing | Auto Opulence",
+    h1: "Attleborough car valeting & detailing.",
+    description: "Attleborough car valeting, hand washing, paint correction and ceramic coating at our Norwich studio, with route advice and services for A11 commuters.",
+    alt: "Attleborough car valeting customers: complete exterior and interior valet",
+  },
+
+  // ---- Business sectors ---------------------------------------------------------------------------------------------
+  "/business-sectors/fleet-valeting": {
+    title: "Fleet Valeting Norwich | Business Vehicle Care | Auto Opulence",
+    description: "Fleet valeting in Norwich and Norfolk: hand washing, complete valets and paint enhancement for company cars, matched to each vehicle's condition.",
+    alt: "Fleet valeting in Norwich: professionally presented company vehicles",
+    sections: [
+      { heading: "Fleet valeting across Norfolk", text: "Fleet valeting is completed at our Norwich studio for businesses across Norfolk. Each vehicle is matched to a published service and size price, from a hand wash and vacuum (from £49) to a complete valet (from £70) or a Stage 1 machine polish (from £295)." },
+      { heading: "Fleet vehicle cleaning in Norwich: planning repeat care", text: "Tell us the number of vehicles, their sizes, how they are used and the standard you expect. Where repeat care is useful, we will suggest a realistic rhythm based on mileage, season and use." },
+      { heading: "Company car valeting for customer-facing vehicles", text: "Sales, management and other high-profile company cars can follow a different care plan from working vehicles, with periodic complete valets and paint enhancement where presentation matters most." },
+    ],
+  },
+  "/business-sectors/car-dealership-valeting": {
+    title: "Car Dealership Valeting Norwich | Auto Opulence",
+    description: "Car dealership valeting in Norwich: stock preparation, demonstrator and handover valets, decontamination and paint enhancement, matched to each vehicle.",
+    alt: "Car dealership valeting in Norwich: row of valeted vehicles ready for sale",
+    sections: [
+      { heading: "Dealership valeting in Norwich", text: "Car dealership valeting prepares stock, demonstrators and customer handovers to a consistent standard. A complete exterior and interior valet (from £70) suits most retail stock; a decontamination wash (from £80) removes road film, iron and tar before photography or polishing." },
+      { heading: "Used car valeting and sales preparation", text: "Used cars with lighter wash marks can be lifted with a Stage 1 machine polish (from £295) before display. Each vehicle is inspected first so cleaning, enhancement and any separate repair needs are clear." },
+    ],
+  },
+  "/business-sectors/taxi-private-hire-valeting": {
+    title: "Taxi & Private Hire Valeting Norwich | Auto Opulence",
+    h1: "Taxi and private hire valeting in Norwich.",
+    description: "Taxi and private hire valeting in Norwich: interior and exterior cleaning for high-use passenger vehicles, with practical booking options from £40.",
+    alt: "Taxi and private hire valeting in Norwich: clean executive passenger car",
+    sections: [
+      { heading: "Taxi cleaning in Norwich for high-use interiors", text: "Taxi and private hire valeting focuses on the passenger environment: seats, carpets, mats, glass and touch points. A premium interior car valet starts from £40, and a deep interior clean (from £70) adds extraction for heavily used cabins." },
+      { heading: "Private hire car cleaning and taxi valeting in Norwich", text: "For vehicles that need both, the Premium Exterior & Interior Valet resets the whole car in one appointment from £70. Regular bookings can be discussed around your shifts." },
+    ],
+  },
+  "/business-sectors/lease-return-valeting": {
+    title: "Lease Return Valeting Norwich | Auto Opulence",
+    description: "Lease return valeting in Norwich: interior cleaning, exterior valeting and paint enhancement before a lease car goes back, chosen around its condition.",
+    alt: "Lease return valeting in Norwich: family SUV cleaned for inspection",
+    sections: [
+      { heading: "Lease car valeting before handover", text: "Lease return valeting improves presentation before the finance company's inspection. A complete valet (from £70) suits most cars; a deep interior clean (from £70) helps with heavily used cabins, and light swirls can be reduced with a Stage 1 machine polish." },
+      { heading: "Lease return preparation and car cleaning: what it can change", text: "Valeting removes dirt and many surface marks, but not damage such as dents, deep scratches or torn fabric. Book early so there is time to arrange a different repair if needed. Our guide to preparing a car for lease return has a checklist." },
+    ],
+  },
+  "/business-sectors/garage-bodyshop-support": {
+    title: "Garage & Bodyshop Valeting Norwich | Auto Opulence",
+    h1: "Garage and bodyshop valeting support in Norwich.",
+    description: "Garage and bodyshop valeting in Norwich: cleaning, finishing and paint enhancement for customer cars, plus an equipped indoor bay for your own staff.",
+    alt: "Garage and bodyshop valeting in Norwich: saloon under inspection lighting",
+    sections: [
+      { heading: "Garage valeting for customer cars", text: "Garage and bodyshop valeting adds a professional finish to mechanical or bodywork jobs: a hand wash, complete valet or decontamination wash before the customer collects, matched to the vehicle's size and condition." },
+      { heading: "Bodyshop vehicle cleaning and paint finishing", text: "After a repair, a Stage 1 machine polish or multi-stage paint correction can blend the finish across panels. Your own staff can also hire the indoor trade bay from £50 for three hours." },
+      { heading: "Garage vehicle cleaning: how to arrange it", text: "Send the vehicle details, the work completed and when the customer needs the car back, and we will confirm the treatment, price and completion time." },
+    ],
+  },
+  "/business-sectors/trade-detailer-bay-hire": {
+    title: "Trade Detailing Bay Hire Norwich | Auto Opulence",
+    description: "Trade detailing bay hire in Norwich: an indoor bay with lighting, drainage, spotless water and specialist equipment, from £50 for three hours.",
+    alt: "Trade detailing bay hire in Norwich: performance car in the indoor bay",
+    sections: [
+      { heading: "Trade valet bay hire in Norwich", text: "Trade detailing bay hire gives mobile valeters, detailers and automotive professionals a controlled indoor setting for customer work: 3 hours for £50, a full day for £140, or day and overnight for £170." },
+      { heading: "Indoor detailing bay hire: equipment included", text: "Sessions include the indoor bay, floor drainage, a Kranzle K7 pressure washer, spotless water, professional lighting and access to specialist equipment. Bring your own products and consumables." },
+      { heading: "Professional valet bay hire for coatings", text: "The day and overnight option gives coatings time to cure indoors; the vehicle must be collected by 8:30am the next morning." },
+    ],
+  },
+
+  // ---- Guides ---------------------------------------------------------------------------------------------------------
+  "/guides/how-often-should-you-valet-a-car": {
+    title: "How Often Should You Valet a Car? | Auto Opulence",
+    description: "How often should you valet a car? Typical intervals by mileage, family use, pets and season, plus the signs a car is due, from Auto Opulence in Norwich.",
+    alt: "How often should you valet a car: professionally maintained Volvo XC60",
+    sections: [{ heading: "Car valeting frequency: a quick rule of thumb", text: "How often should you valet a car? It depends on use: many cars benefit from a maintenance hand wash every few weeks and a complete valet every few months, with deeper interior work when spills, pet hair or heavy family use build up." }],
+  },
+  "/guides/vehicle-size-guide": {
+    h1: "Car Valeting Vehicle Size Guide",
+    description: "Our car valeting vehicle size guide explains the Small, Medium, Large and Extra Large bands used for washing, valeting and polishing prices in Norwich.",
+    alt: "Car valeting vehicle size guide: vehicle prepared for valeting at Auto Opulence",
+    sections: [{ heading: "Car valeting prices by vehicle size", text: "This car valeting vehicle size guide is a starting point: Small covers city cars and compact hatchbacks, Medium saloons and family hatchbacks, Large estates, crossovers and small vans, and Extra Large large SUVs, 4x4s and vans. We confirm the band before the appointment." }],
+  },
+  "/guides/hand-car-wash-vs-automatic": {
+    title: "Hand Car Wash vs Automatic Car Wash | Auto Opulence",
+    h1: "Hand Car Wash vs Automatic Car Wash",
+    description: "Hand car wash vs automatic car wash: how contact, wheels, drying and contamination affect your paintwork, and when a specialist wash is worth booking.",
+    alt: "Hand car wash vs automatic car wash: Volkswagen Golf being hand washed",
+    sections: [{ heading: "Is a hand car wash better for paint?", text: "In a hand car wash vs automatic car wash comparison, the hand wash gives more control over contact, products, wheels and drying, which reduces the risk of wash marring. An automatic wash is quicker, but brushes and generic drying can leave marks." }],
+  },
+  "/guides/stage-one-vs-multistage-polishing": {
+    title: "Stage 1 vs Multi-Stage Polishing | Auto Opulence",
+    description: "Stage 1 vs multi-stage polishing: compare single-stage machine polishing and multi-stage paint correction, the defects each suits and prices in Norwich.",
+    alt: "Stage 1 vs multi-stage polishing: Jaguar F-Type being machine polished",
+    sections: [{ heading: "Car polishing stages explained: Stage 1 or multi-stage paint correction?", text: "In the stage 1 vs multi-stage polishing choice, Stage 1 is one polishing stage that improves gloss and reduces light swirls, while multi-stage paint correction uses cutting and refining stages for deeper defects. Stage 1 or multi-stage paint correction is decided after a paint inspection." }],
+  },
+  "/guides/ceramic-coating-aftercare": {
+    title: "Ceramic Coating Aftercare Guide | Auto Opulence",
+    description: "Ceramic coating aftercare: curing, safe washing, drying, dealing with contamination and reduced beading, and what a coating cannot do. Advice from Norwich.",
+    alt: "Ceramic coating aftercare: coated Range Rover Sport after a maintenance wash",
+    sections: [{ heading: "How to wash a ceramic coated car", text: "Good ceramic coating aftercare starts with following the curing instructions, then using a safe maintenance wash, drying the car rather than leaving mineral spots, and dealing with contamination before it reduces water beading." }],
+  },
+  "/guides/choosing-valet-bay-hire": {
+    title: "Choosing Valet Bay Hire in Norwich | Auto Opulence",
+    description: "Choosing valet bay hire in Norwich: compare public and trade hire, 2-hour, full-day, weekend and overnight sessions at our equipped indoor studio.",
+    alt: "Choosing valet bay hire: Audi TT inside the Auto Opulence bay in Norwich",
+    sections: [{ heading: "Valet bay hire prices in Norwich", text: "When choosing valet bay hire, public sessions are £80 for 2 hours, £200 for a full day and £350 for a weekend; trade sessions are £50 for 3 hours, £140 for a full day and £170 for day and overnight." }],
+  },
+  "/guides/standard-valet-vs-deep-interior-clean": {
+    description: "Standard valet vs deep interior clean: when a complete valet is enough and when stains, pet hair or neglect need a deep interior clean, with Norwich prices.",
+    alt: "Standard valet vs deep interior clean: Land Rover carpet being deep cleaned",
+    sections: [{ heading: "Deep interior cleaning prices compared", text: "In the standard valet vs deep interior clean decision, a Premium Exterior & Interior Valet starts from £70 and a Deep Interior Clean from £70; the deep clean puts all the extra working time into the cabin." }],
+  },
+  "/guides/decontamination-wash-vs-clay-bar": {
+    title: "Decontamination Wash vs Clay Bar | Auto Opulence",
+    description: "Decontamination wash vs clay bar: what chemical decontamination removes, what clay treatment adds, and which to book before polishing or ceramic coating.",
+    alt: "Decontamination wash vs clay bar: red Porsche 718 receiving clay treatment",
+    sections: [{ heading: "Decontamination wash and clay bar prices", text: "In the decontamination wash vs clay bar choice, the Two-Step Decontamination Wash starts from £80 and the Clay Bar Decontamination Wash from £195; the clay bar wash is the minimum preparation for our 7-year ceramic coating." }],
+  },
+  "/guides/ceramic-coating-vs-car-wax": {
+    description: "Ceramic coating vs car wax: compare gloss, durability, preparation, maintenance and cost to decide which paint protection suits your car and how you use it.",
+    alt: "Ceramic coating vs car wax: Porsche Taycan receiving ceramic paint protection",
+    sections: [{ heading: "Ceramic coating vs car wax: cost in Norwich", text: "When weighing ceramic coating vs car wax, remember that our coatings include the decontamination and preparation they need: the 3 + 1 year coating starts from £445 and the 7-year coating with clay bar wash from £495." }],
+  },
+  "/guides/prepare-car-for-lease-return": {
+    description: "How to prepare a car for lease return: a practical checklist for cleaning, the interior, paint assessment and handover timing, from Auto Opulence in Norwich.",
+    alt: "Prepare a car for lease return: Volvo XC60 professionally valeted for handover",
+    sections: [
+      { heading: "Car lease return checklist", text: "To prepare a car for lease return, start early: clear and inspect the cabin, wash and assess the exterior, and separate dirt and surface marks from damage that needs a different repair." },
+      { heading: "End of lease car preparation and cleaning before return", text: "A complete valet suits most cars; heavily used cabins may need a deep interior clean, and light swirls can be reduced with a Stage 1 machine polish. Our Volvo XC60 end-of-lease valet case study shows the process." },
+    ],
+  },
+  "/guides/what-does-machine-polishing-remove": {
+    description: "What does machine polishing remove? Swirls, haze, oxidation and light scratches it can improve, the defects it cannot safely remove, and why inspection matters.",
+    alt: "What does machine polishing remove: Range Rover Velar during paint correction",
+    sections: [{ heading: "Machine polishing in Norwich: Stage 1 or correction", text: "Knowing what machine polishing can remove helps choose the stage: a Stage 1 Machine Polish (from £295) for light swirls and lost gloss, or Multi-Stage Paint Correction (from £345) for deeper defects." }],
+  },
+  "/guides/car-valeting-cost-norwich": {
+    title: "Car Valeting Cost in Norwich: 2026 Prices | Auto Opulence",
+    description: "Car valeting cost in Norwich: published prices for hand washing, interior and complete valets, polishing, ceramic coating and valet bay hire by vehicle size.",
+    alt: "Car valeting cost in Norwich: professionally valeted vehicle at Auto Opulence",
+    sections: [{ heading: "Car valeting prices in Norwich at a glance", text: "The car valeting cost for most cars starts from £30 for a hand car wash, £40 for a premium interior or exterior valet and £70 for a complete valet, with the exact price set by vehicle size." }],
+  },
+  "/guides/maintain-professionally-valeted-car": {
+    title: "How to Maintain a Professionally Valeted Car | Auto Opulence",
+    description: "How to maintain a professionally valeted car: protect the clean finish, deal with spills fast, wash safely and adjust the routine with the seasons.",
+    alt: "Maintain a professionally valeted car: blue BMW 3 Series after an exterior valet",
+    sections: [
+      { heading: "How to maintain a valeted car between visits", text: "To maintain a professionally valeted car, protect the clean starting point: use mats, deal with spills and bird droppings promptly and wash safely with clean mitts and plenty of water." },
+      { heading: "Car care after valeting: keep the car clean after a valet", text: "Adjust the routine with the seasons, rinsing salt and grime off more often in winter, and book a maintenance hand wash or a complete valet when home care is no longer enough." },
+    ],
+  },
+  "/guides/car-cleaning-before-vehicle-graphics": {
+    title: "Car Cleaning Before Vehicle Graphics | Auto Opulence",
+    description: "Car cleaning before vehicle graphics or wrapping: why wax, traffic film and tar must go, and which wash or decontamination to book before installation.",
+    alt: "Car cleaning before vehicle graphics: decontamination before vinyl installation",
+    sections: [{ heading: "Which wash to book before graphics", text: "For car cleaning before vehicle graphics, a hand wash without wax or sealant may be enough for a clean, well-kept vehicle; bonded tar and iron need the Two-Step Decontamination Wash or the Clay Bar Decontamination Wash. Check with the installer first." }],
+  },
+  "/guides/ceramic-protection-for-vehicle-graphics": {
+    title: "Ceramic Protection for Vehicle Graphics | Auto Opulence",
+    description: "Ceramic protection for vehicle graphics and wraps: potential maintenance benefits, preparation and timing after fitting, limitations and safe aftercare.",
+    alt: "Ceramic protection for vehicle graphics: coating applied to vinyl graphics",
+    sections: [{ heading: "Ceramic coating for wraps: check compatibility first", text: "Ceramic protection for vehicle graphics only works when the product suits the vinyl finish, age and manufacturer guidance. Ask the installer how long to wait after fitting before coating." }],
+  },
+  "/guides/what-to-bring-valet-bay-hire": {
+    title: "What to Bring to a Valet Bay Hire Session | Auto Opulence",
+    h1: "What to Bring to a Valet Bay Hire Session",
+    description: "What to bring to a valet bay hire session in Norwich: products, consumables, clothing and a plan, plus the equipment included with each session.",
+    alt: "What to bring to a valet bay hire session: Audi TT interior in the Auto Opulence bay",
+    sections: [{ heading: "Valet bay hire equipment included", text: "Before deciding what to bring to a valet bay hire session, check what is included: the indoor bay, drainage, professional lighting, a Kranzle K7 pressure washer and spotless water, with wet vacuum, extraction and polishing equipment depending on the session." }],
+  },
+
+  // ---- Case studies ---------------------------------------------------------------------------------------------------
+  "/case-studies/bmw-e21-3-series-restoration-detail": {
+    title: "BMW E21 3 Series Restoration Detail | Auto Opulence",
+    description: "BMW E21 3 Series restoration detail in Norwich: deep interior clean, paint correction, engine bay detail and a Gyeon ceramic coating on original paint.",
+    faqHeading: "Classic BMW paint correction and detailing: FAQs",
+    alt: "BMW E21 3 Series restoration detail: factory-original red paint after correction",
+    sections: [{ heading: "BMW E21 detailing and ceramic coating: the services used", text: "This BMW E21 3 Series restoration detail combined the Factory Restored Valet, a Clay Bar Decontamination Wash, single-stage machine polishing on the original paint, an engine bay detail and a Gyeon ceramic coating. Classic BMW paint correction was kept deliberately controlled to protect the original finish." }],
+    faqs: [
+      { question: "Can you detail a classic car without losing its originality?", answer: "Yes. We assess the paint, trim and interior first and use the least aggressive effective process, as on this BMW E21, so original materials are cleaned and protected rather than replaced." },
+      { question: "Which service should I book for a similar car?", answer: "The Factory Restored Valet combines a deep interior clean with multi-stage paint correction. Engine bay detailing and ceramic coating can be added. Contact us with photos and we will recommend the right combination." },
+      { question: "Where was the work done?", answer: `At our indoor studio at ${ADDRESS}.` },
+    ],
+  },
+  "/case-studies/mercedes-cla45-indoor-detailing-bay-hire": {
+    title: "Mercedes CLA45 Indoor Detailing Bay Hire | Auto Opulence",
+    description: "Mercedes CLA45 indoor detailing bay hire in Norwich: an indoor wash, machine polish and ceramic coating, all completed in our climate-controlled studio.",
+    faqHeading: "Indoor detailing bay hire in Norwich: FAQs",
+    alt: "Mercedes CLA45 indoor detailing bay hire at Auto Opulence in Norwich",
+    sections: [{ heading: "Mercedes CLA45 ceramic coating in an indoor detailing bay", text: "This project shows what our climate-controlled bay makes possible: an indoor wash with spotless water, machine polishing under inspection lights and a ceramic coating completed indoors. Indoor detailing bay hire in Norwich is available to private owners and trade detailing users." }],
+    faqs: [
+      { question: "Can I polish and coat my own car in the bay?", answer: "Yes. Public bay hire gives private owners the space, lighting and equipment to wash, polish and coat their own car. Bring your own products and consumables." },
+      { question: "How long should I book?", answer: "A full day suits washing, polishing and coating in one visit. Public hire is £200 for a full day and £350 for a weekend; trade hire is £140 for a full day or £170 with overnight." },
+      { question: "Is there somewhere for a coating to cure?", answer: "Trade users can book Trade Hire — Day + Overnight so the vehicle stays indoors until 8:30am the next morning." },
+    ],
+  },
+  "/case-studies/merl-grey-range-rover-sport-ceramic-coating": {
+    faqHeading: "Range Rover Sport detailing and coating: FAQs",
+    title: "Range Rover Sport Ceramic Coating Case Study | Auto Opulence",
+    h1: "Merl Grey Range Rover Sport Ceramic Coating",
+    alt: "Range Rover Sport ceramic coating: Merl Grey Range Rover inside the Auto Opulence bay",
+    sections: [{ heading: "Preparing the paint before the Gyeon coating", text: "The work started with a K7-powered decontamination wash and a spotless-water final rinse, so the Gyeon Evo coating went onto clean, prepared paint. The Merl Grey Range Rover's pearl finish and coated wheels now bead water and are easier to wash." }],
+    faqs: [
+      { question: "Which coating was used?", answer: "A Gyeon Evo seven-year ceramic coating, applied after a full decontamination wash." },
+      { question: "How much does a 7-year ceramic coating cost?", answer: "The 7-Year Ceramic Coating with Clay Bar Wash starts from £495 and is priced by vehicle size; large SUVs such as a Range Rover Sport are usually in the Extra Large band, which is £745." },
+      { question: "How long will I be without the car?", answer: "The 7-year coating with clay bar wash takes about 10 working hours, so we keep the vehicle until the next working day. A loan car or van can be requested when you book." },
+    ],
+  },
+  "/case-studies/volvo-xc60-end-of-lease-valet": {
+    faqHeading: "End-of-lease car valet in Norwich: FAQs",
+    description: "A Volvo XC60 end of lease valet in Norwich: deep interior and boot-carpet cleaning, surface scratch reduction and collection, ready for lease return.",
+    alt: "Volvo XC60 end of lease valet: white XC60 ready for lease return",
+    sections: [{ heading: "Volvo XC60 lease return clean: what was done", text: "The car was collected, given a detailed cabin and boot clean, and light surface scratches were reduced before it was returned ready for handover. An end-of-lease valet like this is planned around the inspection date." }],
+    faqs: [
+      { question: "Which service suits an end-of-lease car?", answer: "Most cars need the Premium Exterior & Interior Valet (from £70). Heavily used cabins may need a deep interior clean, and light swirls can be reduced with a Stage 1 machine polish." },
+      { question: "Can valeting remove damage before a lease inspection?", answer: "Valeting removes dirt and many surface marks, but not dents, deep scratches or torn fabric. Book early so there is time to arrange a separate repair if needed." },
+    ],
+  },
+  "/case-studies/audi-tt-valet-bay-hire": {
+    faqHeading: "Car detailing bay hire: FAQs",
+    description: "Audi TT valet bay hire in Norwich: how a private owner used our indoor detailing bay, lighting and their own car-care products to prepare for an open day.",
+    alt: "Audi TT valet bay hire: grey Audi TT inside the Auto Opulence indoor bay",
+    sections: [{ heading: "Audi TT detailing: indoor valet bay hire in Norwich", text: "This project shows how private owners use the bay: a weatherproof place to work, their preferred products and lighting that reveals the finish. Public hire starts from £80 for two hours, and a full day is £200." }],
+    faqs: [
+      { question: "Can I use my own products?", answer: "Yes. Bay hire customers bring their own products and consumables; the bay, lighting, pressure washer and spotless water are provided." },
+      { question: "Which session should I book?", answer: "Two hours suits a focused wash; three hours, a full day or a weekend gives time for more detailed work. Our guide to choosing valet bay hire compares them." },
+    ],
+  },
+};
+
+export function seoFor(path: string): PageSeo | undefined {
+  const p = path === "/" ? "/" : "/" + String(path || "").split(/[?#]/)[0].replace(/^\/+|\/+$/g, "");
+  return pageSeo[p];
+}
+
+/** A page's metadata with the overlay's title and description applied (also to Open Graph and Twitter). */
+export function withSeo<T extends Record<string, any>>(path: string, meta: T): T {
+  const seo = seoFor(path);
+  if (!seo || (!seo.title && !seo.description)) return meta;
+  const out: Record<string, any> = { ...meta };
+  if (seo.title) out.title = { absolute: seo.title };
+  if (seo.description) out.description = seo.description;
+  for (const k of ["openGraph", "twitter"]) if (out[k]) out[k] = { ...out[k], ...(seo.title ? { title: seo.title } : {}), ...(seo.description ? { description: seo.description } : {}) };
+  return out as T;
+}

@@ -3,21 +3,22 @@ import Link from "next/link";
 import { Footer, Header } from "@/components/site-chrome";
 import { JsonLd } from "@/components/json-ld";
 import { siteUrl } from "@/lib/seo";
+import { SeoExtra } from "@/components/seo-extra";
 
 const title = "Privacy Policy | Auto Opulence";
-const description = "How Auto Opulence collects, uses, shares and protects personal information when you enquire, book or use our website.";
+const description = "The Auto Opulence privacy policy: what personal information we collect for enquiries and bookings, how we use and protect it, and your data protection rights.";
 
 export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "/privacy" },
-  openGraph: { title, description, url: "/privacy", siteName: "Auto Opulence", locale: "en_GB", type: "website" },
+  openGraph: { title, description, url: "/privacy", siteName: "Auto Opulence", locale: "en_GB", type: "website", images: [{ url: "/images/home-sections/indoor-detailing-facility.webp", width: 1200, height: 800, alt: "Auto Opulence indoor car valeting studio in Norwich" }] },
   twitter: { card: "summary", title, description },
 };
 
 export default function PrivacyPage() {
   const pageUrl = `${siteUrl}/privacy`;
-  const schema = { "@context": "https://schema.org", "@type": "WebPage", "@id": `${pageUrl}/#webpage`, url: pageUrl, name: title, description, isPartOf: { "@id": `${siteUrl}/#website` }, dateModified: "2026-09-22", inLanguage: "en-GB" };
+  const schema = { "@context": "https://schema.org", "@graph": [{ "@type": "WebPage", "@id": `${pageUrl}/#webpage`, url: pageUrl, name: title, description, isPartOf: { "@id": `${siteUrl}/#website` }, dateModified: "2026-09-22", inLanguage: "en-GB" }, { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: siteUrl }, { "@type": "ListItem", position: 2, name: "Privacy Policy", item: pageUrl }] }] };
   return <><JsonLd data={schema} /><Header /><main className="policy-page">
     <header className="policy-hero"><div className="shell"><p className="kicker">Legal information</p><h1>Privacy Policy</h1><p>How we use and protect your personal information when you contact us, book vehicle care or use an Auto Opulence customer account.</p><small>Last updated: 1 November 2026</small></div></header>
     <div className="policy-layout shell">
@@ -34,5 +35,6 @@ export default function PrivacyPage() {
         <section><h2>9. Changes to this policy</h2><p>We may update this policy when our services, providers or legal obligations change. The date at the top shows the latest revision.</p></section>
       </article>
     </div>
+    <SeoExtra path="/privacy" />
   </main><Footer /></>;
 }

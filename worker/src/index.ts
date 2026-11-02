@@ -25,7 +25,7 @@ const BLOG = {
   blogName: "Blog",
   blogTitle: "Vehicle care blog",
   kicker: "Auto Opulence blog · Norwich",
-  intro: "Car-care advice, seasonal tips and news from our indoor valeting and detailing studio in Norwich.",
+  intro: "The Auto Opulence vehicle care blog: car care tips, cleaning advice and news from our indoor valeting and detailing studio in Norwich.",
   guidesPath: "/guides",
   ctaHtml: '<p><strong>Want it done properly?</strong> Choose a service and book online, or ask us about your vehicle.</p><p><a class="crmblog-btn" href="/services">View services</a> <a class="crmblog-btn2" href="/contact">Ask Auto Opulence</a></p>',
   css: `.crmblog{max-width:860px;margin:0 auto;color:#101519}

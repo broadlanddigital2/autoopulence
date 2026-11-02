@@ -7,7 +7,7 @@ import { ArrowRight, CheckCircle2, ChevronLeft, ChevronRight, ShieldCheck } from
 const slides = [
   {
     image: "/images/home-banners/auto-opulence.webp",
-    alt: "Pearl grey luxury SUV inside a professional detailing studio",
+    alt: "Car valeting and detailing Norwich: pearl grey SUV inside the Auto Opulence indoor studio",
     kicker: "Auto Opulence · Norwich",
     title: "Care that shows in every reflection.",
     text: "Professional vehicle care and a fully equipped indoor bay, all under one roof in Norwich.",
@@ -63,8 +63,8 @@ export function HomeHeroCarousel() {
     <div className="home-campaign-shade" aria-hidden="true" />
     <div className="shell home-campaign-layout">
       <div className="home-campaign-copy" aria-live="polite" aria-atomic="true">
-        <p className="kicker">{slide.kicker}</p>
-        <h1>{slide.title}</h1>
+        <h1 className="kicker">Car valeting &amp; detailing · Norwich</h1>
+        <p className="home-campaign-title">{slide.title}</p>
         <p className="hero-intro">{slide.text}</p>
         {slide.price && <div className="campaign-price"><span>{slide.price}</span>{slide.note && <small>{slide.note}</small>}</div>}
         {!slide.price && <div className="hero-points"><span><CheckCircle2 /> Tailored to your vehicle</span><span><ShieldCheck /> Professional products & equipment</span></div>}

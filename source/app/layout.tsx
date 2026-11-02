@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   publisher: "Auto Opulence",
   category: "Automotive detailing and vehicle care",
   title: "Car Valeting & Detailing Norwich | Auto Opulence",
-  description: "Professional vehicle valeting, hand car washing, machine polishing, ceramic coatings and fully equipped valet bay hire in Norwich, Norfolk.",
+  description: "Car valeting and detailing, Norwich: hand car washing, interior and exterior valets, machine polishing, ceramic coating and indoor valet bay hire. Book online.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "Car Valeting & Detailing Norwich | Auto Opulence",

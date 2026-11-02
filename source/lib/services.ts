@@ -8,7 +8,7 @@ export type Service = { slug: string; title: string; short: string; description:
 // For an add-on: where to book the main service it goes with (shown near the top of the add-on's page).
 export type AddOnHelp = { heading: string; links: { href: string; label: string }[] };
 // h1: the category page's heading when it should differ from the title used in menus and cards.
-export type Category = { slug: string; title: string; h1?: string; eyebrow: string; intro: string; image: string; accent: string; services: Service[] };
+export type Category = { slug: string; title: string; h1?: string; imageAlt?: string; eyebrow: string; intro: string; image: string; accent: string; services: Service[] };
 
 function price(amount?: number) {
   return amount === undefined ? { amount: "0.00", display: "POA" } : { amount: amount.toFixed(2), display: `£${amount}` };
@@ -20,7 +20,7 @@ function vehiclePrices(small?: number, medium?: number, large?: number, extraLar
 
 export const categories: Category[] = [
   {
-    slug: "vehicle-valeting", title: "Vehicle Valeting", h1: "Car Valeting in Norwich", eyebrow: "Refresh every surface", image: "/images/categories/vehicle-valeting.webp", accent: "#1fb6ed",
+    slug: "vehicle-valeting", title: "Vehicle Valeting", h1: "Car Valeting in Norwich", imageAlt: "Car valeting in Norwich: interior and exterior valet at the Auto Opulence studio", eyebrow: "Refresh every surface", image: "/images/categories/vehicle-valeting.webp", accent: "#1fb6ed",
     intro: "Structured interior and exterior valeting in Norwich, using safe-contact techniques, specialist tools and professional products to restore cleanliness, comfort and presentation.",
     services: [
       { slug: "premium-exterior-car-valet", title: "Premium Exterior Car Valet", short: "A methodical exterior clean and finish for a sharper, glossier vehicle.", description: "A carefully structured exterior valet that loosens road film before a safe hand wash, wheel clean, detailed drying and protective finish. It is ideal for restoring a well-kept vehicle without moving into paint correction.", includes: ["Pre-wash and safe contact wash", "Wheels, tyres, trims and glass", "Careful microfibre drying", "Protective finishing treatment"], prices: vehiclePrices(40, 45, 50, 60) },
@@ -34,7 +34,7 @@ export const categories: Category[] = [
     ],
   },
   {
-    slug: "vehicle-washing", title: "Vehicle Washing", eyebrow: "Clean without compromise", image: "/images/categories/vehicle-washing.webp", accent: "#67d3ff",
+    slug: "vehicle-washing", title: "Vehicle Washing", imageAlt: "Hand car washing in Norwich: foam pre-wash at the Auto Opulence studio", eyebrow: "Clean without compromise", image: "/images/categories/vehicle-washing.webp", accent: "#67d3ff",
     intro: "Professional hand washing in Norwich for anything from a regular maintenance clean to full paint decontamination, completed with careful methods that protect the finish.",
     services: [
       { slug: "hand-car-wash-norwich", title: "Hand Car Wash", short: "A safe wash and dry for regular vehicle maintenance.", description: "A professional hand wash that removes loose dirt, traffic film and day-to-day contamination without relying on harsh automated brushes. Dedicated products are used for bodywork, wheels and glass.", includes: ["Pre-rinse and pre-wash", "Safe contact wash", "Wheel and tyre clean", "Careful hand drying"], prices: vehiclePrices(30, 35, 40, 50) },
@@ -44,7 +44,7 @@ export const categories: Category[] = [
     ],
   },
   {
-    slug: "vehicle-polishing", title: "Vehicle Polishing", eyebrow: "Bring back the gloss", image: "/images/categories/vehicle-polishing.webp", accent: "#82b5e2",
+    slug: "vehicle-polishing", title: "Vehicle Polishing", imageAlt: "Car polishing in Norwich: machine polishing paintwork under inspection lights", eyebrow: "Bring back the gloss", image: "/images/categories/vehicle-polishing.webp", accent: "#82b5e2",
     intro: "Paint enhancement and protection services in Norwich, from gloss-improving machine polishing to multi-stage correction and long-term ceramic coating packages.",
     services: [
       { slug: "stage-1-vehicle-machine-polish", title: "Stage 1 Machine Polish", short: "Enhance gloss and reduce light swirls in a single polishing stage.", description: "A one-stage machine polish that improves clarity and gloss while reducing light swirls, wash marring and minor imperfections. It is a strong enhancement option for daily drivers and well-kept vehicles.", includes: ["Paint inspection", "Full wash and decontamination", "Single-stage machine polish", "Protective finish"], prices: vehiclePrices(295, 320, 345, 395) },
@@ -60,7 +60,7 @@ export const categories: Category[] = [
     ],
   },
   {
-    slug: "valet-bay-hire", title: "Valet Bay Hire", eyebrow: "Your space. Pro equipment.", image: "/images/categories/valet-bay-hire.webp", accent: "#cfe3ef",
+    slug: "valet-bay-hire", title: "Valet Bay Hire", imageAlt: "Valet bay hire in Norwich: the indoor Auto Opulence detailing bay", eyebrow: "Your space. Pro equipment.", image: "/images/categories/valet-bay-hire.webp", accent: "#cfe3ef",
     intro: "Hire a fully equipped indoor valeting and detailing bay in Norwich, with drainage, lighting, spotless water, pressure washing and specialist equipment available for trade and public use.",
     services: [
       { slug: "public-hire-2-hours", title: "Public Hire — 2 Hours", short: "A focused session for washing or light vehicle care.", description: "Two hours in a professional indoor valeting bay for customers who want the right space and equipment for a focused clean.", includes: ["Indoor wash bay and drainage", "Kranzle K7 pressure washer", "Inline spotless water", "Professional lighting"], prices: vehiclePrices(80, 80, 80, 80) },

@@ -378,7 +378,8 @@
 .home-campaign-shade{background:linear-gradient(90deg,rgba(7,13,17,.96) 0%,rgba(7,13,17,.86) 36%,rgba(7,13,17,.26) 68%,rgba(7,13,17,.08) 100%)}
 .home-campaign-layout{position:relative;z-index:1;display:flex;min-height:720px;align-items:center;justify-content:space-between;padding-top:62px;padding-bottom:92px}
 .home-campaign-copy{max-width:720px}
-.home-campaign-copy h1{max-width:720px;margin:0;font-size:clamp(4rem,7vw,7.15rem);line-height:.86;letter-spacing:-.07em}
+.home-campaign-copy .home-campaign-title{max-width:720px;margin:0;font-size:clamp(4rem,7vw,7.15rem);font-weight:700;line-height:.86;letter-spacing:-.07em}
+.home-campaign-copy h1.kicker{margin:0 0 12px;font-size:.78rem;line-height:1.6}
 .home-campaign-copy .hero-intro{max-width:590px;color:#c1cdd2}
 .campaign-price{display:flex;align-items:flex-end;gap:16px;margin:5px 0 26px}
 .campaign-price>span{color:#67d3ff;font-size:clamp(2.3rem,4vw,4.25rem);font-weight:900;line-height:1;letter-spacing:-.055em}
@@ -472,7 +473,7 @@
 @media(max-width:620px){
   .home-campaign-hero,.home-campaign-layout{min-height:610px}
   .home-campaign-layout{align-items:flex-end;padding-top:80px;padding-bottom:105px}
-  .home-campaign-copy h1{font-size:clamp(3.1rem,15vw,4.9rem)}
+  .home-campaign-copy .home-campaign-title{font-size:clamp(3.1rem,15vw,4.9rem)}
   .home-campaign-shade{background:linear-gradient(0deg,rgba(7,13,17,.97) 0%,rgba(7,13,17,.82) 54%,rgba(7,13,17,.28) 100%)}
   .home-campaign-images img{object-position:65% center}
   .campaign-price{align-items:flex-start;flex-direction:column;gap:8px}.campaign-price small{padding:0}
@@ -957,3 +958,11 @@
 .addon-hero-note a{display:inline-flex;align-items:center;gap:5px;color:#67d3ff;font-weight:800;text-decoration:underline;text-underline-offset:3px}
 .addon-hero-note a:hover{color:#fff}
 @media(max-width:760px){.hero-cta-actions{flex-direction:row;align-items:center;gap:12px 18px}.hero-cta-actions .button{flex:1 1 200px}.hero-cta-actions .category-hero-text-link{flex-basis:100%}}
+
+/* Keyword sections and FAQs from lib/page-seo.ts; components/seo-extra.tsx */
+.seo-page-copy { padding: clamp(40px, 6vw, 76px) 0; }
+.seo-page-copy h2 { font-size: clamp(1.45rem, 2.4vw, 2rem); line-height: 1.15; letter-spacing: -.02em; }
+.seo-page-copy__block + .seo-page-copy__block { margin-top: 26px; }
+.seo-page-copy p { color: #4e5d64; }
+.seo-page-copy .crm-page-copy__faqs { margin-top: 40px; }
+.policy-page .seo-page-copy { padding-top: 0; }

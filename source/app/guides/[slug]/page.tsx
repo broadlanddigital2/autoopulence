@@ -9,17 +9,26 @@ import { getService, getServiceFromPrice } from "@/lib/services";
 import { getServiceCardImage, getServiceImageAlt } from "@/lib/category-presentation";
 import { getCaseStudy } from "@/lib/case-studies";
 import { localBusinessSchema, siteUrl } from "@/lib/seo";
+import { seoFor } from "@/lib/page-seo";
+import { SeoExtra } from "@/components/seo-extra";
+
+// The guide with its SEO overlay (lib/page-seo.ts): H1 (name), title, description and hero alt text.
+function guideWithSeo(slug: string) {
+  const base = getGuide(slug); if (!base) return undefined;
+  const o = seoFor(`/guides/${base.slug}`);
+  return { ...base, name: o?.h1 ?? base.name, title: o?.title ?? base.title, description: o?.description ?? base.description, heroAlt: o?.alt ?? base.heroAlt };
+}
 
 export function generateStaticParams() { return guides.map((guide) => ({ slug: guide.slug })); }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params; const guide = getGuide(slug); if (!guide) return {};
+  const { slug } = await params; const guide = guideWithSeo(slug); if (!guide) return {};
   const url = `/guides/${guide.slug}`;
   return { title: guide.title, description: guide.description, alternates: { canonical: url }, openGraph: { title: guide.title, description: guide.description, url, siteName: "Auto Opulence", locale: "en_GB", type: "article", images: [{ url: guide.heroImage, width: 1200, height: 800, alt: guide.heroAlt }] }, twitter: { card: "summary_large_image", title: guide.title, description: guide.description, images: [guide.heroImage] } };
 }
 
 export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params; const guide = getGuide(slug); if (!guide) notFound();
+  const { slug } = await params; const guide = guideWithSeo(slug); if (!guide) notFound();
   const pageUrl = `${siteUrl}/guides/${guide.slug}`;
   const related = guide.relatedServiceSlugs.map((serviceSlug) => getService(serviceSlug)).filter((result): result is NonNullable<typeof result> => Boolean(result));
   const relatedGuides = guide.relatedGuideSlugs.map((guideSlug) => getGuide(guideSlug)).filter((item): item is NonNullable<typeof item> => Boolean(item));
@@ -35,6 +44,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
     </div></div>
     {caseStudy && <section className="guide-case-study"><div className="shell"><figure><img src={caseStudy.images[0].src} alt={caseStudy.images[0].alt} /></figure><div><p className="kicker">Related case study</p><h2>{caseStudy.title}</h2><p>{caseStudy.summary}</p><Link href={`/case-studies/${caseStudy.slug}`} className="button">View the vehicle <ArrowRight size={17} /></Link></div></div></section>}
     <section className="section shell guide-related-services"><div className="section-heading compact"><div><p className="kicker">Relevant treatments</p><h2>Services mentioned in this guide.</h2></div><p>Open a service to see exactly what is included, vehicle-size pricing and booking options.</p></div><div>{related.map(({ category, service }) => { const image = getServiceCardImage(service.slug, category.image); return <Link href={`/service/${service.slug}`} key={service.slug}><img src={image} alt={getServiceImageAlt(service.slug, service.title)} /><span>{category.title}</span><h3>{service.title}</h3><p>{service.short}</p><strong>From {getServiceFromPrice(service)}</strong><small>View service <ArrowRight size={15} /></small></Link>; })}</div></section>
+    <SeoExtra path={`/guides/${guide.slug}`} />
     <section className="section shell faq-section" id="faq"><div><p className="kicker">Frequently asked</p><h2>Good to know.</h2></div><div className="faq-list">{guide.faqs.map((faq, index) => <details key={faq.question} open={index === 0}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div></section>
     <section className="section shell guide-more"><div className="section-heading compact"><div><p className="kicker">Keep reading</p><h2>Related vehicle-care guides.</h2></div></div><div>{relatedGuides.map((item) => <Link href={`/guides/${item.slug}`} key={item.slug}><span>{item.category} · {item.readTime}</span><h3>{item.name}</h3><strong>Read next <ArrowRight size={16} /></strong></Link>)}</div></section>
     <section className="guide-hub-cta"><div className="shell"><div><p className="kicker">Norwich vehicle care</p><h2>Need advice for your vehicle?</h2><p>Tell us how it is used, its current condition and the result you want. We will recommend the most suitable starting point.</p></div><div><Link href="/contact" className="button">Ask Auto Opulence <ArrowRight size={17} /></Link><Link href="/locations" className="inline-link">See service areas</Link></div></div></section>

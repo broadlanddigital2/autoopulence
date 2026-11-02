@@ -5,9 +5,10 @@ import { Header, Footer } from "@/components/site-chrome";
 import { EnquiryForm } from "@/components/enquiry-form";
 import { JsonLd } from "@/components/json-ld";
 import { defaultSocialImage, googleProfileUrl, localBusinessSchema, openingHours, siteUrl } from "@/lib/seo";
+import { SeoExtra } from "@/components/seo-extra";
 
 const title = "Contact Auto Opulence | Vehicle Care Norwich";
-const description = "Contact Auto Opulence in Norwich for vehicle valeting, hand washing, machine polishing, ceramic coatings and professional valet bay hire enquiries.";
+const description = "Contact Auto Opulence in Norwich to book car valeting, ask about detailing, ceramic coating or valet bay hire. Call 01603 517142 or send us an enquiry.";
 
 export const metadata: Metadata = {
   title,
@@ -21,7 +22,7 @@ export default function ContactPage() {
   const pageUrl = `${siteUrl}/contact`;
   const schema = { "@context": "https://schema.org", "@graph": [localBusinessSchema, { "@type": "ContactPage", "@id": `${pageUrl}/#webpage`, url: pageUrl, name: title, description, about: { "@id": `${siteUrl}/#business` }, inLanguage: "en-GB" }, { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: siteUrl }, { "@type": "ListItem", position: 2, name: "Contact Auto Opulence", item: pageUrl }] }] };
   return <><JsonLd data={schema} /><Header /><main>
-    <section className="contact-hero"><div className="shell"><p className="kicker">Contact Auto Opulence</p><h1>Let’s talk about your vehicle.</h1><p>Ask about a valet, wash, machine polish, ceramic coating or valet bay booking. Our Norwich team will help you choose the right option.</p></div></section>
+    <section className="contact-hero"><div className="shell"><p className="kicker">Contact Auto Opulence</p><h1>Contact Auto Opulence in Norwich</h1><p>Ask about a valet, wash, machine polish, ceramic coating or valet bay booking. Our Norwich team will help you choose the right option.</p></div></section>
     <section className="contact-main shell">
       <EnquiryForm />
       <aside className="nap-card" aria-label="Auto Opulence contact details">
@@ -36,5 +37,6 @@ export default function ContactPage() {
       </aside>
     </section>
     <section className="map-section"><header className="shell map-heading"><div><p className="kicker">Find us in Norwich</p><h2>Unit 7 Consensus House</h2></div><p>St Faiths Road, Norwich, NR6 7BW. Open the map for directions to the Auto Opulence detailing facility.</p></header><figure className="map-frame"><iframe title="Map showing Auto Opulence at Unit 7 Consensus House, Norwich" src="https://www.google.com/maps?q=Unit+7+Consensus+House,+St+Faiths+Road,+Norwich,+NR6+7BW&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade" /></figure></section>
+    <SeoExtra path="/contact" />
   </main><Footer /></>;
 }

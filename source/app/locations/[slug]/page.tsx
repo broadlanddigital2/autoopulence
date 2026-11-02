@@ -9,6 +9,9 @@ import { getLocation, locations } from "@/lib/content";
 import { getServiceCardImage, getServiceImageAlt } from "@/lib/category-presentation";
 import { categories, getService, getServiceFromPrice, getServicePrices, type Service } from "@/lib/services";
 import { directionsUrl, localBusinessSchema, siteUrl } from "@/lib/seo";
+import { seoFor, withSeo } from "@/lib/page-seo";
+import { SeoExtra } from "@/components/seo-extra";
+
 
 const comparisonRows = [
   { slug: "vehicle-washing", bestFor: "Routine cleaning and paint preparation", scope: "Hand washing, vacuum options and bonded-contamination removal", from: "£30" },
@@ -29,7 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const location = getLocation(slug);
   if (!location) return {};
   const url = `/locations/${location.slug}`;
-  return {
+  return withSeo(url, {
     title: location.title,
     description: location.description,
     alternates: { canonical: url },
@@ -40,10 +43,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       siteName: "Auto Opulence",
       locale: "en_GB",
       type: "website",
-      images: [{ url: location.heroImage, width: 1200, height: 800, alt: location.heroAlt }],
+      images: [{ url: location.heroImage, width: 1200, height: 800, alt: seoFor(url)?.alt ?? location.heroAlt }],
     },
     twitter: { card: "summary_large_image", title: location.title, description: location.description, images: [location.heroImage] },
-  };
+  });
 }
 
 export default async function LocationPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -51,6 +54,8 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
   const location = getLocation(slug);
   if (!location) notFound();
 
+  const path = `/locations/${location.slug}`; const seo = seoFor(path);
+  const heroAlt = seo?.alt ?? location.heroAlt;
   const pageUrl = `${siteUrl}/locations/${location.slug}`;
   const recommendations = location.recommendedServices.flatMap((recommendation) => {
     const match = getService(recommendation.slug);
@@ -94,14 +99,15 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
         "@type": "WebPage",
         "@id": `${pageUrl}/#webpage`,
         url: pageUrl,
-        name: location.title,
-        description: location.description,
+        name: seo?.title ?? location.title,
+        description: seo?.description ?? location.description,
         about: { "@id": `${pageUrl}/#service-area` },
         primaryImageOfPage: { "@id": `${pageUrl}/#primaryimage` },
         inLanguage: "en-GB",
       },
-      { "@type": "ImageObject", "@id": `${pageUrl}/#primaryimage`, contentUrl: `${siteUrl}${location.heroImage}`, caption: location.heroAlt },
+      { "@type": "ImageObject", "@id": `${pageUrl}/#primaryimage`, contentUrl: `${siteUrl}${location.heroImage}`, caption: heroAlt },
       serviceNode,
+      { "@type": "FAQPage", "@id": `${pageUrl}/#faq`, mainEntity: location.faqs.map((faq) => ({ "@type": "Question", name: faq.question, acceptedAnswer: { "@type": "Answer", text: faq.answer } })) },
       {
         "@type": "BreadcrumbList",
         itemListElement: [
@@ -115,13 +121,13 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
 
   return <><JsonLd data={schema} /><Header /><main>
     <section className="service-hero location-service-hero">
-      <img className="service-hero-image" src={location.heroImage} alt={location.heroAlt} />
+      <img className="service-hero-image" src={location.heroImage} alt={heroAlt} />
       <div className="service-hero-shade" />
       <div className="shell service-hero-content">
         <Link href="/locations" className="back-link"><ArrowLeft size={17} /> All locations</Link>
         <div className="service-hero-copy">
           <p className="kicker">Serving drivers from {location.name}</p>
-          <h1>{`Car valeting for ${location.name}.`}</h1>
+          <h1>{seo?.h1 ?? `Car valeting for ${location.name}.`}</h1>
           <p>{location.intro}</p>
           <div className="location-hero-actions"><Link href="/#book" className="button">Request a booking <ArrowRight size={18} /></Link><a href={mapDirections} target="_blank" rel="noreferrer" className="location-text-link"><Navigation size={17} /> Plan the route</a></div>
         </div>
@@ -132,7 +138,7 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
     <section className="section shell editorial-grid location-overview">
       <article>
         <p className="kicker">Local vehicle-care needs</p>
-        <h2>Professional care near {location.name}.</h2>
+        <h2>Car detailing for {location.name} drivers.</h2>
         <p>{location.localNeed}</p>
         <p>{location.localFocus}</p>
         <h2>Visiting Auto Opulence</h2>
@@ -151,7 +157,7 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
 
     <section className="location-recommendations">
       <div className="section shell">
-        <div className="section-heading compact"><div><p className="kicker">Recommended for {location.name}</p><h2>Choose by vehicle condition.</h2></div><p>These are useful starting points for the driving and vehicle-care needs common around {location.name}. We will confirm the right treatment before booking.</p></div>
+        <div className="section-heading compact"><div><p className="kicker">Recommended for {location.name}</p><h2>Vehicle valeting for {location.name}: choose by condition.</h2></div><p>These are useful starting points for the driving and vehicle-care needs common around {location.name}. We will confirm the right treatment before booking.</p></div>
         <div className="location-service-grid">{recommendations.map(({ service, category, reason }) => {
           const image = getServiceCardImage(service.slug, category.image);
           const imageAlt = getServiceImageAlt(service.slug, `${service.title} at Auto Opulence in Norwich`);
@@ -201,8 +207,8 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
       <nav aria-label="Nearby Auto Opulence service areas">{nearbyLocations.map((nearby) => <Link href={`/locations/${nearby.slug}`} key={nearby.slug}><MapPin size={18} /><span><strong>{nearby.name}</strong>View local service guide</span><ArrowRight size={17} /></Link>)}</nav>
     </section>
 
-    <section className="section shell faq-section"><div><p className="kicker">{location.name} FAQs</p><h2>Before you travel.</h2></div><div className="faq-list">{location.faqs.map((faq, index) => <details key={faq.question} open={index === 0}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div></section>
+    <section className="section shell faq-section"><div><p className="kicker">{location.name} FAQs</p><h2>Car cleaning questions from {location.name}.</h2></div><div className="faq-list">{location.faqs.map((faq, index) => <details key={faq.question} open={index === 0}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div></section>
 
-    <section className="location-cta"><div className="shell"><div><p className="kicker">Vehicle care for {location.name}</p><h2>Tell us what your vehicle needs.</h2><p>Choose a service online or send an enquiry for help selecting the correct wash, valet, correction, coating or bay-hire package.</p></div><div><Link href="/#book" className="button">Book a service <ArrowRight size={18} /></Link><Link href="/contact" className="location-secondary-button">Ask a question</Link></div></div></section>
+    <section className="location-cta"><div className="shell"><div><p className="kicker">{location.name} car valeting &amp; detailing</p><h2>Tell us what your vehicle needs.</h2><p>Choose a service online or send an enquiry for help selecting the correct wash, valet, correction, coating or bay-hire package.</p></div><div><Link href="/#book" className="button">Book a service <ArrowRight size={18} /></Link><Link href="/contact" className="location-secondary-button">Ask a question</Link></div></div></section>
   </main><Footer /></>;
 }

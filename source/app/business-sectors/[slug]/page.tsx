@@ -10,6 +10,15 @@ import { getSector, sectors } from "@/lib/content";
 import { getServiceCardImage, getServiceImageAlt } from "@/lib/category-presentation";
 import { getService, getServiceFromPrice, getServicePrices, type Service } from "@/lib/services";
 import { localBusinessSchema, siteUrl } from "@/lib/seo";
+import { seoFor } from "@/lib/page-seo";
+import { SeoExtra } from "@/components/seo-extra";
+
+// The sector with its SEO overlay (lib/page-seo.ts): H1, title, description and hero alt text.
+function sectorWithSeo(slug: string) {
+  const base = getSector(slug); if (!base) return undefined;
+  const o = seoFor(`/business-sectors/${base.slug}`);
+  return { ...base, h1: o?.h1 ?? base.h1, title: o?.title ?? base.title, description: o?.description ?? base.description, heroAlt: o?.alt ?? base.heroAlt };
+}
 
 const localAreas = [
   { name: "Norwich", slug: "norwich" },
@@ -27,7 +36,7 @@ export function generateStaticParams() { return sectors.map((sector) => ({ slug:
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const sector = getSector(slug);
+  const sector = sectorWithSeo(slug);
   if (!sector) return {};
   const url = `/business-sectors/${sector.slug}`;
   return {
@@ -41,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function SectorPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const sector = getSector(slug);
+  const sector = sectorWithSeo(slug);
   if (!sector) notFound();
 
   const pageUrl = `${siteUrl}/business-sectors/${sector.slug}`;
@@ -80,6 +89,7 @@ export default async function SectorPage({ params }: { params: Promise<{ slug: s
 
     <section className="section shell business-local"><div><p className="kicker">Serving Norwich and Norfolk</p><h2>One genuine Norwich facility.</h2><p>Commercial enquiries from Norwich and surrounding Norfolk towns are completed through our confirmed address at Unit 7 Consensus House, St Faiths Road, Norwich, NR6 7BW. Use the location guides for journey and appointment information.</p></div><nav aria-label="Local business vehicle-care areas">{localAreas.map((area) => <Link href={`/locations/${area.slug}`} key={area.slug}><MapPin size={17} /><span><strong>{area.name}</strong>View service-area guide</span><ArrowRight size={16} /></Link>)}</nav></section>
 
+    <SeoExtra path={`/business-sectors/${sector.slug}`} />
     <section className="section shell faq-section"><div><p className="kicker">{sector.name} FAQs</p><h2>Planning the work.</h2></div><div className="faq-list">{sector.faqs.map((faq, index) => <details key={faq.question} open={index === 0}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div></section>
 
     <section className="business-enquiry-section" id="business-enquiry"><div className="shell business-enquiry-grid"><div><p className="kicker">Business vehicle enquiry</p><h2>Discuss vehicles, timing and presentation.</h2><p>Include the number and type of vehicles, current condition, preferred date and whether the requirement is one-off or recurring. We will recommend the most appropriate published service or provide a tailored response where the work needs individual planning.</p><div className="business-enquiry-points"><span><Clock3 /> Response target within 24 hours</span><span><Sparkles /> Service matched to vehicle condition</span></div></div><EnquiryForm initialService={initialService} businessSector={sector.name} title={`Enquire about ${sector.name.toLowerCase()}`} intro="Tell us about the vehicles, required standard, preferred date and whether this is a one-off or repeat requirement." /></div></section>
