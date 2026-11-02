@@ -4,8 +4,16 @@ import { CrmPageCopy } from "@/components/crm-page-copy";
 import { CustomerLogin } from "./customer-login";
 import { ArrowRight, CalendarCheck2, ChevronDown, Menu, Phone, MapPin, Sparkles, UserRound } from "lucide-react";
 import { categories, getServiceFromPrice } from "@/lib/services";
+import { usePathname } from "next/navigation";
+
+// Pages with their own booking panel (BookingWidget, id="book"): "Book now" scrolls to it instead of going home.
+function hasOwnBookingPanel(path: string) {
+  const p = "/" + String(path || "").split(/[?#]/)[0].replace(/^\/+|\/+$/g, "");
+  return p === "/" || p === "/ceramic-coating" || p.startsWith("/service/") || p.startsWith("/category/");
+}
 
 export function Header() {
+  const bookHref = hasOwnBookingPanel(usePathname() ?? "") ? "#book" : "/#book";
   function closeParentMenu(event: React.MouseEvent<HTMLElement>) {
     if ((event.target as HTMLElement).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open");
   }
@@ -35,8 +43,8 @@ export function Header() {
       </div></details>
       <Link href="/about">About</Link><Link href="/contact">Contact</Link>
     </nav>
-    <div className="header-actions"><a href="tel:01603517142" className="phone-link"><Phone size={16} /> 01603 517142</a><button type="button" className="customer-login-link" data-site-search hidden aria-label="Search the site" style={{ display: "none", background: "none", cursor: "pointer", font: "inherit" }}><svg stroke="currentColor" fill="none" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" height="17" width="17"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><span>Search</span></button><CustomerLogin /><Link href="/#book" className="button button-small header-book-button">Book now</Link>
-      <details className="mobile-menu" data-nav-menu onToggle={closeOtherMenus}><summary aria-label="Open navigation"><Menu /></summary><div className="mobile-menu-panel" onClick={closeParentMenu}><details className="mobile-nav-group" open><summary onClick={trackServicesMenu}>Services <ChevronDown size={15} /></summary><div>{categories.map((category) => <Link key={category.slug} href={`/category/${category.slug}`}>{category.title}</Link>)}</div></details><details className="mobile-nav-group"><summary>Explore <ChevronDown size={15} /></summary><div><Link href="/locations">Locations</Link><Link href="/business-sectors">For Business</Link><Link href="/gallery">Gallery</Link><Link href="/case-studies">Case Studies</Link><Link href="/guides">Guides &amp; Advice</Link></div></details><Link href="/about">About Auto Opulence</Link><Link href="/contact">Contact us</Link><CustomerLogin mobile /><Link href="/#book" className="mobile-book">Book a service</Link></div></details>
+    <div className="header-actions"><a href="tel:01603517142" className="phone-link"><Phone size={16} /> 01603 517142</a><a href="tel:01603517142" className="header-call-icon" aria-label="Call Auto Opulence on 01603 517142"><Phone size={18} /></a><button type="button" className="customer-login-link" data-site-search hidden aria-label="Search the site" style={{ display: "none", background: "none", cursor: "pointer", font: "inherit" }}><svg stroke="currentColor" fill="none" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" height="17" width="17"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><span>Search</span></button><CustomerLogin /><a href={bookHref} className="button button-small header-book-button">Book now</a>
+      <details className="mobile-menu" data-nav-menu onToggle={closeOtherMenus}><summary aria-label="Open navigation"><Menu /></summary><div className="mobile-menu-panel" onClick={closeParentMenu}><details className="mobile-nav-group" open><summary onClick={trackServicesMenu}>Services <ChevronDown size={15} /></summary><div>{categories.map((category) => <Link key={category.slug} href={`/category/${category.slug}`}>{category.title}</Link>)}</div></details><details className="mobile-nav-group"><summary>Explore <ChevronDown size={15} /></summary><div><Link href="/locations">Locations</Link><Link href="/business-sectors">For Business</Link><Link href="/gallery">Gallery</Link><Link href="/case-studies">Case Studies</Link><Link href="/guides">Guides &amp; Advice</Link></div></details><Link href="/about">About Auto Opulence</Link><Link href="/contact">Contact us</Link><CustomerLogin mobile /><a href={bookHref} className="mobile-book">Book a service</a></div></details>
     </div>
   </div></header>;
 }

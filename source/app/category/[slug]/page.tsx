@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowDown, ArrowRight, Check } from "lucide-react";
+import { ArrowDown, ArrowRight, CalendarCheck2, Check, Phone } from "lucide-react";
 import { Header, Footer } from "@/components/site-chrome";
 import { BookingWidget } from "@/components/booking-widget";
 import { ServiceCard } from "@/components/service-card";
-import { categories, getCategory, getServiceFromPrice } from "@/lib/services";
+import { categories, getCategory, getServiceFromPrice, type Service } from "@/lib/services";
 import { categoryComparisonFeatures } from "@/lib/category-presentation";
 import { JsonLd } from "@/components/json-ld";
 import { categoryDescription, categoryTitle, localBusinessSchema, siteUrl } from "@/lib/seo";
@@ -27,8 +27,14 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const mainServices = category.services.filter((service) => !service.isAddOn);
   const additionalServices = category.services.filter((service) => service.isAddOn);
   const comparisonFeatures = categoryComparisonFeatures[category.slug] ?? [];
+  // Lowest price shown in the hero: main services only (add-ons are charged on top of a main service).
+  const priceOf = (service: Service) => { const p = getServiceFromPrice(service); return p === "POA" ? undefined : Number(p.slice(1)); };
+  const mainPrices = mainServices.map(priceOf).filter((n): n is number => n !== undefined);
+  const fromPrice = mainPrices.length ? Math.min(...mainPrices) : undefined;
+  const packagePrices = mainServices.map((service) => getLowestPackagePrice(service.slug)).filter((n): n is number => n !== undefined);
+  const packageFrom = packagePrices.length ? Math.min(...packagePrices) : undefined;
   return <><JsonLd data={schema} /><Header /><main>
-    <section className="service-hero category-service-hero" style={{"--category-accent": category.accent} as React.CSSProperties}><img className="service-hero-image" src={category.image} alt={`${category.title} services at Auto Opulence in Norwich`} width="1200" height="800" fetchPriority="high" decoding="async" /><div className="service-hero-shade" /><div className="shell service-hero-content"><div className="service-hero-copy"><p className="kicker">{category.eyebrow} · Norwich</p><h1>{category.title}</h1><p>{category.intro}</p>{category.slug === "vehicle-polishing" && <p className="category-hero-note"><Link href="/ceramic-coating">Compare every ceramic coating package and price →</Link></p>}<div className="category-hero-actions"><a href="#treatments" className="button">Choose a treatment <ArrowDown size={18} /></a><a href="#compare-services" className="category-hero-text-link">Compare services <ArrowDown size={17} /></a></div></div><div className="service-hero-proof category-hero-proof"><strong>{category.services.length} service options</strong><span>{additionalServices.length > 0 ? `${mainServices.length} main services · ${additionalServices.length} additional services` : "Clear inclusions and pricing for every option"}</span></div></div></section>
+    <section className="service-hero category-service-hero" style={{"--category-accent": category.accent} as React.CSSProperties}><img className="service-hero-image" src={category.image} alt={`${category.title} services at Auto Opulence in Norwich`} width="1200" height="800" fetchPriority="high" decoding="async" /><div className="service-hero-shade" /><div className="shell service-hero-content"><div className="service-hero-copy"><p className="kicker">{category.eyebrow} · Norwich</p><h1>{category.h1 ?? category.title}</h1><p>{category.intro}</p>{category.slug === "vehicle-polishing" && <p className="category-hero-note"><Link href="/ceramic-coating">Compare every ceramic coating package and price →</Link></p>}{fromPrice !== undefined && <div className="campaign-price service-hero-price"><span>From £{fromPrice}</span><small>{packageFrom !== undefined ? <><strong>Package from £{packageFrom}</strong>Lowest package rate per visit</> : category.slug === "valet-bay-hire" ? "Price varies by session length" : "Price varies by service and vehicle size"}</small></div>}<div className="category-hero-actions hero-cta-actions"><a href="#book" className="button"><CalendarCheck2 size={18} /> Book now</a><a href="tel:01603517142" className="button button--hero-call"><Phone size={17} /> Call 01603 517142</a><a href="#treatments" className="category-hero-text-link">Choose a treatment <ArrowDown size={17} /></a><a href="#compare-services" className="category-hero-text-link">Compare services <ArrowDown size={17} /></a></div></div><div className="service-hero-proof category-hero-proof"><strong>{category.services.length} service options</strong><span>{additionalServices.length > 0 ? `${mainServices.length} main services · ${additionalServices.length} additional services` : "Clear inclusions and pricing for every option"}</span></div></div></section>
     <section className="section shell" id="treatments"><div className="section-heading compact"><div><p className="kicker">Select a sub service</p><h2>Find the right level of care.</h2></div><p>Choose a main service first, then add any optional treatments. Open a service to compare vehicle sizes, inclusions and prices.</p></div>
       <header className="service-group-heading"><p className="kicker">Your base booking</p><h3>Main services</h3><p>These services can be booked as the main treatment for your vehicle.</p></header>
       <div className="service-list visual-service-grid">{mainServices.map((service, index) => <ServiceCard key={service.slug} category={category} service={service} index={index} />)}</div>
