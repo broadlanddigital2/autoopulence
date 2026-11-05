@@ -11,6 +11,8 @@ const serviceLabels: Record<string, string> = {
   "vehicle-polishing": "Vehicle Polishing & Ceramic Coating",
   "valet-bay-hire": "Valet Bay Hire",
 };
+// The CRM's Auto Opulence Web Forms channel (its public key; also the …@webform.autoopulence.co.uk inbox).
+const CRM_FORM_KEY = "3ca8339d-bd85-443a-9662-3bbc287b15ff";
 const allowedFileTypes = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 const text = (value: FormDataEntryValue | null, maximum: number) => typeof value === "string" ? value.trim().slice(0, maximum) : "";
 
@@ -78,7 +80,7 @@ export async function POST(request: Request) {
       fromEmail: runtimeEnv("SMTP_FROM_EMAIL", "valeting@autoopulence.co.uk"),
       fromName: runtimeEnv("SMTP_FROM_NAME", "Auto Opulence Website"),
       toEmail: runtimeEnv("SMTP_TO_EMAIL", "01a0bfe8-a701-4f15-8f2d-37ca4fc4bd1c@webform.boxly.ai"),
-      additionalToEmails: ["3ca8339d-bd85-443a-9662-3bbc287b15ff@webform.autoopulence.co.uk"],
+      additionalToEmails: [`${CRM_FORM_KEY}@webform.autoopulence.co.uk`] as string[],
       ccEmail: runtimeEnv("SMTP_CC_EMAIL", "chris@racecargraphics.uk"),
     };
     if (!config.password) return Response.json({ error: "Email delivery is temporarily unavailable. Please call 01603 517142." }, { status: 503 });
@@ -90,6 +92,22 @@ export async function POST(request: Request) {
       const result = await crm.json().catch(() => ({}));
       return Response.json(crm.ok && result.monitor ? { ok: true, monitor: true, captcha: true, smtp_configured: true, crm: result } : { error: result.error || "CRM check failed (" + crm.status + ")" }, { status: crm.ok ? 200 : crm.status });
     }
+
+    // Straight into the CRM (Auto Opulence Web Forms), before the emails, so an email that's delayed or dropped can't
+    // lose the lead. Enquiries with files still go to the CRM by email (the direct route carries no attachments), and so
+    // does any enquiry if the direct route fails. 5 Nov 2026: a Land Rover valet enquiry never reached the CRM by email.
+    let crmDirect = false;
+    if (!files.length) {
+      try {
+        const details = [`Name: ${firstName} ${lastName}`, `Email: ${email}`, `Phone: ${phone}`, `Service: ${service}`,
+          registration ? `Vehicle registration: ${registration}` : "", `Enquiry: ${enquiryText}`].filter(Boolean).join("\n");
+        const crm = await fetch("https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/inbound-webform-email", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ form_key: CRM_FORM_KEY, name: `${firstName} ${lastName}`, email, subject: service, details, page_url: sourceUrl }) });
+        crmDirect = crm.ok;
+        if (!crm.ok) console.error("CRM enquiry not accepted", crm.status, await crm.text().catch(() => ""));
+      } catch (e) { console.error("CRM enquiry failed", e); }
+    }
+    if (crmDirect) config.additionalToEmails = [];
 
     const inlineImages = await loadEnquiryEmailImages();
     await sendEnquiryEmails(config, { firstName, lastName, phone, email, service, message, sourceUrl, submittedAt }, inlineImages, attachments);
