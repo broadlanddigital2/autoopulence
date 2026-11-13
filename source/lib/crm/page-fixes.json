@@ -5,5 +5,42 @@
   "h1": null,
   "alts": {},
   "copy": null
+ },
+ "/ceramic-coating": {
+  "meta_title": null,
+  "meta_description": null,
+  "h1": null,
+  "alts": {},
+  "copy": {
+   "faqs": [
+    {
+     "answer": "Our packages start from £445 for a small vehicle on the 3 + 1 Year Ceramic Coating. The 7-Year Ceramic Coating + Clay Bar Decontamination Wash starts from £495, and Paint Correction + 7-Year Ceramic from £645. The final price depends on your vehicle size.",
+     "question": "How much does ceramic coating cost?"
+    },
+    {
+     "answer": "Each package includes a full decontamination wash, preparation of the panels, the coating itself, a final inspection and aftercare advice. Paint correction is included only in the Paint Correction + 7-Year Ceramic package.",
+     "question": "What is included in the ceramic coating price?"
+    },
+    {
+     "answer": "A larger vehicle has more paintwork to wash, prepare and coat, so it takes more time and product. Small covers city cars and compact hatchbacks, while Extra Large covers large SUVs, 4x4s and vans.",
+     "question": "Why does the price change with vehicle size?"
+    },
+    {
+     "answer": "Yes. Alloy wheel coating on the vehicle is £195, wheels-off ceramic coating is £280, and soft top options start at £95. These are added to a suitable main service booking.",
+     "question": "Can I add wheels or a soft top to my ceramic coating booking?"
+    },
+    {
+     "answer": "No. A ceramic coating is not scratch-proof and does not replace careful washing. It does make washing easier and helps protect the paint, and our aftercare guide explains how to keep it performing.",
+     "question": "Is a ceramic coating scratch-proof?"
+    }
+   ],
+   "heading": "Understanding ceramic coating cost in Norwich",
+   "paragraphs": [
+    "Ceramic coating cost depends on three things: the size of your vehicle, how long you want the protection to last, and whether the paint needs correcting first. Prices start from £445 for a small car on the 3 + 1 Year package and rise to £895 for an extra large vehicle with paint correction and a 7-year coating.",
+    "Every package includes the wash, decontamination and panel preparation the coating needs, so the price covers the full job rather than just the product. The 3 + 1 Year package gives 4 years of protection and suits daily drivers and family cars in good condition. The 7-year package suits new cars and well-kept paint, and is booked as one appointment of about 10 working hours.",
+    "If your paint has swirls, haze or light scratches, the Paint Correction + 7-Year Ceramic package is the better choice. We correct the finish first, then coat it, so you are not sealing in defects. Alloy wheel coating and soft top treatments can be added to a suitable main service booking.",
+    "To work out your ceramic coating cost, choose the size that matches your vehicle: small, medium, large or extra large. You select it when you book, and we confirm it before your appointment. You can book and pay securely online, or call us on 01603 517142 if you would like to talk it through first."
+   ]
+  }
  }
 }
