@@ -15281,6 +15281,16 @@ html,body {
     box-shadow: none;
   }
 }
+.size-card.is-selected,.service-page .size-card.is-selected {
+  background: #089fd8;
+  border-color: #089fd8;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(8,159,216,.32);
+}
+.size-card.is-selected *,.service-page .size-card.is-selected h3,.service-page .size-card.is-selected p,.service-page .size-card.is-selected .size-price span,.service-page .size-card.is-selected .size-price strong {
+  color: #fff;
+  border-color: rgba(255,255,255,.35);
+}
 @property --tw-translate-x {
   syntax: "*";
   inherits: false;

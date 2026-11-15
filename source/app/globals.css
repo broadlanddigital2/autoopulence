@@ -1045,3 +1045,6 @@ html,body{max-width:100%;overflow-x:clip}
 .service-page .section{padding-top:44px;padding-bottom:44px}
 }
 @media(max-width:760px){.service-page .booking-panel,.service-page .ao-booking.booking-panel{background:transparent;border:0;border-radius:0;box-shadow:none}}
+/* Selected size tile: solid brand blue, like the booking form. */
+.size-card.is-selected,.service-page .size-card.is-selected{background:#089fd8;border-color:#089fd8;color:#fff;box-shadow:0 10px 24px rgba(8,159,216,.32)}
+.size-card.is-selected *,.service-page .size-card.is-selected h3,.service-page .size-card.is-selected p,.service-page .size-card.is-selected .size-price span,.service-page .size-card.is-selected .size-price strong{color:#fff;border-color:rgba(255,255,255,.35)}
