@@ -15114,16 +15114,16 @@ html,body {
     order: 1;
   }
   .service-page>#sizes {
-    order: 2;
-  }
-  .service-page>.service-packages {
     order: 3;
   }
-  .service-page>.booking-section {
+  .service-page>.service-packages {
     order: 4;
   }
-  .service-page>.about-service {
+  .service-page>.booking-section {
     order: 5;
+  }
+  .service-page>.about-service {
+    order: 2;
   }
   .service-hero-content {
     padding-top: 20px;

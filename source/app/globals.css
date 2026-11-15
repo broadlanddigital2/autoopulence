@@ -1001,10 +1001,10 @@ html,body{max-width:100%;overflow-x:clip}
 .service-page{display:flex;flex-direction:column}
 .service-page>*{order:6}
 .service-page>.service-hero{order:1}
-.service-page>#sizes{order:2}
-.service-page>.service-packages{order:3}
-.service-page>.booking-section{order:4}
-.service-page>.about-service{order:5}
+.service-page>#sizes{order:3}
+.service-page>.service-packages{order:4}
+.service-page>.booking-section{order:5}
+.service-page>.about-service{order:2}
 .service-hero-content{padding-top:20px;padding-bottom:28px}
 .service-hero h1{font-size:clamp(2.1rem,9.5vw,2.9rem);line-height:1.02}
 .service-hero .back-link{margin-bottom:16px}
