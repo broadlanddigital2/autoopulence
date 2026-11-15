@@ -985,3 +985,12 @@
 .mobile-nav-sub>div>a.mobile-nav-all{display:flex;align-items:center;gap:6px;color:#087eaa;font-weight:850}
 }
 @media(max-width:760px){.mobile-menu>.mobile-menu-panel{top:72px;max-height:calc(100dvh - 72px)}}
+/* Phones: nothing may push the page wider than the screen */
+@media(max-width:1050px){
+.policy-layout{grid-template-columns:minmax(0,1fr)}
+.policy-layout>*{min-width:0}
+.enquiry-captcha>*{min-width:0}
+.enquiry-captcha>div:first-child small{white-space:normal}
+}
+/* Safety net: never scroll sideways (clip, unlike hidden, keeps the sticky header working) */
+html,body{max-width:100%;overflow-x:clip}

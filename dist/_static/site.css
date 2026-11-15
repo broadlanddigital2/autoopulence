@@ -15079,6 +15079,24 @@ img {
     max-height: calc(100dvh - 72px);
   }
 }
+@media (max-width:1050px) {
+  .policy-layout {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .policy-layout>* {
+    min-width: 0;
+  }
+  .enquiry-captcha>* {
+    min-width: 0;
+  }
+  .enquiry-captcha>div:first-child small {
+    white-space: normal;
+  }
+}
+html,body {
+  max-width: 100%;
+  overflow-x: clip;
+}
 @property --tw-translate-x {
   syntax: "*";
   inherits: false;
