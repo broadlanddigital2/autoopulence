@@ -49,6 +49,15 @@ export function SizePicker() {
       if (!card) return;
       markSize(card.dataset.sizePick);
       window.dispatchEvent(new CustomEvent("crm-booking:select", { detail: { size: card.dataset.sizePick } }));
+      // Go straight to the first step of the booking form (inside the widget's shadow root), just below the sticky header.
+      const host = document.querySelector<HTMLElement>("[data-crm-booking]");
+      const root = host?.shadowRoot || host?.querySelector<HTMLElement>("*")?.shadowRoot || [...(host?.querySelectorAll<HTMLElement>("*") || [])].find(el => el.shadowRoot)?.shadowRoot;
+      const first = root?.querySelector<HTMLElement>(".booking-form-main > fieldset, .booking-form-main fieldset");
+      if (first) {
+        event.preventDefault();
+        const header = document.querySelector<HTMLElement>(".site-header, header")?.getBoundingClientRect().height || 80;
+        window.scrollTo({ top: window.scrollY + first.getBoundingClientRect().top - header - 12, behavior: "smooth" });
+      }
     }
     function service(event: Event) {
       const detail = (event as CustomEvent<{ url?: string; size?: string }>).detail;
