@@ -1044,3 +1044,4 @@ html,body{max-width:100%;overflow-x:clip}
 .service-page .service-guide-links a>strong{display:none}
 .service-page .section{padding-top:44px;padding-bottom:44px}
 }
+@media(max-width:760px){.service-page .booking-panel,.service-page .ao-booking.booking-panel{background:transparent;border:0;border-radius:0;box-shadow:none}}

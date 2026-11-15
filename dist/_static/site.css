@@ -15271,6 +15271,12 @@ html,body {
     padding-top: 44px;
     padding-bottom: 44px;
   }
+  .service-page .booking-panel,.service-page .ao-booking.booking-panel {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
 @property --tw-translate-x {
   syntax: "*";
