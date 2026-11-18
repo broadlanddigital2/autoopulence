@@ -467,7 +467,7 @@ async function probe(t) {
   }
   return null;
 }
-async function email(env, subject, text2) {
+async function email(env, subject, text3) {
   const key = String(env.SMTP_PASSWORD || ""), to = String(env.ALERT_EMAILS || "").split(/[\s,;]+/).filter((e) => e.includes("@"));
   if (!key || !to.length) {
     console.error("Uptime pinger: no SendGrid key or ALERT_EMAILS");
@@ -480,7 +480,7 @@ async function email(env, subject, text2) {
       personalizations: [{ to: to.map((email2) => ({ email: email2 })) }],
       from: { email: String(env.SMTP_FROM_EMAIL || "valeting@autoopulence.co.uk"), name: "CRM uptime alert" },
       subject,
-      content: [{ type: "text/plain", value: text2 + "\n\nMonitoring: https://staff.racecargraphics.uk/dashboard/monitoring\n(Sent by the external pinger on Cloudflare, every 5 minutes.)" }]
+      content: [{ type: "text/plain", value: text3 + "\n\nMonitoring: https://staff.racecargraphics.uk/dashboard/monitoring\n(Sent by the external pinger on Cloudflare, every 5 minutes.)" }]
     })
   });
   if (!r.ok) console.error("Uptime pinger email failed", r.status, await r.text().catch(() => ""));
@@ -801,6 +801,58 @@ function trackAi(request, response, ctx, { feedKey, countPreview = false }) {
   }
 }
 
+// ../../worker/src/ad-headings.js
+var esc2 = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+var noComments = (html) => String(html || "").replace(/<!--[\s\S]*?-->/g, "");
+var text2 = (html) => noComments(html).replace(/<[^>]+>/g, "").replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, "\xA0").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+var plain = (html) => !/<[a-z/]/i.test(noComments(html));
+var pathOf = (pathname) => pathname.replace(/\.html$/, "").replace(/\/+$/, "") || "/";
+function headingFor(url, headings) {
+  const ag = (url.searchParams.get("ag") || "").replace(/\D/g, "");
+  const h = ag && headings ? headings[ag] : null;
+  if (!h || !h.h1 || pathOf(url.pathname) !== pathOf(h.path || "")) return null;
+  return h;
+}
+function swapHeading(html, h) {
+  const main = html.indexOf("<main");
+  const re = /<h1\b([^>]*)>([\s\S]*?)<\/h1>/g;
+  re.lastIndex = main >= 0 ? main : 0;
+  const m = re.exec(html);
+  if (!m || !plain(m[2]) || !text2(m[2])) return null;
+  const info = { from: text2(m[2]), h1: h.h1 };
+  let rest = html.slice(re.lastIndex);
+  if (h.subheading) {
+    const p = /^\s*<p\b([^>]*)>([\s\S]*?)<\/p>/.exec(rest);
+    if (p && plain(p[2]) && text2(p[2])) {
+      info.fromSub = text2(p[2]);
+      info.subheading = h.subheading;
+      rest = rest.slice(0, p.index) + `<p${p[1]}>${esc2(h.subheading)}</p>` + rest.slice(p.index + p[0].length);
+    }
+  }
+  let out = html.slice(0, m.index) + `<h1${m[1]}>${esc2(h.h1)}</h1>` + rest;
+  const script = `<script>window.__AO_AD_HEADING=${JSON.stringify(info).replace(/</g, "\\u003c")}</script>`;
+  out = out.includes("</head>") ? out.replace("</head>", script + "</head>") : script + out;
+  return out;
+}
+async function withAdHeading(request, response, headings) {
+  if (request.method !== "GET" || response.status !== 200) return response;
+  if (!(response.headers.get("content-type") || "").includes("text/html")) return response;
+  const h = headingFor(new URL(request.url), headings);
+  if (!h) return response;
+  const original = await response.text();
+  const html = swapHeading(original, h);
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  headers.delete("etag");
+  if (html == null) return new Response(original, { status: response.status, statusText: response.statusText, headers });
+  headers.set("x-ad-heading", "1");
+  headers.set("cache-control", "private, no-store");
+  return new Response(html, { status: response.status, statusText: response.statusText, headers });
+}
+
+// ../../source/lib/crm/ad-headings.json
+var ad_headings_default = {};
+
 // ../../worker/src/index.ts
 var BLOG = {
   feedUrl: "https://dipjypzrfigkzuarlsov.supabase.co/functions/v1/seo-blog",
@@ -935,6 +987,7 @@ var index_default = {
     let response;
     try {
       response = await handle(request, env);
+      response = await withAdHeading(request, response, ad_headings_default);
     } catch (error) {
       console.error("Unhandled error", error instanceof Error ? error.stack || error.message : error);
       response = Response.json({ error: "Something went wrong. Please call 01603 517142." }, { status: 500 });
