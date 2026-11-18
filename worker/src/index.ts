@@ -13,6 +13,10 @@ import { runUptimePinger } from "./uptime-pinger";
 import { blogResponse, addPostsToSitemap } from "./crm-blog.js";
 // @ts-ignore plain JS module shared with the LeMan Cave and Race Car Graphics workers
 import { trackAi } from "./ai-visibility.js";
+// @ts-ignore plain JS module (same idea as the Race Car Graphics worker, plus the browser swap)
+import { withAdHeading } from "./ad-headings.js";
+// Page headings per Google Ads ad group, from the CRM (fetch-crm.mjs, refreshed on every publish).
+import AD_HEADINGS from "../../source/lib/crm/ad-headings.json";
 
 // Blog: posts written and approved in the CRM (Marketing → Blog posts), rendered on request into the /blog shell page.
 const BLOG = {
@@ -149,6 +153,8 @@ export default {
     let response: Response;
     try {
       response = await handle(request, env);
+      // Google Ads clicks (?ag=<ad group>) with a page heading set in the CRM get that heading on this page.
+      response = await withAdHeading(request, response, AD_HEADINGS);
     } catch (error) {
       console.error("Unhandled error", error instanceof Error ? error.stack || error.message : error);
       response = Response.json({ error: "Something went wrong. Please call 01603 517142." }, { status: 500 });
