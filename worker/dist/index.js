@@ -851,7 +851,12 @@ async function withAdHeading(request, response, headings) {
 }
 
 // ../../source/lib/crm/ad-headings.json
-var ad_headings_default = {};
+var ad_headings_default = {
+  "204395103067": {
+    path: "/category/valet-bay-hire",
+    h1: "Car Detailing Bay Hire in Norwich"
+  }
+};
 
 // ../../worker/src/index.ts
 var BLOG = {
